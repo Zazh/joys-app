@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Environment
+.env
+.env.*
+*.env
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+
+# Node
+node_modules/
+pnpm-lock.yaml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
+
+# Compiled CSS/JS (rebuild from src/)
+# static/dist/ tracked intentionally — no build step on server
+
+# Logs
+*.log
+
+# Docker volumes
+*.pid
