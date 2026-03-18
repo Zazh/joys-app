@@ -1,0 +1,33 @@
+{% if breadcrumb_jsonld %}
+<script type="application/ld+json">
+{{ breadcrumb_jsonld|safe }}
+</script>
+{% endif %}
+
+{% if breadcrumbs %}
+<!-- Mobile/Tablet: кнопка назад -->
+{% with prev=breadcrumbs|slice:"-2:-1"|first %}
+<a href="{{ prev.url|default:'/' }}" class="breadcrumb-back" aria-label="Назад">
+  <span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </span>
+</a>
+
+<!-- Desktop: полный список -->
+<nav aria-label="Breadcrumb" class="hidden lg:flex">
+  <ol class="breadcrumb mt-auto">
+    {% for crumb in breadcrumbs %}
+    {% if not forloop.last %}
+    <li class="breadcrumb-item"><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+    <li class="breadcrumb-separator" aria-hidden="true">/</li>
+    {% else %}
+    <li class="breadcrumb-item" aria-current="page">{{ crumb.name }}</li>
+    {% endif %}
+    {% endfor %}
+  </ol>
+</nav>
+{% endwith %}
+{% endif %}

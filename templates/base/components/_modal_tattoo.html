@@ -1,0 +1,108 @@
+{% load static %}
+
+<!-- BEGIN modal tattoo -->
+<div class="modal-overlay hidden" id="modalTattoo">
+    <div class="modal-content modal-dark">
+
+        <!-- Step 1 -->
+        <div class="modal-step" data-step="1">
+            <div class="modal-header">
+                <div></div>
+                <button class="modal-close modal-close-tattoo" type="button" aria-label="Закрыть">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <figure class="modal-figure">
+                <img src="{% static 'dist/images/promo_events/m1jpg.jpg' %}" alt="Тату с логотипом DR.JOYS">
+            </figure>
+            <p class="modal-text">Сделай тату с логотипом DR.JOYS (от 5x7 см) на любом месте. Мы оплачиваем работу твоего тату-мастера.</p>
+            <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-next-step="2">Далее</button>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="modal-step hidden" data-step="2">
+            <div class="modal-header">
+                <button class="modal-back" type="button" aria-label="Назад" data-prev-step="1">
+                    <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button class="modal-close modal-close-tattoo" type="button" aria-label="Закрыть">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <figure class="modal-figure">
+                <img src="{% static 'dist/images/promo_events/m1jpg.jpg' %}" alt="Процесс нанесения тату">
+            </figure>
+            <p class="modal-text">Отправь фото и видео процесса и готового тату</p>
+            <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-next-step="3">Далее</button>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="modal-step hidden" data-step="3">
+            <div class="modal-header">
+                <button class="modal-back" type="button" aria-label="Назад" data-prev-step="2">
+                    <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button class="modal-close modal-close-tattoo" type="button" aria-label="Закрыть">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <figure class="modal-figure">
+                <img src="{% static 'dist/images/promo_events/m1jpg.jpg' %}" alt="Готовое тату DR.JOYS">
+            </figure>
+            <p class="modal-text">Получи пожизненный запас DR.JOYS в подарок</p>
+            <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-next-step="4">Далее</button>
+        </div>
+
+        <!-- Step 4 (Form) -->
+        <div class="modal-step hidden" data-step="4">
+            <div class="modal-header">
+                <button class="modal-back" type="button" aria-label="Назад" data-prev-step="3">
+                    <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button class="modal-close modal-close-tattoo" type="button" aria-label="Закрыть">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 21+ badge -->
+            <div class="modal-badge">
+                <div class="modal-badge-icon">
+                    <span>21+</span>
+                </div>
+            </div>
+
+            <p class="modal-text">Оставляй заявку и мы расскажем подробнее про условия и поможем подобрать тату-мастера</p>
+
+            <form class="flex flex-col gap-3" id="tattooForm" novalidate>
+                <input class="modal-input" type="text" name="name" placeholder="Имя" required>
+                <div>
+                    <input class="modal-input" type="text" inputmode="numeric" pattern="[0-9]*" id="tattooAge" name="age" placeholder="Возраст" required>
+                    <p class="modal-error hidden" id="tattooAgeError">Минимальный возраст — 18 лет</p>
+                </div>
+                <input class="modal-input" type="text" name="city" placeholder="Страна и город проживания" required>
+                <input class="modal-input" type="tel" id="tattooPhone" name="phone" placeholder="+7 (700) 123-45-67" required>
+                <button type="submit" class="btn-macro small danger w-full text-center">Оставить заявку</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+<!-- END modal tattoo -->

@@ -1,0 +1,54 @@
+@layer components {
+    /* Слайдер */
+    .slider-image {
+        @apply w-full h-full object-cover absolute inset-0 opacity-0 transition-opacity duration-500;
+    }
+    .slider-image.active {
+        @apply opacity-100;
+    }
+
+    /* Круговой прогресс в правом верхнем углу */
+    .slider-progress-wrapper {
+        @apply absolute top-4 right-4 w-12 h-12 z-10;
+    }
+
+    .slider-progress-circle {
+        @apply w-full h-full transform -rotate-90;
+    }
+
+    .slider-progress-circle .progress-bg {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.3);
+        stroke-width: 2;
+    }
+
+    .slider-progress-circle .progress-bar {
+        fill: none;
+        stroke: white;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+        transition: stroke-dashoffset 0.1s linear;
+    }
+
+    /* Кнопка play/pause */
+    .slider-play-pause {
+        @apply absolute inset-0 flex items-center justify-center;
+        @apply text-white hover:text-red-500 transition-colors duration-200;
+        @apply cursor-pointer;
+    }
+
+    /* Индикаторы */
+    .slider-indicators {
+        @apply absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-10;
+    }
+
+    .slider-indicators .indicator {
+        @apply w-1 h-1 rounded-full bg-white/50 transition-all duration-200;
+    }
+
+    .slider-indicators .indicator.active {
+        @apply bg-white w-4;
+    }
+}

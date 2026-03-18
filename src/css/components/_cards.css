@@ -1,0 +1,84 @@
+/* Product Card */
+.product-card {
+    @apply w-full;
+}
+.product-card:hover {
+    @apply text-red-500;
+}
+.product-card_picture {
+    @apply w-full aspect-[9/10] relative overflow-hidden;
+}
+
+/* Картинки */
+.product-card_picture .product-image {
+    @apply w-full h-full object-cover absolute inset-0 opacity-0 transition-opacity duration-200;
+}
+.product-card_picture .product-image:only-child {
+    @apply opacity-100;
+}
+.product-card_picture .product-image.active {
+    @apply opacity-100;
+}
+
+.product-card_label {
+    @apply absolute left-3 bottom-3 z-10;
+}
+
+/* Индикаторы */
+.product-indicators {
+    @apply absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-10;
+}
+.product-indicators .indicator {
+    @apply w-1 h-1 rounded-full bg-black transition-all duration-200;
+}
+.product-indicators .indicator.active {
+    @apply bg-black w-4;
+}
+
+.product-card_info {
+    @apply xl:absolute -bottom-[3rem] h-12 w-full;
+}
+.product-card_info .product-card_title {
+    @apply text-xs font-bold uppercase tracking-wider pt-4;
+}
+.product-card_info .product-card_title > span {
+    @apply lg:block;
+}
+
+
+/* Carousel Card  */
+.carousel-card {
+    @apply flex-shrink-0 w-[280px] lg:w-[320px];
+}
+.carousel-card_picture {
+    @apply w-full aspect-[9/10] relative overflow-hidden;
+}
+.carousel-card_info {
+    @apply mt-4;
+}
+.carousel-card_title {
+    @apply text-xs font-bold uppercase tracking-wider;
+}
+
+/* Blog Card */
+.blog-card {
+    @apply w-full md:aspect-[595/400] aspect-[320/530] max-w-150 relative rounded-3xl overflow-hidden;
+}
+.blog-card-link, .blog-card-figure, .blog-card-content {
+    @apply absolute inset-0;
+}
+.blog-card-img {
+    @apply object-cover w-full h-full;
+}
+.blog-card-content {
+    @apply bg-black/20;
+}
+.blog-card-info {
+    @apply p-5 md:p-10 absolute bottom-0 w-full h-full flex flex-col gap-2;
+}
+.blog-card-title {
+    @apply mt-auto text-white font-bold leading-tight;
+}
+.blog-card-meta {
+    @apply text-white md:text-sm text-xs;
+}

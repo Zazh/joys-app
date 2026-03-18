@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}Оформление заказа — DR.JOYS{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full lg:col-span-13 xl:col-span-11 xl:col-start-2">
+            <div class="pt-46">
+
+            <h1 class="font-benzin text-2xl uppercase mb-8">Оформление заказа</h1>
+
+            {% if not is_authenticated %}
+            <!-- BEGIN auth required -->
+            <div class="flex flex-col items-center text-center py-16">
+                <svg class="mb-6 text-stone-300" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <p class="text-sm text-stone-500 mb-6">Для оформления заказа необходимо войти в аккаунт</p>
+                <button class="btn-macro black text-center text-xs px-8" type="button" id="checkoutLoginBtn">
+                    ВОЙТИ
+                </button>
+            </div>
+            <!-- END auth required -->
+
+            {% else %}
+
+            {% if error_message %}
+            <div class="bg-red-50 text-red-600 text-sm rounded-xl p-4 mb-6">{{ error_message }}</div>
+            {% endif %}
+
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                <!-- BEGIN delivery form -->
+                <div class="flex-1 lg:max-w-lg">
+                    <h2 class="font-bold text-lg mb-6">Доставка</h2>
+
+                    <form method="post" class="flex flex-col gap-4" id="checkoutForm" novalidate>
+                        {% csrf_token %}
+
+                        <div>
+                            <label class="modal-label" for="id_country">Страна</label>
+                            <select class="modal-input" id="id_country" name="country" required>
+                                {% for r in all_regions %}
+                                <option value="{{ r.code }}"{% if form.country.value == r.code %} selected{% endif %}>{{ r.flag_emoji }} {{ r.name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.country.errors %}<p class="text-xs text-red-500 mt-1">{{ form.country.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div>
+                            <label class="modal-label" for="id_city">Город</label>
+                            <input class="modal-input" type="text" id="id_city" name="city" value="{{ form.city.value|default:'' }}" required>
+                            {% if form.city.errors %}<p class="text-xs text-red-500 mt-1">{{ form.city.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div>
+                            <label class="modal-label" for="id_street">Улица</label>
+                            <input class="modal-input" type="text" id="id_street" name="street" value="{{ form.street.value|default:'' }}" required>
+                            {% if form.street.errors %}<p class="text-xs text-red-500 mt-1">{{ form.street.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="modal-label" for="id_house">Дом</label>
+                                <input class="modal-input" type="text" id="id_house" name="house" value="{{ form.house.value|default:'' }}" required>
+                                {% if form.house.errors %}<p class="text-xs text-red-500 mt-1">{{ form.house.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div>
+                                <label class="modal-label" for="id_apt">Квартира</label>
+                                <input class="modal-input" type="text" id="id_apt" name="apt" value="{{ form.apt.value|default:'' }}">
+                            </div>
+                        </div>
+
+                        <hr class="border-stone-100 my-2">
+
+                        <div>
+                            <label class="modal-label" for="id_first_name">Имя</label>
+                            <input class="modal-input" type="text" id="id_first_name" name="first_name" value="{{ form.first_name.value|default:'' }}" required>
+                            {% if form.first_name.errors %}<p class="text-xs text-red-500 mt-1">{{ form.first_name.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div>
+                            <label class="modal-label" for="id_last_name">Фамилия</label>
+                            <input class="modal-input" type="text" id="id_last_name" name="last_name" value="{{ form.last_name.value|default:'' }}" required>
+                            {% if form.last_name.errors %}<p class="text-xs text-red-500 mt-1">{{ form.last_name.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div>
+                            <label class="modal-label" for="id_phone">Телефон</label>
+                            <input class="modal-input" type="tel" id="id_phone" name="phone" value="{{ form.phone.value|default:'' }}" placeholder="+7 (700) 123-45-67" required>
+                            {% if form.phone.errors %}<p class="text-xs text-red-500 mt-1">{{ form.phone.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div>
+                            <label class="modal-label" for="id_email">Email</label>
+                            <input class="modal-input" type="email" id="id_email" name="email" value="{{ form.email.value|default:'' }}">
+                            {% if form.email.errors %}<p class="text-xs text-red-500 mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn-macro black w-full text-center text-xs mt-4">
+                            ОФОРМИТЬ ЗАКАЗ
+                        </button>
+                    </form>
+                </div>
+                <!-- END delivery form -->
+
+                <!-- BEGIN order summary -->
+                <div class="lg:w-72 shrink-0">
+                    <h2 class="font-bold text-lg mb-6">Ваш заказ</h2>
+                    <div class="flex flex-col divide-y divide-stone-100">
+                        {% for item in cart_items %}
+                        <div class="flex gap-3 py-3">
+                            <div class="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-stone-50">
+                                <img src="{% if item.image_url %}{{ item.image_url }}{% else %}{{ placeholder_image_url }}{% endif %}" class="w-full h-full object-cover" alt="{{ item.name }}" loading="lazy">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-bold leading-tight">{{ item.name }}</p>
+                                <p class="text-[10px] text-stone-400 mt-0.5">{{ item.size_name }} &times; {{ item.qty }}</p>
+                                <p class="text-xs text-red-500 font-benzin mt-1">{{ item.subtotal|floatformat:0 }} {{ currency_symbol }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="border-t border-stone-200 pt-4 mt-2">
+                        {% if cart_old_total and cart_old_total > cart_total %}
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-stone-400">Без скидки</span>
+                            <span class="text-xs text-stone-400 line-through">{{ cart_old_total|floatformat:0 }} {{ currency_symbol }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between items-center">
+                            <span class="font-benzin uppercase text-sm">Итого</span>
+                            <div class="text-right">
+                                <span class="font-benzin text-lg text-red-500">{{ cart_total|floatformat:0 }} {{ currency_symbol }}</span>
+                                {% if payment_total %}
+                                <span class="block text-xs text-stone-400 mt-0.5">({{ payment_total|floatformat:0 }} {{ payment_currency_symbol }})</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END order summary -->
+            </div>
+
+            {% endif %}
+
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    // Кнопка "Войти" на checkout — открывает auth modal
+    const loginBtn = document.getElementById('checkoutLoginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            const authModal = document.getElementById('modalAuth');
+            if (authModal && typeof openModal === 'function') {
+                openModal(authModal);
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

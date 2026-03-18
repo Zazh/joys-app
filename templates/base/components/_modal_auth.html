@@ -1,0 +1,104 @@
+{% load i18n %}
+<!-- BEGIN modal auth -->
+<div class="modal-overlay hidden" id="modalAuth">
+    <div class="modal-content modal-wide">
+        <!-- Header -->
+        <div class="modal-header">
+            <button class="modal-back hidden" type="button" aria-label="{% trans 'Назад' %}" id="authBackBtn">
+                <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
+                </svg>
+            </button>
+            <button class="modal-close" type="button" aria-label="{% trans 'Закрыть' %}">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Step 1: Вход (email + SSO) -->
+        <div class="modal-step" data-step="1">
+            <h2 class="modal-title">{% trans "Вход" %}</h2>
+            <div class="flex flex-col gap-3 pt-4">
+                <div>
+                    <label class="modal-label" for="authLoginEmail">Email</label>
+                    <input class="modal-input" type="email" id="authLoginEmail" name="email"
+                           placeholder="your@email.com" autocomplete="email" required>
+                </div>
+                <div>
+                    <label class="modal-label" for="authLoginPassword">{% trans "Пароль" %}</label>
+                    <input class="modal-input" type="password" id="authLoginPassword" name="password"
+                           placeholder="••••••••" autocomplete="current-password" required>
+                </div>
+                <p class="text-xs text-red-500 hidden" id="authLoginError"></p>
+                <button class="btn-macro black w-full text-center text-xs" type="button" id="authLoginBtn">
+                    {% trans "ВОЙТИ" %}
+                </button>
+
+                <!-- SSO divider -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 h-px bg-stone-200"></div>
+                    <span class="text-xs text-stone-400">{% trans "или" %}</span>
+                    <div class="flex-1 h-px bg-stone-200"></div>
+                </div>
+
+                <!-- Google -->
+                <button class="btn-sso" type="button" data-sso-provider="google">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/>
+                        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
+                    </svg>
+                    <span>{% trans "Войти через Google" %}</span>
+                </button>
+
+                <!-- Yandex -->
+                <button class="btn-sso" type="button" data-sso-provider="yandex">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="9" cy="9" r="9" fill="#FC3F1D"/>
+                        <path d="M10.37 14.4H8.78V6.41c-.74.22-1.15.86-1.15 1.68 0 .84.36 1.34 1.08 2.02l1.22 1.12-1.7 3.17H6.43l1.49-3c-.86-.84-1.44-1.7-1.44-3.17C6.48 6.43 7.68 4.8 10.37 4.8h1.58v9.6h-1.58Z" fill="#fff"/>
+                    </svg>
+                    <span>{% trans "Войти через Яндекс" %}</span>
+                </button>
+
+                <button class="text-xs text-center text-gray-500 hover:text-black pt-1" type="button"
+                        data-auth-method="register">
+                    {% trans "Нет аккаунта? Зарегистрироваться" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Step: Регистрация -->
+        <div class="modal-step hidden" data-step="register">
+            <h2 class="modal-title">{% trans "Регистрация" %}</h2>
+            <div class="flex flex-col gap-3 pt-4">
+                <div>
+                    <label class="modal-label" for="authRegEmail">Email</label>
+                    <input class="modal-input" type="email" id="authRegEmail" name="email"
+                           placeholder="your@email.com" autocomplete="email" required>
+                </div>
+                <div>
+                    <label class="modal-label" for="authRegPassword1">{% trans "Пароль" %}</label>
+                    <input class="modal-input" type="password" id="authRegPassword1" name="password1"
+                           placeholder="••••••••" autocomplete="new-password" required>
+                </div>
+                <div>
+                    <label class="modal-label" for="authRegPassword2">{% trans "Повторите пароль" %}</label>
+                    <input class="modal-input" type="password" id="authRegPassword2" name="password2"
+                           placeholder="••••••••" autocomplete="new-password" required>
+                </div>
+                <p class="text-xs text-red-500 hidden" id="authRegError"></p>
+                <button class="btn-macro black w-full text-center text-xs" type="button" id="authRegisterBtn">
+                    {% trans "СОЗДАТЬ АККАУНТ" %}
+                </button>
+                <button class="text-xs text-center text-gray-500 hover:text-black pt-1" type="button"
+                        data-auth-method="1">
+                    {% trans "Уже есть аккаунт? Войти" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END modal auth -->

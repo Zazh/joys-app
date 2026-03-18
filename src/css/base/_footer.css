@@ -1,0 +1,6 @@
+.footer-menu {
+    @apply flex flex-col gap-2;
+}
+.footer-menu .nav-item {
+    @apply uppercase tracking-wider text-xs hover:text-red-500;
+}

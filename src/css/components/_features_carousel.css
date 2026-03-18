@@ -1,0 +1,110 @@
+.features {
+    @apply bg-gray-200 py-8 md:py-10 relative;
+}
+.features-card {
+    @apply h-[31.25rem] bg-white rounded-3xl lg:rounded-4xl relative overflow-hidden;
+    flex-shrink: 0;
+    width: 80vw;
+}
+.features-card-content > p {
+    @apply pb-4 leading-tight lg:text-sm text-xs;
+}
+.features-card-container {
+    @apply flex flex-col gap-5 mx-0 px-5 my-8 lg:px-0 lg:mx-[5rem] lg:my-[3.75rem] w-full max-w-105 relative z-10;
+}
+.features-bg-img {
+    @apply w-full h-full object-cover object-right-bottom;
+}
+
+.features-carousel {
+    @apply flex gap-[10px] lg:gap-4;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.features-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+/* Custom cursor */
+.features-cursor {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.15s;
+    z-index: 1000;
+    transform: translate(-50%, -50%);
+}
+
+.features-cursor.visible {
+    opacity: 1;
+}
+
+.features-cursor.dragging {
+    transform: translate(-50%, -50%) scale(0.8);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Features controls */
+.features-controls {
+    @apply flex items-center justify-center gap-3 mt-6 ;
+}
+
+.features-dots {
+    @apply flex items-center gap-2 px-4 h-12 rounded-full bg-black/10 backdrop-blur-xl;
+}
+
+.features-dot {
+    @apply w-2 h-2 rounded-full bg-white/60 transition-all duration-300;
+}
+
+.features-dot.active {
+    @apply w-10 bg-white;
+}
+
+.features-pause {
+    @apply w-12 h-12 rounded-full flex items-center justify-center bg-black/10 backdrop-blur-xl;
+}
+
+.features-pause .hidden {
+    display: none;
+}
+
+/* Mobile */
+@media (max-width: 1023px) {
+    .features-carousel {
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scroll-padding-left: 2rem;
+        @apply px-8;
+    }
+
+    .features-carousel > .features-card {
+        scroll-snap-align: start;
+    }
+
+    .features-cursor {
+        display: none;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .features-carousel {
+        @apply justify-start px-5;
+        cursor: none;
+        user-select: none;
+    }
+    .features-card {
+        width: min(100%, 64rem);
+    }
+    .features-carousel img {
+        -webkit-user-drag: none;
+        user-select: none;
+        pointer-events: none;
+    }
+}

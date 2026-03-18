@@ -1,0 +1,87 @@
+{% comment %}
+Карточка отзыва. Принимает переменную `review` (Review model instance).
+Вариант верстки определяется по review.card_type.
+{% endcomment %}
+<div class="reviews-carousel-slide" data-rating="{{ review.rating }}" data-nm-id="{{ review.nm_id }}">
+    <div class="comment-card">
+        <!-- Review -->
+        <div class="comment-card__review">
+            <!-- Header -->
+            <div class="comment-card__header">
+                <div class="comment-card__main">
+                    <div class="rating rating-bg [ rating-{{ review.rating }} ]">
+                        <div class="rating-fill"></div>
+                    </div>
+                    <div class="comment-card__name">
+                        <span>{{ review.user_name|default:"Аноним" }}</span>
+                        <span>|</span>
+                        <span>{{ review.formatted_date }}</span>
+                    </div>
+                </div>
+                <div class="comment-card__side">
+                    <div class="comment-card__tools"></div>
+                </div>
+            </div>
+            <!-- END Header -->
+
+            <!-- Body -->
+            <div class="comment-card__body">
+                {% if review.text %}
+                <div class="comment-card__text">
+                    {{ review.text }}
+                </div>
+                {% endif %}
+
+                {% if review.has_list %}
+                <ul class="comment-card__list">
+                    {% if review.pros %}
+                    <li>
+                        <span class="comment-card__title">Достоинства</span>
+                        <p>{{ review.pros }}</p>
+                    </li>
+                    {% endif %}
+                    {% if review.cons %}
+                    <li>
+                        <span class="comment-card__title">Недостатки</span>
+                        <p>{{ review.cons }}</p>
+                    </li>
+                    {% endif %}
+                    {% if review.text and review.has_list %}
+                    <li>
+                        <span class="comment-card__title">Комментарий</span>
+                        <p>{{ review.text }}</p>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+
+                {% if review.formatted_tags %}
+                <div class="comment-card__meta">
+                    <p class="comment-card__title">Плюсы товара</p>
+                    <ul class="comment-card__tags">
+                        {% for tag in review.formatted_tags %}
+                        <li>{{ tag }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            <!-- END Body -->
+        </div>
+        <!-- END Review -->
+
+        {% if review.answer_text %}
+        <!-- Answer -->
+        <div class="comment-card__answer bg-slate-50">
+            <div class="comment-card__answer-title">
+                <div class="reply-icon"></div>
+                <span>Ответ Dr.Joys</span>
+            </div>
+            <div class="comment-card__answer-body">
+                {{ review.answer_text }}
+            </div>
+        </div>
+        <!-- END Answer -->
+        {% endif %}
+    </div>
+</div>

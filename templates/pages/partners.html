@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Партнерам — DR.JOYS{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Станьте партнером DR.JOYS — оптовые поставки презервативов для дистрибьюторов, аптек и магазинов. Лучшие условия сотрудничества.">
+<meta property="og:title" content="Партнерам — DR.JOYS">
+<meta property="og:description" content="Оптовые поставки презервативов DR.JOYS для дистрибьюторов, аптек и магазинов.">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://drjoys.kz/partners/">
+{% endblock %}
+
+{% block header_right %}
+{% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
+{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
+            <div class="blog-container pt-46">
+                <!-- BEGIN заголовок -->
+                <div>
+                    <h1 class="display-2 uppercase font-benzin">Хотите зарабатывать вместе с DR.JOYS?</h1>
+                </div>
+                <!-- END заголовок -->
+
+                <!-- BEGIN content -->
+                <div class="blog-content">
+                    <div>
+                        <p>
+                            Каждый день мы получаем много заявок на оптовую реализацию продукции из разных стран. Если вы действующий дистрибьютор в своем городе или у вас сеть магазинов или аптек — оставляйте заявку и мы отправим вам коммерческое предложение с самыми выгодными оптовыми ценами.
+                        </p>
+                        <p>
+                            У каждого из наших партнеров DR.JOYS занимает первые места по продажам в категории барьерной контрацепции.
+                        </p>
+
+                        <h3>
+                            Почему выбирают DR.JOYS
+                        </h3>
+                        <ul>
+                            <li><b>Высокий спрос:</b> DR.JOYS — один из самых узнаваемых брендов ультратонких презервативов в Казахстане. Продукция продаётся сама благодаря лояльной аудитории и маркетингу.</li>
+                            <li><b>Выгодные условия:</b> индивидуальные оптовые цены, гибкая логистика и маркетинговая поддержка для каждого партнера.</li>
+                            <li><b>Сертифицированный продукт:</b> вся продукция прошла сертификацию и соответствует международным стандартам качества.</li>
+                        </ul>
+
+                        <figure>
+                            <img src="{% static 'dist/images/go_partner/partner.jpg' %}" alt="Партнерство с DR.JOYS">
+                            <figcaption>
+                                Партнерская сеть DR.JOYS
+                            </figcaption>
+                        </figure>
+
+                        <figure>
+                            <div class="blog-content-video">
+                                <iframe
+                                    src="https://www.youtube.com/embed/TGFDgNPNJhU?rel=0&modestbranding=1"
+                                    title="DR.JOYS — партнерская программа"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen
+                                    loading="lazy"
+                                ></iframe>
+                            </div>
+                            <figcaption>
+                                DR.JOYS — о партнерской программе
+                            </figcaption>
+                        </figure>
+
+                        <h3>
+                            Как стать партнером
+                        </h3>
+                        <p>Оставьте заявку — мы свяжемся с вами в течение 24 часов и обсудим условия сотрудничества. Работаем с оптовыми покупателями из Казахстана, России, Узбекистана, Кыргызстана и других стран.</p>
+
+                        <div class="py-6">
+                            <button type="button" class="btn-macro danger" id="openPartnerModal">Оставить заявку</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- END content -->
+            </div>
+        </div>
+    </section>
+
+    {% include 'base/components/_modal_partner.html' %}
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Партнерам — DR.JOYS",
+        "description": "Станьте партнером DR.JOYS — оптовые поставки презервативов для дистрибьюторов, аптек и магазинов.",
+        "url": "https://drjoys.kz/partners/",
+        "publisher": {
+            "@type": "Organization",
+            "name": "DR.JOYS"
+        }
+    }
+    </script>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const openBtn = document.getElementById('openPartnerModal');
+        const overlay = document.getElementById('modalPartner');
+        const closeBtn = document.getElementById('modalPartnerClose');
+
+        if (!openBtn || !overlay) return;
+
+        function openModal() {
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // Phone mask: +{code} ({XXX}) XXX-XX-XX
+        const phoneInput = document.getElementById('partnerPhone');
+        if (phoneInput) {
+            function formatPhone(digits) {
+                if (!digits.length) return '';
+
+                // Determine country code length: +7, +1 = 1 digit; +99X, +99XX = 3-4 digits; rest = 2-3
+                let codeLen = 1;
+                if (digits.startsWith('7') || digits.startsWith('1')) codeLen = 1;
+                else if (digits.startsWith('99')) codeLen = 3;
+                else codeLen = 2;
+
+                const code = digits.slice(0, codeLen);
+                const rest = digits.slice(codeLen);
+
+                let formatted = '+' + code;
+                if (rest.length > 0) formatted += ' (' + rest.slice(0, 3);
+                if (rest.length >= 3) formatted += ')';
+                if (rest.length > 3) formatted += ' ' + rest.slice(3, 6);
+                if (rest.length > 6) formatted += '-' + rest.slice(6, 8);
+                if (rest.length > 8) formatted += '-' + rest.slice(8, 10);
+
+                return formatted;
+            }
+
+            phoneInput.addEventListener('input', (e) => {
+                let digits = e.target.value.replace(/\D/g, '');
+                if (digits.length > 15) digits = digits.slice(0, 15);
+                e.target.value = formatPhone(digits);
+            });
+
+            phoneInput.addEventListener('focus', () => {
+                if (!phoneInput.value) phoneInput.value = '+';
+            });
+
+            phoneInput.addEventListener('blur', () => {
+                if (phoneInput.value === '+') phoneInput.value = '';
+            });
+
+            phoneInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && phoneInput.value.length <= 1) {
+                    phoneInput.value = '';
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

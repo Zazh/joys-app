@@ -1,0 +1,1519 @@
+{% extends 'base.html' %}
+{% load static i18n review_tags menu_tags %}
+
+{% block title %}{% trans "DR.JOYS — ультратонкие презервативы, неощутимые на 95%" %}{% endblock %}
+
+{% block meta %}
+<meta name="description" content="{% trans "Ультратонкие презервативы DR.JOYS толщиной 0,02 мм — неощутимые на 95%. Классические, ребристые, ароматизированные." %}">
+{% endblock %}
+
+{% block content %}
+<main class="mt-[7.5rem] lg:mt-[7.5rem]">
+
+<!-- Hero -->
+<section id="home-hero">
+    <div class="mb-6">
+        {% if hero %}
+        <h1 class="text-center pb-5 flex flex-col
+                   text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
+            {{ hero.title|linebreaksbr }}
+        </h1>
+        <h2 class="flex flex-wrap justify-center text-sm lg:text-xl font-medium leading-tight text-center">
+            {{ hero.subtitle|linebreaksbr }}
+        </h2>
+        {% else %}
+        <h1 class="text-center pb-5 flex flex-col
+                   text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
+            <span>Ультратонкие</span> <span>презервативы </span><span>DR.JOYS</span>
+        </h1>
+        <h2 class="flex flex-wrap justify-center text-sm lg:text-xl font-medium leading-tight">
+            <span class="flex justify-center gap-1 w-full">Неощутимые на 95% <span class="lg:text-sm text-xs mb-auto">(0,02 мм)</span></span>
+            <span class="flex justify-center w-full">Тоньше волоса, прочнее стали</span>
+        </h2>
+        {% endif %}
+    </div>
+
+    <div class="hero-carousel-container gap-2 lg:gap-0 flex justify-center items-center relative pb-6 pt-12 h-[23rem] max-lg:px-[30%] max-lg:justify-start">
+            <!-- Card 1 -->
+            <div class="w-[240px]">
+                <div class="hero-carousel-card bg-white" data-parallax>
+                    <!-- background -->
+                    <div class="hero-carousel-card_layer [ rotate-[4deg] ] [ flex items-center justify-center ]" data-depth="0.2">
+                        <div class="hero-carousel-card_bg [ bg-gradient-to-b from-[#ACE143] to-[#D7E422] ]">
+                            <img src="{% static 'dist/images/hero/prod_bg/gl.svg' %}" data-depth="0.4" alt="" class="absolute -top-[1rem] -left-[1rem]">
+                            <img src="{% static 'dist/images/hero/prod_bg/gr.svg' %}" data-depth="-0.4" alt="" class="absolute -top-[1rem] -right-[1rem]">
+                        </div>
+                    </div>
+
+                    <!-- Product image -->
+                    <div class="hero-carousel-card_layer [ flex justify-center ]" data-depth="-0.2">
+                        <div class="w-[80%] relative">
+                            <img src="{% if card1 and card1.image %}{{ card1.image.url }}{% else %}{% static 'dist/images/hero/1.png' %}{% endif %}" class="absolute bottom-10 hero-carousel-card-product_img">
+                        </div>
+                    </div>
+
+                    <!-- Count -->
+                    <div class="hero-carousel-card_layer [ flex justify-end ]" data-depth="1.5">
+                        <div class="w-[45%] relative">
+                            <img src="{% if card1 and card1.count_image %}{{ card1.count_image.url }}{% else %}{% static 'dist/images/hero/counter/5.svg' %}{% endif %}" class="w-full absolute bottom-8 -right-[1.5rem]">
+                        </div>
+                    </div>
+
+                    <!-- Light spark -->
+                    <div class="hero-carousel-card_layer [ flex justify-center items-center ]" data-depth="0.5">
+                        <div class="w-full relative z-50">
+                            <img src="{% static 'dist/images/hero/light.svg' %}" class="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="w-[240px]">
+                <div class="hero-carousel-card bg-white [ active ]" data-parallax>
+                    <!-- background -->
+                    <div class="hero-carousel-card_layer [ rotate-[1deg] ] [ flex items-center justify-center ]" data-depth="0.2">
+                        <div class="hero-carousel-card_bg [ bg-gradient-to-b from-[#FE70BA] to-[#F3971C] ]">
+                            <svg data-depth="0.4" class="absolute -bottom-[4.5rem] -right-[2rem] w-[17rem]" viewBox="0 0 337 395" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M297.668 94.9485C230.919 49.738 140.159 67.1977 94.9482 133.946C49.7377 200.694 67.1975 291.455 133.946 336.666L94.7949 394.467C-3.87654 327.634 -29.6867 193.467 37.1463 94.7951C103.979 -3.87626 238.147 -29.6864 336.819 37.1466L297.668 94.9485Z" fill="url(#paint0_linear_2029_83)"/>
+                                <defs>
+                                    <linearGradient id="paint0_linear_2029_83" x1="247.488" y1="-23.3593" x2="5.46467" y2="333.961" gradientUnits="userSpaceOnUse">
+                                        <stop stop-color="#F42296"/>
+                                        <stop offset="1" stop-color="#FDFF7E"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Product image -->
+                    <div class="hero-carousel-card_layer [ flex justify-center ]" data-depth="-0.2">
+                        <div class="w-[70%] relative product-image">
+                            <img src="{% if card2 and card2.image %}{{ card2.image.url }}{% else %}{% static 'dist/images/hero/2.png' %}{% endif %}" class="absolute bottom-10 hero-carousel-card-product_img">
+                        </div>
+                    </div>
+
+                    <!-- Count -->
+                    <div class="hero-carousel-card_layer [ flex justify-end ]" data-depth="1.5">
+                        <div class="w-[60%] relative">
+                            <img src="{% if card2 and card2.count_image %}{{ card2.count_image.url }}{% else %}{% static 'dist/images/hero/counter/17.svg' %}{% endif %}" class="w-full absolute bottom-8 -right-[1.5rem]">
+                        </div>
+                    </div>
+
+                    <!-- Light spark -->
+                    <div class="hero-carousel-card_layer [ flex justify-center items-center ]" data-depth="0.5">
+                        <div class="w-full relative z-50">
+                            <img src="{% static 'dist/images/hero/light.svg' %}" class="">
+                        </div>
+                    </div>
+
+                    <!-- Bundle -->
+                    <div class="hero-carousel-card_layer [ flex justify-start items-center ]"  data-depth="-0.5">
+                        <div class="inset-0 w-full aspect-square relative">
+                            <img src="{% static 'dist/images/hero/top.svg' %}" class="absolute top-0 -left-[1.5rem]">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="w-[240px]">
+                <div class="hero-carousel-card bg-white " data-parallax>
+                    <!-- background -->
+                    <div class="hero-carousel-card_layer [ -rotate-[4deg] ] [ flex items-center justify-center ]" data-depth="0.2">
+                        <div class="hero-carousel-card_bg [ bg-gradient-to-b from-[#AF87DF] to-[#5C40AE] ]" data-depth="-0.2">
+                            <img src="{% static 'dist/images/hero/prod_bg/ic.svg' %}" data-depth="0.4" alt="" class="w-[17rem] absolute bottom-0 -left-[1rem]">
+                        </div>
+                    </div>
+
+                    <!-- Product image -->
+                    <div class="hero-carousel-card_layer [ flex justify-center ]" data-depth="-0.2">
+                        <div class="w-[80%] relative">
+                            <img src="{% if card3 and card3.image %}{{ card3.image.url }}{% else %}{% static 'dist/images/hero/3.png' %}{% endif %}" class="absolute bottom-10 hero-carousel-card-product_img">
+                        </div>
+                    </div>
+
+                    <!-- Count -->
+                    <div class="hero-carousel-card_layer [ flex justify-end ]" data-depth="1.5">
+                        <div class="w-[50%] relative">
+                            <img src="{% if card3 and card3.count_image %}{{ card3.count_image.url }}{% else %}{% static 'dist/images/hero/counter/30.svg' %}{% endif %}" class="w-full absolute bottom-10 -right-[1.5rem]">
+                        </div>
+                    </div>
+
+                    <!-- Light spark -->
+                    <div class="hero-carousel-card_layer [ flex justify-center items-center ]">
+                        <div class="w-full relative z-50">
+                            <img src="{% static 'dist/images/hero/light.svg' %}" class="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="flex justify-center items-center gap-2 pb-10">
+        {% if hero %}
+        <a href="{{ hero.get_catalog_url }}" class="btn-macro default">{{ hero.button_catalog_text }}</a>
+        <a href="{{ hero.button_buy_url|default:'#' }}" class="btn-macro danger">{{ hero.button_buy_text }}</a>
+        {% else %}
+        <button class="btn-macro default">В каталог</button>
+        <button class="btn-macro danger">Купить</button>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Presentation block -->
+<section id="features" class="features ">
+    <div class="features-carousel">
+        <div class="features-cursor"></div>
+        {% for slide in feature_slides %}
+        <div class="features-card">
+            <div class="features-card-container">
+                <div>
+                    <h2 class="display-2">{{ slide.title }}</h2>
+                </div>
+                <div class="features-card-content">
+                    {{ slide.text|linebreaksbr }}
+                </div>
+            </div>
+            <div class="absolute inset-0 z-0">
+                {% if slide.media_type == 'video' and slide.video %}
+                <video class="features-bg-img" muted loop playsinline preload="none"{% if slide.video_poster %} poster="{{ slide.video_poster.url }}"{% endif %}>
+                    <source src="{{ slide.video.url }}" type="video/mp4">
+                </video>
+                {% elif slide.image %}
+                <img class="features-bg-img" src="{{ slide.image.url }}" alt="{{ slide.title }}">
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Controls -->
+    <div class="absolute bottom-14 flex justify-center items-center w-full">
+        <div class="features-controls">
+            <div class="features-dots">
+                {% for slide in feature_slides %}
+                <button class="features-dot{% if forloop.first %} active{% endif %}" data-index="{{ forloop.counter0 }}"></button>
+                {% endfor %}
+            </div>
+            <button class="features-pause">
+                <svg class="pause-icon" width="14" height="16" viewBox="0 0 14 16" fill="none">
+                    <rect width="4" height="16" rx="1" fill="white"/>
+                    <rect x="10" width="4" height="16" rx="1" fill="white"/>
+                </svg>
+                <svg class="play-icon hidden" width="14" height="16" viewBox="0 0 14 16" fill="none">
+                    <path d="M14 8L0 16V0L14 8Z" fill="white"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Quizzes block -->
+{% get_promo "quiz" as quiz_promo %}
+<section id="quizzes" class="quizzes" data-parallax >
+    <div class="quizzes-container ">
+        <div class="quizzes-content ">
+            <div class="w-full">
+                <h2 class="text-white hyphens-auto
+                            text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
+                    {% if quiz_promo %}{{ quiz_promo.title|linebreaksbr }}{% else %}Не можешь <br>Определи&shy;ться?{% endif %}</h2>
+                <p class="font-medium text-white text-sm md:text-lg leading-tight mt-5">{% if quiz_promo %}{{ quiz_promo.text }}{% else %}Пройди короткий тест и узнай, какой DR.JOYS подходит именно тебе{% endif %}</p>
+            </div>
+            <div class="w-full mt-auto text-center md:text-left">
+                <button type="button" class="btn-macro white-opacity" id="openQuizModal">{% if quiz_promo %}{{ quiz_promo.button_text }}{% else %}{% trans "Пройти опрос" %}{% endif %}</button>
+            </div>
+        </div>
+
+        <div class="quizzes-girl">
+            {% if quiz_promo and quiz_promo.image %}
+            <img src="{{ quiz_promo.image.url }}" class="w-full" alt="">
+            {% else %}
+            <img src="{% static 'dist/images/quizzes/girl.png' %}" class="w-full" alt="">
+            {% endif %}
+        </div>
+        <div class="quizzes-heart"  data-depth="0.85">
+            <img src="{% static 'dist/images/quizzes/heart.png' %}" class="w-full object-cover" alt="">
+        </div>
+    </div>
+</section>
+
+<!-- Reviews block -->
+<section id="reviews" class="reviews" data-parallax >
+    <div class="w-full max-w-screen-lg mx-auto">
+        <div class="lg:pb-10">
+            <h2 class="display-1">
+                <span class="flex flex-wrap items-center justify-center md:gap-2">
+                    <span class="w-full md:w-auto -mb-3 md:mb-0 text-center">Более</span>
+                    <span class="w-[260px] md:w-[240px] lg:w-[440px] shrink-0 relative">
+                        <span class="relative md:absolute md:-bottom-6.5 lg:-bottom-12 w-full z-10" data-depth="0.5">
+                            <img src="{% static 'dist/images/reviews/label_counter.png' %}" alt="" class="object-contain w-full h-full object-top-left">
+                        </span>
+                        <span class="reviews-counter-shadow w-[80%] ml-[10%] h-1 absolute top-5 md:-top-2 lg:-top-2 z-0" data-depth="-0.5"></span>
+                    </span>
+                    <span class="w-full md:w-auto text-center">заказов</span>
+                </span>
+                <span class="flex justify-center flex-wrap md:gap-2">
+                    <span class="hyphens-auto w-full md:w-auto text-center">на маркет&shy;плейсах</span>
+                    <span class="hyphens-auto w-full md:w-auto text-center">со средней</span>
+                </span>
+                <span class="flex flex-wrap items-center justify-center md:gap-2">
+                    <span class="hyphens-auto text-center block w-full md:w-auto">оценкой</span>
+                    <span class="w-[160px] md:w-[130px] lg:w-[242px] shrink-0 relative lg:absolute">
+                        <span class="relative md:absolute md:-bottom-9 lg:-bottom-22 lg:-right-65 w-full z-10" data-depth="-0.65">
+                            <img src="{% static 'dist/images/reviews/label_ranked.svg' %}" alt="" class="object-contain w-full h-full object-top-left">
+                        </span>
+                        <span class="reviews-shadow-alt w-[70%] ml-[20%] h-4 absolute top-10 md:-top-1.5 lg:-right-57 lg:top-1 z-0" data-depth="0.5"></span>
+                    </span>
+                </span>
+            </h2>
+        </div>
+        {% get_review_stats as review_stats %}
+        <div class="flex justify-center pt-2 pb-8 lg:py-8">
+            <div class="md:w-lg m-auto text-center text-lg leading-tight font-medium px-5 md:px-0">
+                <p>Всего {{ review_stats.negative_percent }}% негативных отзывов. Мы за честный фидбек, поэтому не стесняемся, а наоборот — отвечаем с удовольствием :)</p>
+            </div>
+        </div>
+        <div class="flex justify-center py-2">
+            <ul class="flex gap-3 md:gap-4 flex-col md:flex-row">
+                <li>
+                    <button type="button" class="reviews-filter btn-macro black active font-sans inline-flex gap-2 text-base" data-filter="positive">
+                        <span>Понравилось</span> <span class="opacity-55">{{ review_stats.positive_count }}</span>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="reviews-filter btn-macro light font-sans inline-flex gap-2 text-base" data-filter="negative">
+                        <span>Не понравилось</span> <span class="opacity-55">{{ review_stats.negative_count }}</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Reviews carousel block -->
+{% get_featured_reviews as featured_reviews %}
+<section id="reviews-carousel" class="reviews-carousel">
+    <div class="reviews-carousel-wrapper">
+        <!-- Стрелка влево -->
+        <button class="reviews-arrow reviews-arrow--prev">
+            <svg  class="rotate-180" width="68" height="60" viewBox="0 0 68 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M38.3946 60L33.3061 54.9107L54.2546 33.683L-5.88933e-06 33.683L-4.6014e-06 26.317L54.2546 26.317L33.3061 5.15626L38.3946 6.71312e-06L68 30L38.3946 60Z" fill="currentColor"/>
+            </svg>
+        </button>
+        <!-- Стрелка вправо -->
+        <button class="reviews-arrow reviews-arrow--next">
+            <svg width="68" height="60" viewBox="0 0 68 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M38.3946 60L33.3061 54.9107L54.2546 33.683L-5.88933e-06 33.683L-4.6014e-06 26.317L54.2546 26.317L33.3061 5.15626L38.3946 6.71312e-06L68 30L38.3946 60Z" fill="currentColor"/>
+            </svg>
+        </button>
+
+        <div class="reviews-carousel-track">
+            {% for review in featured_reviews %}
+            {% include 'base/components/_review_card.html' with review=review %}
+            {% empty %}
+            <div class="reviews-carousel-slide">
+                <div class="comment-card">
+                    <div class="comment-card__review">
+                        <div class="comment-card__body">
+                            <div class="comment-card__text">
+                                Отзывы скоро появятся. Отметьте избранные в админке.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+
+    </div>
+    <div class="pt-5 pb-10 md:py-10">
+        <div class="text-center">
+            <a id="btnReadWB" href="https://www.wildberries.ru" target="_blank" rel="noopener" class="btn-wb inline-block">
+                <span>Читать на WB</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Go partners block -->
+{% get_promo "partners" as partners_promo %}
+<section id="go-partners" class="go-partners">
+    <div class="main-grid">
+        <div class="go-partners-container">
+            <div class="go-partners-content" data-parallax>
+                <span class="lg:w-[320px] w-[160px] aspect-square shrink-0 absolute flex justify-center items-center [ -top-[15%] lg:-top-[20%] md:-top-[15%] right-0 md:-right-[20%] ]">
+                    <span class="relative w-full z-10" data-depth="-0.65">
+                        <img src="{% static 'dist/images/go_partner/accessory.png' %}" alt="" class="object-contain w-full h-full object-top-left">
+                    </span>
+                    <span class="reviews-shadow-alt md:mt-[20%] lg:mt-[50%] w-[50%] mx-auto h-4 absolute top-10 z-0" data-depth="0.5"></span>
+                </span>
+                <div>
+                    <h2 class="display-1 md:hyphens-none">
+                        {% if partners_promo %}{{ partners_promo.title|linebreaksbr }}{% else %}Хотите <span class="block md:inline">зарабаты&shy;вать вместе</span> <span class="block md:inline">с DR.JOYS?</span>{% endif %}
+                    </h2>
+                </div>
+                <div>
+                    <p class="leading-tight text-sm lg:text-base">{% if partners_promo %}{{ partners_promo.text }}{% else %}Каждый день мы получаем много заявок на оптовую реализацию продукции из разных стран.{% endif %}</p>
+                </div>
+                <div class="py-2 hidden md:block">
+                    <ul class="flex flex-wrap gap-2">
+                        <li>
+                            <button type="button" class="btn-macro default">Подробнее</button>
+                        </li>
+                        <li>
+                            <button type="button" class="btn-macro danger open-partner-modal">{% if partners_promo %}{{ partners_promo.button_text }}{% else %}Оставить заявку{% endif %}</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="go-partners-side">
+            {% if partners_promo and partners_promo.image %}
+            <img src="{{ partners_promo.image.url }}" class="object-cover w-full h-full" alt="">
+            {% else %}
+            <img src="{% static 'dist/images/go_partner/partner.jpg' %}" class="object-cover w-full h-full" alt="">
+            {% endif %}
+            <div class="absolute inset-0 flex items-end md:hidden">
+                <ul class="flex flex-wrap gap-2 p-5">
+                    <li>
+                        <button type="button" class="btn-macro default">Подробнее</button>
+                    </li>
+                    <li>
+                        <button type="button" class="btn-macro danger open-partner-modal">{% if partners_promo %}{{ partners_promo.button_text }}{% else %}Оставить заявку{% endif %}</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Events block -->
+{% get_promo "tattoo" as tattoo_promo %}
+<section id="events" class="events ">
+    <div class="events-container">
+        <div class="flex flex-wrap gap-5 md:gap-10 shadow-[0_0_120px_30px_rgba(0,0,0,0.9)] bg-[#00000094] rounded-full">
+            <div class="w-full lg:pt-8 text-white text-center">
+                <h2 class="text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
+                    {% if tattoo_promo %}{{ tattoo_promo.title|linebreaksbr }}{% else %}<span class="block">Пожизненный</span><span class="block">запас DR.JOYS</span><span class="block">за татуировку</span>{% endif %}
+                </h2>
+                <p class="text-sm lg:text-xl leading-tight pt-5 lg:pt-10">{% if tattoo_promo %}{{ tattoo_promo.text }}{% else %}DR.JOYS для смелых. Наша миссия - ломать стереотипы и выйти за пределы стандартов и рамок, навязанных обществом.{% endif %}</p>
+            </div>
+            <div class="w-full text-center absolute lg:static bottom-16">
+                <button type="button" class="btn-macro danger hover:bg-white hover:text-red-500" data-open-modal="tattoo">{% if tattoo_promo %}{{ tattoo_promo.button_text }}{% else %}Прочитать условие{% endif %}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Images Gallery -->
+    <div class="events-gallery" id="events-gallery">
+        {% if tattoo_gallery %}
+        <div class="events-gallery_row">
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.0.image.url }}" alt=""></div>
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.1.image.url }}" alt=""></div>
+        </div>
+        <div class="events-gallery_row">
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.2.image.url }}" alt=""></div>
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.3.image.url }}" alt=""></div>
+        </div>
+        <div class="events-gallery_row">
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.4.image.url }}" alt=""></div>
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.5.image.url }}" alt=""></div>
+        </div>
+        <div class="events-gallery_row">
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.6.image.url }}" alt=""></div>
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{{ tattoo_gallery.7.image.url }}" alt=""></div>
+        </div>
+        {% else %}
+        <div class="events-gallery_row">
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{% static 'dist/images/placeholder.svg' %}" alt="Нет фото"></div>
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{% static 'dist/images/placeholder.svg' %}" alt="Нет фото"></div>
+        </div>
+        <div class="events-gallery_row">
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{% static 'dist/images/placeholder.svg' %}" alt="Нет фото"></div>
+            <div class="events-gallery_item"><img class="events-gallery-img" src="{% static 'dist/images/placeholder.svg' %}" alt="Нет фото"></div>
+        </div>
+        {% endif %}
+    </div>
+    <!-- END Images Gallery -->
+</section>
+
+<!-- Blog block -->
+<section id="blog-widgets" class="blog-widgets">
+    <div class="blog-widgets-container">
+        <div class="main-grid">
+            <div class="col-span-full lg:col-start-2">
+                <div class="md:pt-12 md:pb-10 pb-8">
+                    <h2 class="text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
+                        тут интересно, <br>почитай
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="blog-carousel">
+            <div class="blog-carousel-track">
+                <div class="blog-carousel-slide">
+                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                        <a href="" class="blog-card-link">
+                            <figure class="blog-card-figure">
+                                <img
+                                        class="blog-card-img"
+                                        src="{% static 'dist/images/blog/1.jpg' %}"
+                                        alt="Описание изображения статьи"
+                                        loading="lazy"
+                                        itemprop="image"
+                                >
+                            </figure>
+                            <div class="blog-card-content">
+                                <div class="blog-card-info">
+                                    <div class="blog-card-title">
+                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
+                                    </div>
+                                    <div class="blog-card-meta">
+                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+                <div class="blog-carousel-slide">
+                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                        <a href="" class="blog-card-link">
+                            <figure class="blog-card-figure">
+                                <img
+                                        class="blog-card-img"
+                                        src="{% static 'dist/images/blog/1.jpg' %}"
+                                        alt="Описание изображения статьи"
+                                        loading="lazy"
+                                        itemprop="image"
+                                >
+                            </figure>
+                            <div class="blog-card-content">
+                                <div class="blog-card-info">
+                                    <div class="blog-card-title">
+                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
+                                    </div>
+                                    <div class="blog-card-meta">
+                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+
+                <div class="blog-carousel-slide">
+                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                        <a href="" class="blog-card-link">
+                            <figure class="blog-card-figure">
+                                <img
+                                        class="blog-card-img"
+                                        src="{% static 'dist/images/blog/1.jpg' %}"
+                                        alt="Описание изображения статьи"
+                                        loading="lazy"
+                                        itemprop="image"
+                                >
+                            </figure>
+                            <div class="blog-card-content">
+                                <div class="blog-card-info">
+                                    <div class="blog-card-title">
+                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
+                                    </div>
+                                    <div class="blog-card-meta">
+                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+
+                <div class="blog-carousel-slide">
+                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                        <a href="" class="blog-card-link">
+                            <figure class="blog-card-figure">
+                                <img
+                                        class="blog-card-img"
+                                        src="{% static 'dist/images/blog/1.jpg' %}"
+                                        alt="Описание изображения статьи"
+                                        loading="lazy"
+                                        itemprop="image"
+                                >
+                            </figure>
+                            <div class="blog-card-content">
+                                <div class="blog-card-info">
+                                    <div class="blog-card-title">
+                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
+                                    </div>
+                                    <div class="blog-card-meta">
+                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+
+                <div class="blog-carousel-slide">
+                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                        <a href="" class="blog-card-link">
+                            <figure class="blog-card-figure">
+                                <img
+                                        class="blog-card-img"
+                                        src="{% static 'dist/images/blog/1.jpg' %}"
+                                        alt="Описание изображения статьи"
+                                        loading="lazy"
+                                        itemprop="image"
+                                >
+                            </figure>
+                            <div class="blog-card-content">
+                                <div class="blog-card-info">
+                                    <div class="blog-card-title">
+                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
+                                    </div>
+                                    <div class="blog-card-meta">
+                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% include 'base/components/_modal_quiz.html' %}
+{% load modal_tags %}
+{% get_interactive_modal 'tattoo' as tattoo_modal %}
+{% include 'base/components/_interactive_modal.html' with modal=tattoo_modal %}
+{% get_interactive_modal 'partner' as partner_modal %}
+{% include 'base/components/_interactive_modal.html' with modal=partner_modal %}
+</main>
+
+{% block scripts %}
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script>
+    // --------------------------------------------
+    // PARALLAX ЭФФЕКТ
+    // --------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        const containers = document.querySelectorAll('[data-parallax]');
+        const isMobile = window.innerWidth < 1024;
+
+        containers.forEach(container => {
+            const layers = container.querySelectorAll('[data-depth]');
+
+            // Desktop: mousemove
+            if (!isMobile) {
+                container.addEventListener('mousemove', (e) => {
+                    const rect = container.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    const x = (e.clientX - centerX) / (rect.width / 2);
+                    const y = (e.clientY - centerY) / (rect.height / 2);
+
+                    layers.forEach(layer => {
+                        const depth = parseFloat(layer.dataset.depth);
+                        const moveX = x * 15 * depth;
+                        const moveY = y * 15 * depth;
+
+                        gsap.to(layer, {
+                            x: moveX,
+                            y: moveY,
+                            duration: 0.3,
+                            ease: 'power2.out'
+                        });
+                    });
+                });
+
+                container.addEventListener('mouseleave', () => {
+                    layers.forEach(layer => {
+                        gsap.to(layer, {
+                            x: 0,
+                            y: 0,
+                            duration: 0.5,
+                            ease: 'power2.out'
+                        });
+                    });
+                });
+            }
+        });
+
+        // Mobile: scroll parallax
+        if (isMobile) {
+            const allLayers = document.querySelectorAll('[data-parallax] [data-depth]');
+
+            const updateScrollParallax = () => {
+                allLayers.forEach(layer => {
+                    const rect = layer.closest('[data-parallax]').getBoundingClientRect();
+                    const depth = parseFloat(layer.dataset.depth);
+
+                    // Позиция контейнера относительно центра экрана
+                    const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+
+                    const moveY = centerOffset * 30 * depth;
+
+                    gsap.to(layer, {
+                        y: moveY,
+                        duration: 0.1,
+                        ease: 'none'
+                    });
+                });
+            };
+
+            window.addEventListener('scroll', updateScrollParallax, { passive: true });
+            updateScrollParallax(); // Инициализация
+        }
+    });
+</script>
+
+<script>
+    // --------------------------------------------
+    // HERO CARD CAROUSEL SLIDER
+    // --------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.querySelector('.hero-carousel-container');
+        const cards = document.querySelectorAll('.hero-carousel-card');
+
+        if (window.innerWidth >= 1024) return; // Только mobile
+
+        const updateActiveCard = () => {
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+
+            let closestCard = null;
+            let closestDistance = Infinity;
+
+            cards.forEach(card => {
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const distance = Math.abs(containerCenter - cardCenter);
+
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestCard = card;
+                }
+            });
+
+            cards.forEach(card => card.classList.remove('active'));
+            if (closestCard) closestCard.classList.add('active');
+        };
+
+        // Прокрутка ко второй карточке при загрузке
+        const scrollToCenter = () => {
+            const centerCard = cards[1]; // Вторая карточка
+            if (centerCard) {
+                const wrapper = centerCard.closest('.hero-carousel-container > div');
+                const scrollLeft = wrapper.offsetLeft - (container.offsetWidth - wrapper.offsetWidth) / 2;
+                container.scrollLeft = scrollLeft;
+            }
+        };
+
+        scrollToCenter();
+        container.addEventListener('scroll', updateActiveCard);
+        updateActiveCard();
+    });
+</script>
+
+<script>
+    // --------------------------------------------
+    // FEATURES CAROUSEL
+    // --------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        const section = document.querySelector('#features');
+        const carousel = document.querySelector('.features-carousel');
+        const cursor = document.querySelector('.features-cursor');
+        const dots = document.querySelectorAll('.features-dot');
+        const pauseBtn = document.querySelector('.features-pause');
+        const pauseIcon = pauseBtn?.querySelector('.pause-icon');
+        const playIcon = pauseBtn?.querySelector('.play-icon');
+
+        if (!carousel || !section) return;
+
+        const cards = carousel.querySelectorAll('.features-card');
+        let currentIndex = 0;
+        let isPlaying = true;
+        let isVisible = false;
+        let autoplayInterval;
+        let isDragging = false;
+
+        // Scroll to card
+        const scrollToCard = (index) => {
+            const card = cards[index];
+            if (!card) return;
+
+            const isMobile = window.innerWidth < 1024;
+            const scrollLeft = isMobile
+                ? card.offsetLeft - 20
+                : card.offsetLeft - (carousel.offsetWidth - card.offsetWidth) / 2;
+
+            carousel.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+        };
+
+        // Update dots
+        const updateDots = (index) => {
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+            // Play/pause videos
+            cards.forEach((card, i) => {
+                const video = card.querySelector('video');
+                if (!video) return;
+                if (i === index) {
+                    video.play().catch(() => {});
+                } else {
+                    video.pause();
+                    video.currentTime = 0;
+                }
+            });
+            currentIndex = index;
+        };
+
+        // Autoplay
+        const startAutoplay = () => {
+            if (autoplayInterval) clearInterval(autoplayInterval);
+            if (!isPlaying || !isVisible) return;
+
+            autoplayInterval = setInterval(() => {
+                if (!isDragging && isPlaying && isVisible) {
+                    const nextIndex = (currentIndex + 1) % cards.length;
+                    scrollToCard(nextIndex);
+                    updateDots(nextIndex);
+                }
+            }, 4000);
+        };
+
+        const stopAutoplay = () => {
+            clearInterval(autoplayInterval);
+        };
+
+        // Intersection Observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                isVisible = entry.isIntersecting;
+
+                if (isVisible && isPlaying) {
+                    startAutoplay();
+                } else {
+                    stopAutoplay();
+                }
+            });
+        }, {
+            threshold: 0.3 // 30% видимости
+        });
+
+        observer.observe(section);
+
+        // Detect current card on scroll
+        const onScroll = () => {
+            const scrollLeft = carousel.scrollLeft;
+            let closestIndex = 0;
+            let closestDistance = Infinity;
+
+            cards.forEach((card, i) => {
+                const distance = Math.abs(card.offsetLeft - scrollLeft - 20);
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = i;
+                }
+            });
+
+            if (closestIndex !== currentIndex) {
+                updateDots(closestIndex);
+            }
+        };
+
+        carousel.addEventListener('scroll', onScroll);
+
+        // Dot click
+        dots.forEach((dot, i) => {
+            dot.addEventListener('click', () => {
+                scrollToCard(i);
+                updateDots(i);
+                if (isPlaying && isVisible) startAutoplay();
+            });
+        });
+
+        // Pause/Play
+        pauseBtn?.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            pauseIcon.classList.toggle('hidden', !isPlaying);
+            playIcon.classList.toggle('hidden', isPlaying);
+
+            if (isPlaying && isVisible) {
+                startAutoplay();
+            } else {
+                stopAutoplay();
+            }
+        });
+
+        // Desktop cursor + drag
+        if (cursor && window.innerWidth >= 1024) {
+            let startX;
+            let scrollLeft;
+
+            carousel.addEventListener('mouseenter', () => {
+                cursor.classList.add('visible');
+            });
+
+            carousel.addEventListener('mouseleave', () => {
+                cursor.classList.remove('visible', 'dragging');
+                isDragging = false;
+            });
+
+            carousel.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX - carousel.offsetLeft;
+                const walk = (x - startX) * 1.5;
+                carousel.scrollLeft = scrollLeft - walk;
+            });
+
+            carousel.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.pageX - carousel.offsetLeft;
+                scrollLeft = carousel.scrollLeft;
+                cursor.classList.add('dragging');
+            });
+
+            carousel.addEventListener('mouseup', () => {
+                isDragging = false;
+                cursor.classList.remove('dragging');
+            });
+        }
+    });
+</script>
+
+<script>
+    // --------------------------------------------
+    // REVIEWS CAROUSEL (Infinite + Filter)
+    // --------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        const track = document.querySelector('.reviews-carousel-track');
+        const prevBtn = document.querySelector('.reviews-arrow--prev');
+        const nextBtn = document.querySelector('.reviews-arrow--next');
+        const cursor = document.querySelector('.features-cursor');
+        const filterBtns = document.querySelectorAll('.reviews-filter');
+
+        if (!track) return;
+
+        let originalSlides = Array.from(track.querySelectorAll('.reviews-carousel-slide'));
+        if (originalSlides.length === 0) return;
+
+        let currentFilter = 'all';
+        // Сколько полных копий добавить с каждой стороны
+        const CLONE_SETS = 3;
+
+        // Определить тип отзыва по классу rating-X
+        const getSlideType = (slide) => {
+            const ratingEl = slide.querySelector('[class*="rating-"]');
+            if (!ratingEl) return null;
+            const match = ratingEl.className.match(/rating-(\d)/);
+            if (match) {
+                return parseInt(match[1]) >= 4 ? 'positive' : 'negative';
+            }
+            return null;
+        };
+
+        // Удалить все клоны
+        const removeClones = () => {
+            track.querySelectorAll('.is-clone').forEach(c => c.remove());
+        };
+
+        // Получить видимые оригинальные слайды
+        const getVisibleOriginals = () =>
+            Array.from(track.querySelectorAll('.reviews-carousel-slide:not(.hidden):not(.is-clone)'));
+
+        // Создать клоны — CLONE_SETS полных копий с каждой стороны
+        const createClones = () => {
+            const visible = getVisibleOriginals();
+            if (visible.length < 2) return;
+
+            for (let i = 0; i < CLONE_SETS; i++) {
+                // Копии в конец
+                visible.forEach(slide => {
+                    const clone = slide.cloneNode(true);
+                    clone.classList.add('is-clone');
+                    track.appendChild(clone);
+                });
+                // Копии в начало (в обратном порядке чтобы сохранить порядок)
+                [...visible].reverse().forEach(slide => {
+                    const clone = slide.cloneNode(true);
+                    clone.classList.add('is-clone');
+                    track.insertBefore(clone, track.firstChild);
+                });
+            }
+        };
+
+        // Ширина слайда + gap
+        const getSlideWidth = () => {
+            const slide = track.querySelector('.reviews-carousel-slide:not(.hidden)');
+            if (!slide) return 0;
+            const gap = parseInt(window.getComputedStyle(track).gap) || 16;
+            return slide.offsetWidth + gap;
+        };
+
+        // Найти самый длинный среди видимых оригиналов
+        const findLongestIndex = () => {
+            const visible = getVisibleOriginals();
+            if (visible.length === 0) return 0;
+            let maxLen = 0, idx = 0;
+            visible.forEach((slide, i) => {
+                const len = (slide.textContent || '').trim().length;
+                if (len > maxLen) { maxLen = len; idx = i; }
+            });
+            return idx;
+        };
+
+        // Поставить скролл так, чтобы самый длинный оригинал был по центру
+        const setInitialPosition = () => {
+            const visible = getVisibleOriginals();
+            if (visible.length === 0) return;
+
+            const longestIdx = findLongestIndex();
+            const slideWidth = getSlideWidth();
+            // Оригиналы начинаются после CLONE_SETS * visible.length клонов
+            const offsetSlides = CLONE_SETS * visible.length + longestIdx;
+
+            track.style.scrollBehavior = 'auto';
+            track.scrollLeft = offsetSlides * slideWidth;
+            track.style.scrollBehavior = '';
+        };
+
+        // Бесконечный скролл — перепрыгнуть когда подходим к краю клонов
+        let isJumping = false;
+
+        const checkInfiniteScroll = () => {
+            if (isJumping) return;
+
+            const visible = getVisibleOriginals();
+            if (visible.length < 2) return;
+
+            const slideWidth = getSlideWidth();
+            const setWidth = visible.length * slideWidth;
+            const scrollLeft = track.scrollLeft;
+
+            // Зона оригиналов: от CLONE_SETS * setWidth до (CLONE_SETS + 1) * setWidth
+            const originStart = CLONE_SETS * setWidth;
+            const originEnd = (CLONE_SETS + 1) * setWidth;
+
+            // Если ушли на 1 сет левее оригиналов — прыгнуть вправо на setWidth
+            if (scrollLeft < originStart - setWidth) {
+                isJumping = true;
+                track.style.scrollBehavior = 'auto';
+                track.scrollLeft = scrollLeft + setWidth;
+                track.style.scrollBehavior = '';
+                requestAnimationFrame(() => isJumping = false);
+            }
+            // Если ушли на 1 сет правее оригиналов — прыгнуть влево на setWidth
+            else if (scrollLeft > originEnd + setWidth) {
+                isJumping = true;
+                track.style.scrollBehavior = 'auto';
+                track.scrollLeft = scrollLeft - setWidth;
+                track.style.scrollBehavior = '';
+                requestAnimationFrame(() => isJumping = false);
+            }
+        };
+
+        track.addEventListener('scroll', checkInfiniteScroll);
+
+        // Фильтрация
+        const applyFilter = (filter) => {
+            currentFilter = filter;
+            removeClones();
+
+            originalSlides.forEach(slide => {
+                const type = getSlideType(slide);
+                if (filter === 'all' || type === filter) {
+                    slide.classList.remove('hidden');
+                } else {
+                    slide.classList.add('hidden');
+                }
+            });
+
+            createClones();
+            setTimeout(setInitialPosition, 50);
+        };
+
+        // Обновить стили кнопок
+        const updateButtonStyles = (activeFilter) => {
+            filterBtns.forEach(btn => {
+                const filter = btn.dataset.filter;
+                if (filter === activeFilter && activeFilter !== 'all') {
+                    btn.classList.add('active', 'black');
+                    btn.classList.remove('light');
+                } else {
+                    btn.classList.remove('active', 'black');
+                    btn.classList.add('light');
+                }
+            });
+        };
+
+        // Кнопки фильтров
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                if (currentFilter === filter) {
+                    applyFilter('all');
+                    updateButtonStyles('all');
+                } else {
+                    applyFilter(filter);
+                    updateButtonStyles(filter);
+                }
+            });
+        });
+
+        // Инициализация: по умолчанию показываем «Понравилось»
+        applyFilter('positive');
+        updateButtonStyles('positive');
+
+        // Прокрутка на 1 слайд
+        const scrollToDirection = (direction) => {
+            const slideWidth = getSlideWidth();
+            const delta = direction === 'next' ? slideWidth : -slideWidth;
+            track.scrollBy({ left: delta, behavior: 'smooth' });
+        };
+
+        // Стрелки
+        if (prevBtn) prevBtn.addEventListener('click', () => scrollToDirection('prev'));
+        if (nextBtn) nextBtn.addEventListener('click', () => scrollToDirection('next'));
+
+        // Desktop: drag + cursor
+        if (window.innerWidth >= 1024 && cursor) {
+            let isDragging = false;
+            let startX;
+            let scrollLeft;
+
+            track.style.cursor = 'none';
+
+            track.addEventListener('mouseenter', () => {
+                cursor.classList.add('visible');
+            });
+
+            track.addEventListener('mouseleave', () => {
+                cursor.classList.remove('visible', 'dragging');
+                isDragging = false;
+            });
+
+            track.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX;
+                const walk = (x - startX) * 1.5;
+                track.scrollLeft = scrollLeft - walk;
+            });
+
+            track.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.pageX;
+                scrollLeft = track.scrollLeft;
+                cursor.classList.add('dragging');
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    cursor.classList.remove('dragging');
+                }
+            });
+        }
+
+        // Клавиатурная навигация
+        document.addEventListener('keydown', (e) => {
+            const rect = track.getBoundingClientRect();
+            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+            if (!isVisible) return;
+            if (e.key === 'ArrowLeft') scrollToDirection('prev');
+            if (e.key === 'ArrowRight') scrollToDirection('next');
+        });
+
+        // Обновить ссылку «Читать на WB» по текущему слайду в центре
+        const wbBtn = document.getElementById('btnReadWB');
+        const updateWBLink = () => {
+            if (!wbBtn) return;
+            const trackRect = track.getBoundingClientRect();
+            const centerX = trackRect.left + trackRect.width / 2;
+            const slides = track.querySelectorAll('.reviews-carousel-slide:not(.hidden)');
+            let closest = null;
+            let minDist = Infinity;
+
+            slides.forEach(slide => {
+                const rect = slide.getBoundingClientRect();
+                const slideCenterX = rect.left + rect.width / 2;
+                const dist = Math.abs(slideCenterX - centerX);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = slide;
+                }
+            });
+
+            if (closest) {
+                const nmId = closest.dataset.nmId;
+                if (nmId) {
+                    wbBtn.href = `https://www.wildberries.ru/catalog/${nmId}/feedbacks`;
+                }
+            }
+        };
+
+        track.addEventListener('scroll', updateWBLink);
+        updateWBLink();
+
+        // Resize
+        window.addEventListener('resize', () => {
+            removeClones();
+            createClones();
+            setInitialPosition();
+        });
+    });
+</script>
+
+<script>
+    // --------------------------------------------
+    // EVENTS GALLERY (Infinite Scroll)
+    // --------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        const gallery = document.querySelector('.events-gallery');
+        if (!gallery) return;
+
+        const isDesktop = window.innerWidth >= 1024;
+        const rows = gallery.querySelectorAll('.events-gallery_row');
+
+        // Вычисляем размер всех row'ов
+        let totalSize = 0;
+        rows.forEach(row => {
+            totalSize += isDesktop ? row.offsetHeight : row.offsetWidth;
+        });
+
+        // Добавляем gaps
+        const style = window.getComputedStyle(gallery);
+        const gap = parseInt(isDesktop ? style.rowGap : style.columnGap) || 0;
+        totalSize += gap * rows.length;
+
+        // Дублируем контент
+        const content = gallery.innerHTML;
+        gallery.innerHTML = content + content;
+
+        gallery.style.setProperty('--scroll-size', `-${totalSize}px`);
+    });
+</script>
+
+<script>
+    // --------------------------------------------
+    // BLOG CAROUSEL
+    // --------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        const track = document.querySelector('.blog-carousel-track');
+        const cursor = document.querySelector('.features-cursor');
+
+        if (!track) return;
+
+        // Отключаем drag для всех элементов внутри
+        track.addEventListener('dragstart', (e) => {
+            e.preventDefault();
+        });
+
+        // Desktop: drag + cursor
+        if (window.innerWidth >= 1024 && cursor) {
+            let isDragging = false;
+            let hasMoved = false;
+            let startX;
+            let scrollLeft;
+            const dragThreshold = 5; // Порог в пикселях
+
+            track.addEventListener('mouseenter', () => {
+                cursor.classList.add('visible');
+            });
+
+            track.addEventListener('mouseleave', () => {
+                cursor.classList.remove('visible', 'dragging');
+                isDragging = false;
+            });
+
+            track.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+
+                if (!isDragging) return;
+
+                const x = e.pageX;
+                const distance = Math.abs(x - startX);
+
+                // Если сдвинули больше порога — это drag
+                if (distance > dragThreshold) {
+                    hasMoved = true;
+                    e.preventDefault();
+                }
+
+                const walk = (x - startX) * 1.5;
+                track.scrollLeft = scrollLeft - walk;
+            });
+
+            track.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                hasMoved = false;
+                startX = e.pageX;
+                scrollLeft = track.scrollLeft;
+                cursor.classList.add('dragging');
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    cursor.classList.remove('dragging');
+                }
+            });
+
+            // Блокируем клик если был drag
+            track.addEventListener('click', (e) => {
+                if (hasMoved) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        }
+    });
+</script>
+
+<script>
+    // --------------------------------------------
+    // HOME MODALS (quiz, tattoo, partner)
+    // Uses global openModal/closeModal/goToStep from main.js
+    // Escape key and phone mask are handled globally in main.js
+    // --------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Quiz modal ---
+        const quizOverlay = document.getElementById('modalQuiz');
+        const quizContent = document.getElementById('quizContent');
+        const openQuizBtn = document.getElementById('openQuizModal');
+        let quizAnswers = {};
+
+        if (quizOverlay && openQuizBtn) {
+            openQuizBtn.addEventListener('click', () => openModal(quizOverlay));
+
+            function resetQuizTheme() {
+                quizContent.style.backgroundImage = '';
+                quizContent.style.backgroundSize = '';
+                quizContent.style.backgroundPosition = '';
+                quizContent.classList.remove('modal-result-dark');
+            }
+
+            function closeQuiz() {
+                closeModal(quizOverlay);
+                quizAnswers = {};
+                resetQuizTheme();
+            }
+
+            function goToQuizStep(stepNum) {
+                quizOverlay.querySelectorAll('.modal-step').forEach(step => {
+                    step.classList.toggle('hidden', step.dataset.step !== String(stepNum));
+                });
+            }
+
+            let quizProducts = [];
+            let quizProductIndex = 0;
+            const nextVariantBtn = document.getElementById('quizNextVariant');
+
+            function renderQuizProduct(product) {
+                const img = document.getElementById('quizResultImg');
+                const name = document.getElementById('quizResultName');
+                const btn = document.getElementById('quizResultBtn');
+
+                img.src = product.image_url || (window.DRJOYS?.placeholderUrl || '');
+                img.alt = product.name;
+                name.textContent = product.name;
+                btn.href = product.url;
+
+                // Фон и тема результата (из API)
+                resetQuizTheme();
+                if (product.bg_url) {
+                    quizContent.style.backgroundImage = `url(${product.bg_url})`;
+                    quizContent.style.backgroundSize = 'cover';
+                    quizContent.style.backgroundPosition = 'center';
+                    if (product.bg_dark) {
+                        quizContent.classList.add('modal-result-dark');
+                    }
+                }
+            }
+
+            async function submitQuiz() {
+                try {
+                    const resp = await fetch('{% url "quiz:quiz_result" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': window.DRJOYS.csrfToken,
+                        },
+                        body: JSON.stringify(quizAnswers),
+                    });
+                    const data = await resp.json();
+                    if (data.ok && data.products && data.products.length) {
+                        quizProducts = data.products;
+                        quizProductIndex = 0;
+
+                        renderQuizProduct(quizProducts[0]);
+                        goToQuizStep('result');
+
+                        // Показать «Ещё вариант» если больше одного результата
+                        if (nextVariantBtn) {
+                            nextVariantBtn.classList.toggle('hidden', quizProducts.length <= 1);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Quiz error:', e);
+                }
+            }
+
+            if (nextVariantBtn) {
+                nextVariantBtn.addEventListener('click', () => {
+                    if (quizProducts.length <= 1) return;
+                    quizProductIndex = (quizProductIndex + 1) % quizProducts.length;
+                    renderQuizProduct(quizProducts[quizProductIndex]);
+                });
+            }
+
+            quizOverlay.querySelectorAll('.modal-close-quiz').forEach(btn => {
+                btn.addEventListener('click', () => closeQuiz());
+            });
+
+            quizOverlay.querySelectorAll('.quiz-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const step = btn.closest('.modal-step');
+                    quizAnswers[step.dataset.key || step.dataset.step] = btn.dataset.value;
+
+                    if (btn.hasAttribute('data-last')) {
+                        submitQuiz();
+                    } else if (btn.dataset.nextStep) {
+                        goToQuizStep(btn.dataset.nextStep);
+                    }
+                });
+            });
+
+            quizOverlay.querySelectorAll('[data-prev-step]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    resetQuizTheme();
+                    goToQuizStep(btn.dataset.prevStep);
+                });
+            });
+
+            quizOverlay.addEventListener('click', (e) => {
+                if (e.target === quizOverlay) closeQuiz();
+            });
+        }
+
+        // --- Interactive modals (tattoo, etc.) ---
+        document.querySelectorAll('[data-modal-slug]').forEach(overlay => {
+            const slug = overlay.dataset.modalSlug;
+
+            // Open button: data-open-modal="slug"
+            document.querySelectorAll(`[data-open-modal="${slug}"]`).forEach(btn => {
+                btn.addEventListener('click', () => openModal(overlay));
+            });
+
+            // Close
+            overlay.querySelectorAll('.modal-close-interactive').forEach(btn => {
+                btn.addEventListener('click', () => closeModal(overlay));
+            });
+
+            // Steps
+            overlay.querySelectorAll('[data-next-step]').forEach(btn => {
+                btn.addEventListener('click', () => goToStep(overlay, btn.dataset.nextStep));
+            });
+            overlay.querySelectorAll('[data-prev-step]').forEach(btn => {
+                btn.addEventListener('click', () => goToStep(overlay, btn.dataset.prevStep));
+            });
+
+            // Click outside
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeModal(overlay);
+            });
+        });
+
+        // --- Interactive modal forms (inquiries API) ---
+        document.querySelectorAll('.interactive-modal-form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formSlug = form.dataset.formSlug;
+                const modalSlug = form.dataset.modalSlug;
+
+                // Collect data
+                const formData = {};
+                new FormData(form).forEach((val, key) => { formData[key] = val; });
+
+                // Clear errors
+                form.querySelectorAll('.modal-error').forEach(el => el.classList.add('hidden'));
+
+                try {
+                    const resp = await fetch(`/api/inquiries/${formSlug}/submit/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': window.DRJOYS?.csrfToken || '',
+                        },
+                        body: JSON.stringify({ data: formData }),
+                    });
+                    const result = await resp.json();
+
+                    if (result.ok) {
+                        // Close modal and show success
+                        const overlay = document.getElementById(`modal-${modalSlug}`);
+                        if (overlay) closeModal(overlay);
+                        form.reset();
+
+                        const successOverlay = document.getElementById('modalSuccess');
+                        if (successOverlay) {
+                            const titleEl = document.getElementById('successTitle');
+                            const textEl = document.getElementById('successText');
+                            if (titleEl) titleEl.textContent = result.success_title || '';
+                            if (textEl) textEl.textContent = result.success_text || '';
+                            openModal(successOverlay);
+                        }
+                    } else if (result.errors) {
+                        // Show field errors
+                        const fieldErrors = result.errors.data || result.errors;
+                        for (const [key, msg] of Object.entries(fieldErrors)) {
+                            const errorEl = form.querySelector(`[data-error-for="${key}"]`);
+                            if (errorEl) {
+                                errorEl.textContent = typeof msg === 'string' ? msg : msg[0];
+                                errorEl.classList.remove('hidden');
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Form submit error:', err);
+                }
+            });
+        });
+
+        // --- Partner modal (dynamic InteractiveModal) ---
+        const partnerOverlay = document.getElementById('modal-partner');
+        const openPartnerBtns = document.querySelectorAll('.open-partner-modal');
+
+        if (partnerOverlay) {
+            openPartnerBtns.forEach(btn => {
+                btn.addEventListener('click', () => openModal(partnerOverlay));
+            });
+
+            partnerOverlay.addEventListener('click', (e) => {
+                if (e.target === partnerOverlay) closeModal(partnerOverlay);
+            });
+        }
+    });
+</script>
+
+{% endblock %}
+
+{% endblock %}

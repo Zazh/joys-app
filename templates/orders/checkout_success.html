@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказ оформлен — DR.JOYS{% endblock %}
+
+{% block content %}
+<main>
+    <div class="flex flex-col items-center justify-center text-center px-6 pt-28 pb-16 min-h-[100dvh]">
+        <div class="w-20 h-20 rounded-full bg-green-600 flex items-center justify-center mb-6">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
+        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">Заказ<br>оформлен!</h1>
+        <p class="text-sm text-gray-500 max-w-xs mb-1">
+            Заказ #{{ order.number }} на сумму {{ order.total_amount|floatformat:0 }}&nbsp;{{ currency_symbol }} успешно создан.
+        </p>
+        <p class="text-sm text-gray-500 max-w-xs mb-8">
+            Мы свяжемся с вами для уточнения доставки.
+        </p>
+        <a href="/" class="btn-macro black text-center text-xs px-8">ВЕРНУТЬСЯ К ПОКУПКАМ</a>
+    </div>
+</main>
+{% endblock %}

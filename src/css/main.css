@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* Base */
+@import "./base/_fonts.css";
+@import "./base/_typography.css";
+@import "./base/_nav.css";
+@import "./base/_footer.css";
+
+/* Components */
+@import "./components/_buttons.css";
+@import "./components/_cards.css";
+@import "./components/_forms.css";
+@import "./components/_faq.css";
+
+@import "./components/_breadcrumb.css";
+@import "./components/_product-zoom.css";
+@import "./components/_recommendation_products_carousel.css";
+@import "./components/_product_slider.css";
+@import "./components/_features_carousel.css";
+@import "./components/_hero-carousel.css";
+@import "./components/_quizzes.css";
+@import "./components/_review.css";
+@import "./components/_go-partners.css";
+@import "./components/_promo-events.css";
+@import "./components/_blog-widgets.css";
+@import "./components/_blog.css";
+@import "./components/_modals.css";
+@import "./components/_floating-nav.css";
+@import "./components/_cart.css";
+
+/* Utilities */
+@import "./utilities/custom.css";
+
+@layer base {
+    :root {
+        --default-font-family: "SF Pro Display", sans-serif;
+    }
+}
+
+@theme {
+    --color-stone-50:   #F2F3F3;
+    --color-gray-200:   #EBEBEB;
+    --color-gray-500:   #7D7D7D;
+    --color-gray-600:   #4D4D4D;
+    --color-gray-700:   #868686;
+    --color-gray-800:   #2B2B2B;
+    --color-green-600:  #1B3C39;
+    --color-red-400:    #FD4642;
+    --color-red-500:    #E42521;
+
+    --font-sans:        'SF Pro Display', sans-serif;
+    --font-benzin:      'Benzin', sans-serif;
+}
+
+@layer base {
+    body {
+        @apply min-h-screen flex flex-col;
+    }
+    body > header {
+        @apply shrink-0;
+    }
+    body > main {
+        @apply flex-1;
+    }
+    body > footer {
+        @apply mt-auto;
+    }
+}
+
+@layer components {
+    .main-grid {
+        @apply grid grid-cols-6 lg:grid-cols-15 gap-4 mx-3 lg:mx-5;
+    }
+
+}

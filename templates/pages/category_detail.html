@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} — DR.JOYS{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
+            <div class="blog-container pt-46">
+                <!-- BEGIN category header -->
+                <div>
+                    <h1 class="display-2 uppercase font-benzin">{{ category.name }}</h1>
+                    {% if category.description %}
+                    <p class="mt-4 text-stone-500">{{ category.description }}</p>
+                    {% endif %}
+                </div>
+                <!-- END category header -->
+
+                <!-- BEGIN pages list -->
+                <div class="mt-10 space-y-4">
+                    {% for page in pages %}
+                    <a href="{{ page.get_absolute_url }}"
+                       class="block p-6 bg-stone-50 rounded-2xl hover:bg-stone-100 transition-colors">
+                        <h2 class="text-lg font-bold">{{ page.title }}</h2>
+                        {% if page.meta_description %}
+                        <p class="mt-1 text-sm text-stone-500">{{ page.meta_description }}</p>
+                        {% endif %}
+                    </a>
+                    {% empty %}
+                    <p class="text-stone-400">Страницы пока не добавлены.</p>
+                    {% endfor %}
+                </div>
+                <!-- END pages list -->
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

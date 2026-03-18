@@ -1,0 +1,46 @@
+{% load i18n %}
+<!-- BEGIN modal cart -->
+<div class="modal-overlay hidden" id="modalCart">
+    <div class="modal-content modal-wide">
+        <!-- Header -->
+        <div class="modal-header">
+            <div></div>
+            <button class="modal-close" type="button" aria-label="{% trans 'Закрыть' %}" onclick="closeModal(document.getElementById('modalCart'))">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Title -->
+        <h2 class="modal-title">{% trans "Корзина" %}</h2>
+
+        <!-- Cart items (JS-driven) -->
+        <div class="flex flex-col divide-y divide-stone-50" id="cartItemsList"></div>
+
+        <!-- Empty state (hidden by default) -->
+        <div class="hidden flex-col items-center justify-center py-12" id="cartEmpty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-200 mb-4">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+            </svg>
+            <p class="text-sm text-gray-500">{% trans "Корзина пуста" %}</p>
+        </div>
+
+        <!-- Footer: total + checkout -->
+        <div class="mt-auto pt-4 border-t border-stone-50 hidden" id="cartFooter">
+            <div class="flex justify-between items-center pb-4">
+                <span class="font-benzin uppercase text-xs">{% trans "Итого" %}</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-stone-400 line-through hidden" id="cartOldTotal"></span>
+                    <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded hidden" id="cartSavings"></span>
+                    <span class="font-benzin text-lg text-red-500" id="cartTotal"></span>
+                </div>
+            </div>
+            <button class="btn-macro black w-full text-center text-xs" type="button" id="cartCheckoutBtn">{% trans "ОФОРМИТЬ ЗАКАЗ" %}</button>
+            <button class="w-full text-center text-xs text-black hover:text-red-500 transition-colors py-3 mt-2 cursor-pointer uppercase tracking-wider font-benzin" type="button" id="cartContinueBtn">{% trans "Продолжить покупки" %}</button>
+        </div>
+    </div>
+</div>
+<!-- END modal cart -->

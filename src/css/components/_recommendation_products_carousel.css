@@ -1,0 +1,50 @@
+@layer components {
+    /* Carousel на product detail */
+    .carousel-wrapper {
+        @apply relative overflow-x-scroll cursor-none;
+        @apply pl-4 lg:pl-4;
+        @apply pr-5;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .carousel-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Трек карусели */
+    .carousel-track {
+        @apply flex gap-4;
+        @apply select-none;
+        @apply w-max;
+    }
+
+    /* ВАЖНО: Блокируем pointer-events на содержимом карточек */
+    .carousel-card a,
+    .carousel-card img,
+    .carousel-card div {
+        pointer-events: none;
+    }
+
+    /* Разрешаем pointer-events обратно когда НЕ драгаем */
+    .carousel-wrapper:not(.is-dragging) .carousel-card a {
+        pointer-events: auto;
+    }
+
+    /* Кастомный курсор - кружок */
+    .carousel-cursor {
+        @apply fixed w-12 h-12 rounded-full border-2 border-black;
+        @apply pointer-events-none z-50;
+        @apply transition-transform duration-200;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+    }
+
+    .carousel-wrapper:hover .carousel-cursor {
+        opacity: 1;
+    }
+
+    .carousel-wrapper.is-dragging .carousel-cursor {
+        @apply scale-75 bg-black/10;
+    }
+}

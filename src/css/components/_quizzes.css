@@ -1,0 +1,18 @@
+.quizzes {
+    @apply flex justify-center mt-8 md:mt-20 pb-8 mx-2;
+}
+.quizzes-container {
+    @apply relative h-[31rem] lg:h-[25.75rem] w-full max-w-screen-lg bg-red-500 rounded-3xl lg:rounded-4xl;
+}
+.quizzes-content {
+    @apply relative z-20 px-5 py-8 lg:mx-15 md:py-15 lg:px-0 w-full max-w-lg h-full flex flex-wrap;
+}
+.quizzes-girl {
+    @apply absolute right-0 bottom-0 px-8 lg:px-0 z-10;
+}
+.quizzes-girl > img {
+    @apply h-80 md:h-auto object-contain lg:object-bottom lg:object-none;
+}
+.quizzes-heart {
+    @apply absolute right-0 top-[35%] md:top-[25%] md:right-[20%] lg:top-2 px-8 lg:px-0 z-0 w-full max-w-md aspect-square;
+}

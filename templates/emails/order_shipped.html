@@ -1,0 +1,23 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Заказ отправлен — DR.JOYS{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#000;letter-spacing:1px;">
+    ЗАКАЗ ОТПРАВЛЕН!
+</h1>
+
+<p style="margin:0 0 24px;font-size:14px;color:#44403c;line-height:1.6;">
+    Ваш заказ <strong>#{{ order.number }}</strong> отправлен.
+    {% if order.tracking_number %}Трек-номер: <strong>{{ order.tracking_number }}</strong>{% endif %}
+</p>
+
+<p style="margin:0 0 8px;font-size:13px;color:#78716c;line-height:1.5;">
+    Мы свяжемся с вами для уточнения деталей доставки.
+</p>
+
+<p style="margin:0;font-size:13px;color:#78716c;line-height:1.5;">
+    Если у вас есть вопросы, напишите нам на
+    <a href="mailto:info@dr-joys.com" style="color:#000;">info@dr-joys.com</a>
+</p>
+{% endblock %}

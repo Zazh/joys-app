@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% load static catalog_tags i18n %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+
+{% block meta %}
+{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}
+{% for jsonld_str in jsonld_blocks %}
+<script type="application/ld+json">{{ jsonld_str|safe }}</script>
+{% endfor %}
+{% endblock %}
+
+{% block og %}
+<meta property="og:type" content="product">
+<meta property="og:title" content="{{ meta_title }}">
+{% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if cover_image %}<meta property="og:image" content="{{ cover_image.image.url }}">{% else %}<meta property="og:image" content="{{ placeholder_image_url }}">{% endif %}
+{% endblock %}
+
+{% block twitter %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ meta_title }}">
+{% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}">{% endif %}
+{% if cover_image %}<meta name="twitter:image" content="{{ cover_image.image.url }}">{% else %}<meta name="twitter:image" content="{{ placeholder_image_url }}">{% endif %}
+{% endblock %}
+
+{% block header_right %}{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <!-- Картинка -->
+        <div class="pt-18 md:lg-8 col-span-full lg:col-span-7 xl:col-start-2 xl:col-span-6">
+            <div class="product_picture [ w-full aspect-[1/1] lg:aspect-[2/3] overflow-hidden ]">
+                {% if cover_image %}
+                {% localized_img cover_image 'image' as cover_url %}
+                <img src="{{ cover_url }}" class="object-cover w-full h-full" alt="{{ cover_image.alt_text|default:product.name }}">
+                {% else %}
+                <img src="{{ placeholder_image_url }}" class="object-cover w-full h-full" alt="{{ product.name }}">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Инфо -->
+        <div class="col-span-full lg:col-span-7 lg:col-start-9 xl:col-start-9 xl:col-span-7 flex flex-col">
+            <div class="lg:pt-26">
+                {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
+            </div>
+            <div class="xl:pt-22 lg:pt-22 pt-4 xl:w-[70%] flex flex-col flex-1">
+                <div class="flex flex-col gap-8">
+                    <div class="border-b-[0.5px] border-b-black pb-6">
+                        {% if product.badge %}
+                        <h5 class="text-sm tracking-wide text-red-500 mb-2 font-bold">{{ product.get_badge_display|upper }}</h5>
+                        {% endif %}
+                        <h1 class="h2 br-lg font-benzin uppercase">{{ product.tagline|default:product.name }}</h1>
+
+                        {% if default_size %}
+                        <div class="pt-6" id="skuBlock">
+                            <span class="text-xs uppercase tracking-wider flex items-center gap-2 font-medium">{% trans "АРТИКУЛ" %} <span class="h-4 border-l-1"></span> <span id="productSku">{{ default_size.sku }}</span></span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if product.description %}
+                    <div>
+                        <p class="text-sm md:text-base lg:text-sm">{{ product.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="flex flex-col gap-4">
+                        <!-- BEGIN Size -->
+                        <div class="size-dropdown" id="sizeDropdown">
+                            <button class="size-dropdown__trigger size-dropdown__trigger--placeholder" type="button" id="sizeDropdownBtn">
+                                <span id="selectedSizeName">{% trans "Выберите размер" %}</span>
+                                <svg class="size-dropdown__arrow" width="10" height="6" viewBox="0 0 10 6" fill="none">
+                                    <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <ul class="size-dropdown__menu hidden" id="sizeMenu">
+                                {% for size in sizes %}
+                                {% region_price_data size as spd %}
+                                <li>
+                                    <button class="size-dropdown__item{% if not size.in_stock %} size-dropdown__item--disabled{% endif %}"
+                                            type="button"
+                                            data-size-id="{{ size.pk }}"
+                                            data-size="{{ size.name }}"
+                                            data-sku="{{ size.sku }}"
+                                            data-price="{{ spd.price|format_price }}"
+                                            data-old-price="{% if spd.has_discount %}{{ spd.old_price|format_price }}{% endif %}"
+                                            data-discount="{% if spd.has_discount %}{{ spd.discount_percent }}{% endif %}"
+                                            {% if spd.needs_conversion and spd.payment_price %}data-payment-price="{{ spd.payment_price|format_price }}"{% endif %}
+                                            data-available="{{ size.in_stock|yesno:'true,false' }}"
+                                            {% if not size.in_stock %}disabled{% endif %}>
+                                        <span class="size-dropdown__item-name">{{ size.name }}</span>
+                                        <span class="size-dropdown__item-info">
+                                            {% if size.in_stock %}{{ spd.price|format_price }} {{ currency_symbol }}{% if spd.needs_conversion and spd.payment_price %} <span class="text-stone-400">({{ spd.payment_price|format_price }} {{ spd.payment_currency_symbol }})</span>{% endif %}{% else %}{% trans "Нет в наличии" %}{% endif %}
+                                        </span>
+                                    </button>
+                                </li>
+                                {% endfor %}
+                                <li class="size-dropdown__footer">
+                                    <a href="#" class="size-dropdown__help">{% trans "Как выбрать размер?" %}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- END Size -->
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        <!-- BEGIN price -->
+                        {% if default_size %}
+                        {% region_price_data default_size as pd %}
+                        <div class="flex justify-between items-start shrink-1" id="priceRow">
+                            <span class="text-xs text-black uppercase tracking-wider flex items-center gap-2 font-bold">{% trans "Стоимость" %}</span>
+                            <div class="flex items-center gap-2 flex-wrap" id="priceBlock">
+                                <span class="text-xs text-stone-400 line-through {% if not pd.has_discount %}hidden{% endif %}" id="priceOld">{{ pd.old_price|format_price }} {{ currency_symbol }}</span>
+                                <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded {% if not pd.has_discount %}hidden{% endif %}" id="priceDiscount">-{{ pd.discount_percent }}%</span>
+                                <span class="text-md font-benzin text-red-500 font-bold" id="priceCurrent">{{ pd.price|format_price }} {{ currency_symbol }}</span>
+                                {% if pd.needs_conversion and pd.payment_price %}
+                                <span class="text-xs text-stone-400" id="pricePayment">({{ pd.payment_price|format_price }} {{ pd.payment_currency_symbol }})</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- END price -->
+
+                        <!-- BEGIN buy section -->
+                        <div class="product-buy flex gap-2" id="productBuy" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}">
+                            <button class="btn-cat flex-1 font-benzin" type="button" id="buyAnonymousBtn">{% trans "Добавить в корзину" %}</button>
+                            <button class="btn-favorite{% if is_favorited %} active{% endif %}" type="button" id="productFavoriteBtn" aria-label="Добавить в избранное">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="{% if is_favorited %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- END buy section -->
+                    </div>
+
+                </div>
+
+                <!-- прижать книзу на lg экранах -->
+                <div class="lg:mt-auto mt-4 pt-8 lg:pb-4">
+                    <ul class="flex flex-col gap-3">
+                        <li class="product_links-item"><a href="#characters" class="w-full block">{% trans "СОСТАВ И ХАРАКТЕРИСТИКИ" %}</a></li>
+                        <li class="product_links-item"><a href="" class="w-full block">{% trans "Инструкция по применению" %}</a></li>
+                        <li class="product_links-item"><a href="" class="w-full block">{% trans "противопоказания" %}</a></li>
+                    </ul>
+                </div>
+                <!-- прижать книзу на lg экранах -->
+            </div>
+        </div>
+    </section>
+
+    <section class="main-grid lg:mt-24">
+        <!-- Характеристики -->
+        <div class="col-span-full lg:col-span-7 xl:col-start-3 xl:col-span-5 flex ">
+            <div id="characters" class="mt-auto pt-12 pb-8 lg:pb-4 w-full">
+                <ul class="mt-auto flex flex-col gap-6">
+                    {% for pc in characteristics %}
+                    <li class="flex {% if pc.characteristic.unit %}flex-row items-baseline{% else %}flex-col{% endif %} text-sm gap-1">
+                        <span class="uppercase font-benzin tracking-wider">{{ pc.characteristic.name }}{% if pc.characteristic.unit %} –{% endif %}</span>
+                        <span class="br-lg">{{ pc.value }}{% if pc.characteristic.unit %} {{ pc.characteristic.unit.abbr }}{% endif %}</span>
+                        {% if pc.subtitle %}<span class="text-xs text-stone-400">{{ pc.subtitle }}</span>{% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="text-sm text-stone-400">{% trans "Характеристики не заполнены" %}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Zoom картинка -->
+        <div class="col-span-full lg:col-span-7 lg:col-start-9 xl:col-start-9 xl:col-span-6 ">
+            <div class="product-zoom-container w-full h-full aspect-[2/3] overflow-hidden">
+                {% if product.zoom_image %}
+                <img
+                        src="{{ product.zoom_image.url }}"
+                        class="product-zoom-image w-full h-full object-cover"
+                        data-rotate="{{ product.zoom_rotation_angle|default:'15' }}"
+                        alt="{{ product.name }}"
+                        loading="lazy"
+                >
+                {% else %}
+                <img
+                        src="{{ placeholder_image_url }}"
+                        class="product-zoom-image w-full h-full object-cover"
+                        data-rotate="15"
+                        alt="{{ product.name }}"
+                        loading="lazy"
+                >
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="main-grid mt-8 lg:mt-24">
+        <!-- Слайдер упаковки -->
+        <div class="col-span-full col-start-0 md:col-span-3 lg:col-span-7 xl:col-start-2 xl:col-span-6 flex flex-col">
+            <div class="[ product-slider ] w-full h-full aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="2000">
+                {% for img in package_images %}
+                <img src="{{ img.image.url }}" class="slider-image" alt="{{ img.alt_text|default:'Упаковка' }}" loading="lazy">
+                {% empty %}
+                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="Упаковка" loading="lazy">
+                {% endfor %}
+
+                <!-- Круговой прогресс с кнопкой pause/play -->
+                <div class="slider-progress-wrapper">
+                    <svg class="slider-progress-circle" viewBox="0 0 36 36">
+                        <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
+                        <circle class="progress-bar" cx="18" cy="18" r="16"></circle>
+                    </svg>
+                    <button class="slider-play-pause" type="button" aria-label="Pause slideshow">
+                        <!-- Pause icon -->
+                        <svg class="pause-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="2" width="2" height="8" fill="currentColor"/>
+                            <rect x="8" y="2" width="2" height="8" fill="currentColor"/>
+                        </svg>
+                        <!-- Play icon -->
+                        <svg class="play-icon hidden" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 2L10 6L3 10V2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Индикаторы -->
+                <div class="slider-indicators"></div>
+            </div>
+            <div>
+                <p class="text-xs italic text-right py-2">{% trans "Упаковка презервативов DR.JOYS" %}</p>
+            </div>
+        </div>
+
+        <!-- Слайдер индивидуальный -->
+        <div class="col-span-full lg:col-start-9 md:col-span-3 lg:col-span-7 xl:col-start-9 xl:col-span-6 flex flex-col">
+            <div class="[ product-slider ] w-full h-full aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="2000">
+                {% for img in individual_images %}
+                <img src="{{ img.image.url }}" class="slider-image" alt="{{ img.alt_text|default:'Индивидуальная упаковка' }}" loading="lazy">
+                {% empty %}
+                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="Индивидуальная упаковка" loading="lazy">
+                {% endfor %}
+
+                <!-- Круговой прогресс с кнопкой pause/play -->
+                <div class="slider-progress-wrapper">
+                    <svg class="slider-progress-circle" viewBox="0 0 36 36">
+                        <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
+                        <circle class="progress-bar" cx="18" cy="18" r="16"></circle>
+                    </svg>
+                    <button class="slider-play-pause" type="button" aria-label="Pause slideshow">
+                        <svg class="pause-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="2" width="2" height="8" fill="currentColor"/>
+                            <rect x="8" y="2" width="2" height="8" fill="currentColor"/>
+                        </svg>
+                        <svg class="play-icon hidden" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 2L10 6L3 10V2Z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Индикаторы -->
+                <div class="slider-indicators"></div>
+            </div>
+            <div>
+                <p class="text-xs italic text-right py-2">{% trans "Презерватив в индивидуальной упаковке" %}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- BEGIN related products -->
+    <section class="mt-8 lg:mt-24 py-8">
+        <div class="main-grid">
+            <div class="col-span-full xl:col-start-2">
+                <h2 class="h2 font-benzin uppercase mb-8">{% trans "Вам может быть интересно" %}</h2>
+            </div>
+        </div>
+        <div class="flex">
+            <div class="carousel-wrapper">
+                <div class="carousel-track">
+                    {% for related in related_products %}
+                    <article class="carousel-card">
+                        <a href="{{ related.get_absolute_url }}" class="block">
+                            <div class="carousel-card_picture">
+                                {% with related_cover=related.images.all|first %}
+                                {% if related_cover %}
+                                <img src="{{ related_cover.image.url }}" class="w-full h-full object-cover" alt="{{ related.name }}" loading="lazy">
+                                {% else %}
+                                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="{{ related.name }}" loading="lazy">
+                                {% endif %}
+                                {% endwith %}
+                                <div class="product-card_label" aria-hidden="true">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="16" height="16" rx="1" fill="currentColor"/>
+                                        <path d="M7.64286 3H8.35714V13H7.64286V3Z" fill="white"/>
+                                        <path d="M3 8.35714L3 7.64286L13 7.64286V8.35714L3 8.35714Z" fill="white"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="carousel-card_info">
+                                <h3 class="text-sm uppercase tracking-wider">{{ related.name }}</h3>
+                                {% with first_size=related.sizes.all|first %}
+                                {% if first_size %}
+                                {% region_price_data first_size as rpd %}
+                                <div class="flex items-center gap-2 mt-1">
+                                    {% if rpd.has_discount %}
+                                    <span class="text-xs text-stone-400 line-through">{{ rpd.old_price|format_price }} {{ currency_symbol }}</span>
+                                    {% endif %}
+                                    <span class="text-sm font-bold text-red-500">{{ rpd.price|format_price }} {{ currency_symbol }}</span>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                        </a>
+                    </article>
+                    {% endfor %}
+                </div>
+                <div class="carousel-cursor"></div>
+            </div>
+        </div>
+    </section>
+    <!-- END related products -->
+
+</main>
+
+{% block shop_ui %}
+{% include 'base/components/_modal_order_quantity.html' %}
+{% include 'base/components/_modal_delivery.html' %}
+{% include 'base/components/_modal_success.html' %}
+{% endblock %}
+
+{% block scripts %}
+<!-- YouTube Player API -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script>
+// --------------------------------------------
+// 7. ZOOM ЭФФЕКТ ДЛЯ КАРТИНКИ ТОВАРА ПРИ СКРОЛЛЕ
+// --------------------------------------------
+function initProductZoom() {
+    // Проверяем что GSAP загружен
+    if (typeof gsap === 'undefined') {
+        console.warn('GSAP не загружен - zoom эффект не работает');
+        return;
+    }
+
+    const zoomImages = document.querySelectorAll('.product-zoom-image');
+
+    if (zoomImages.length === 0) return;
+
+    // Регистрируем плагин ScrollTrigger
+    gsap.registerPlugin(ScrollTrigger);
+
+    zoomImages.forEach(image => {
+        const container = image.closest('.product-zoom-container');
+        if (!container) return;
+
+        // Получаем градус поворота из data-атрибута (по умолчанию 15)
+        const rotationDegree = parseFloat(image.getAttribute('data-rotate')) || 15;
+
+        // Создаем GSAP анимацию
+        gsap.fromTo(image,
+            {
+                // Начальное состояние
+                scale: 1,
+                rotation: 0,
+            },
+            {
+                // Конечное состояние
+                scale: 1.5,  // Увеличение на 30%
+                rotation: rotationDegree,  // Поворот из data-rotate
+                ease: "none",  // Линейная анимация для плавности со скроллом
+                scrollTrigger: {
+                    trigger: container,
+                    start: "top bottom",  // Начинаем когда верх контейнера достигает низа экрана
+                    end: "bottom top",    // Заканчиваем когда низ контейнера достигает верха экрана
+                    scrub: 1,  // Плавная синхронизация со скроллом (1 секунда задержки)
+                    // markers: true,  // Раскомментируй для отладки
+                }
+            }
+        );
+    });
+}
+
+// Инициализируем после загрузки
+window.addEventListener('load', initProductZoom);
+</script>
+{% endblock %}
+
+
+{% endblock %}

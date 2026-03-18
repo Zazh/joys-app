@@ -1,0 +1,31 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Подтверждение email — DR.JOYS{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#000;letter-spacing:1px;">
+    ПОДТВЕРДИТЕ EMAIL
+</h1>
+
+<p style="margin:0 0 24px;font-size:14px;color:#44403c;line-height:1.6;">
+    Для завершения регистрации подтвердите ваш email-адрес, нажав на кнопку ниже.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+    <tr>
+        <td style="background-color:#000000;border-radius:999px;padding:14px 32px;">
+            <a href="{{ verify_url }}" target="_blank"
+               style="color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:1px;">
+                ПОДТВЕРДИТЬ EMAIL
+            </a>
+        </td>
+    </tr>
+</table>
+
+<p style="margin:0 0 8px;font-size:13px;color:#78716c;line-height:1.5;">
+    Если вы не регистрировались на DR.JOYS — просто проигнорируйте это письмо.
+</p>
+<p style="margin:0;font-size:12px;color:#a8a29e;line-height:1.5;">
+    Ссылка действительна 24 часа.
+</p>
+{% endblock %}

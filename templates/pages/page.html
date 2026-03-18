@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page.meta_title|default:page.title }} — DR.JOYS{% endblock %}
+
+{% block meta %}
+{% if page.meta_description %}<meta name="description" content="{{ page.meta_description }}">{% endif %}
+{% endblock %}
+
+{% block og %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ page.meta_title|default:page.title }} — DR.JOYS">
+{% if page.meta_description %}<meta property="og:description" content="{{ page.meta_description }}">{% endif %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if page.og_image %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}">
+{% else %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
+            <div class="blog-container pt-46">
+                <div>
+                    <h1 class="display-2 uppercase font-benzin">{{ page.title }}</h1>
+                </div>
+                <div class="blog-content">
+                    <div>{{ page.body|safe }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if page.slug == 'partners' %}
+    {% include 'base/components/_modal_partner.html' %}
+    {% endif %}
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "{{ page.meta_title|default:page.title }}",
+        {% if page.meta_description %}"description": "{{ page.meta_description }}",{% endif %}
+        "url": "{{ request.build_absolute_uri }}",
+        "publisher": {
+            "@type": "Organization",
+            "name": "DR.JOYS"
+        }
+    }
+    </script>
+</main>
+{% endblock %}

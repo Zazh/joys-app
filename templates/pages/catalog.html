@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static catalog_tags i18n %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+
+{% block meta %}
+{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}
+{% for jsonld_str in jsonld_blocks %}
+<script type="application/ld+json">{{ jsonld_str|safe }}</script>
+{% endfor %}
+{% endblock %}
+
+{% block og %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ meta_title }}">
+{% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:image" content="{% static 'dist/images/svgs/logo.svg' %}">
+{% endblock %}
+
+{% block twitter %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ meta_title }}">
+{% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}">{% endif %}
+<meta name="twitter:image" content="{% static 'dist/images/svgs/logo.svg' %}">
+{% endblock %}
+
+{% block content %}
+<main class="mt-[6rem] lg:mt-40">
+    <section class="main-grid">
+        <div class="col-span-full mb-6 lg:mb-12 lg:col-start-2 flex flex-wrap gap-6 justify-center lg:justify-between items-end">
+            <div class="w-full lg:w-auto">
+                <h1 class="text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase text-center lg:text-left">
+                    {% if single_category %}{{ single_category.name }}{% elif current_category %}{{ current_category.name }}{% else %}{% trans "Каталог" %}{% endif %}
+                </h1>
+            </div>
+            {% if show_filters %}
+            <div class="flex gap-8">
+                {% include 'base/components/_catalog_filters.html' %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Эталонный col-span -->
+        <div class="col-span-1 " id="referenceCol"></div>
+
+        <div class="col-span-full lg:col-span-14 grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 lg:gap-4 pb-12 px-4 lg:px-0" id="productGrid">
+            {% for product in products %}
+            <article class="product-card heart-trigger">
+                <a href="{{ product.get_absolute_url }}" class="relative block">
+                    <div class="product-card_picture" data-images-count="{{ product.main_images.all|length }}">
+                        {% for img in product.main_images.all %}
+                        {% if img.thumbnail %}{% localized_img img 'thumbnail' as card_img_url %}{% else %}{% localized_img img 'image' as card_img_url %}{% endif %}
+                        <img src="{{ card_img_url }}" class="product-image" alt="{{ img.alt_text|default:product.name }}" loading="lazy">
+                        {% empty %}
+                        <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="{{ product.name }}" loading="lazy">
+                        {% endfor %}
+
+                        <div class="product-card_label" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="16" height="16" rx="1" fill="currentColor"/>
+                                <path d="M7.64286 3H8.35714V13H7.64286V3Z" fill="white"/>
+                                <path d="M3 8.35714L3 7.64286L13 7.64286V8.35714L3 8.35714Z" fill="white"/>
+                            </svg>
+                        </div>
+
+                        <!-- Индикаторы картинок -->
+                        <div class="product-indicators"></div>
+                    </div>
+                    <div class="product-card_info">
+                        <h2 class="product-card_title">{{ product.name }}</h2>
+                        {% with first_size=product.sizes.all|first %}
+                        {% if first_size %}
+                        {% region_price_data first_size as pd %}
+                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                            {% if pd.has_discount %}
+                            <span class="text-xs text-stone-400 line-through">{{ pd.old_price|format_price }} {{ currency_symbol }}</span>
+                            {% endif %}
+                            <span class="text-sm font-bold text-red-500">{{ pd.price|format_price }} {{ currency_symbol }}</span>
+                            {% if pd.needs_conversion and pd.payment_price %}
+                            <span class="text-xs text-stone-400">({{ pd.payment_price|format_price }} {{ pd.payment_currency_symbol }})</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </a>
+            </article>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <p class="text-lg text-stone-400">{% trans "Товары не найдены" %}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="col-span-full lg:col-span-9 lg:col-start-2 px-4 lg:px-0">
+            {% if faqs %}
+            <div class="pt-12 mb-14 xl:pt-22">
+                <div>
+                    <h2 class="h2 font-benzin uppercase">faq</h2>
+                </div>
+                <div class="py-8">
+                    <ul class="flex flex-col gap-3">
+                        {% for faq in faqs %}
+                        <li class="faq-item">
+                            <button class="faq-button" type="button">
+                                {{ faq.question }}
+                                <span class="faq-icon">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 0H9V16H7V0Z" fill="currentColor"/>
+                                        <path d="M16 7V9L0 9L8.74228e-08 7L16 7Z" fill="currentColor"/>
+                                    </svg>
+                                </span>
+                            </button>
+                            <div class="faq-panel">
+                                <p>{{ faq.answer }}</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block shop_ui %}
+{% include 'base/components/_modal_order_quantity.html' %}
+{% include 'base/components/_modal_delivery.html' %}
+{% include 'base/components/_modal_success.html' %}
+{% endblock %}

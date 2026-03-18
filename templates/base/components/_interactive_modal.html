@@ -1,0 +1,126 @@
+{% load i18n %}
+{# Использование: {% include '_interactive_modal.html' with modal=modal_obj %} #}
+
+{% if modal %}
+<!-- BEGIN interactive modal: {{ modal.slug }} -->
+<div class="modal-overlay hidden" id="modal-{{ modal.slug }}" data-modal-slug="{{ modal.slug }}">
+    <div class="modal-content {% if modal.theme == 'dark' %}modal-dark{% endif %}">
+
+        {% for step in modal.steps.all %}
+        <div class="modal-step{% if not forloop.first %} hidden{% endif %}" data-step="{{ forloop.counter }}">
+            <div class="modal-header">
+                {% if not forloop.first %}
+                <button class="modal-back" type="button" aria-label="{% trans 'Назад' %}" data-prev-step="{{ forloop.counter|add:'-1' }}">
+                    <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                {% else %}
+                <div></div>
+                {% endif %}
+                <button class="modal-close modal-close-interactive" type="button" aria-label="{% trans 'Закрыть' %}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            {% if step.badge_text %}
+            <div class="modal-badge">
+                <div class="modal-badge-icon">
+                    <span>{{ step.badge_text }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if step.step_type == 'content' %}
+                {% if step.image %}
+                <figure class="modal-figure">
+                    <img src="{{ step.image.url }}" alt="" loading="lazy">
+                </figure>
+                {% endif %}
+                {% if step.text %}<div class="modal-text">{{ step.text|safe }}</div>{% endif %}
+                <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-next-step="{{ forloop.counter|add:'1' }}">{{ step.button_text }}</button>
+
+            {% elif step.step_type == 'form' %}
+                {% if step.text %}<div class="modal-text">{{ step.text|safe }}</div>{% endif %}
+                {% if step.inquiry_form %}
+                <form class="flex flex-col gap-3 interactive-modal-form"
+                      data-form-slug="{{ step.inquiry_form.slug }}"
+                      data-modal-slug="{{ modal.slug }}" novalidate>
+                    {% for field in step.inquiry_form.fields.all %}
+                    <div>
+                        {% if field.field_type == 'text' %}
+                        <input class="modal-input" type="text" name="{{ field.key }}"
+                               placeholder="{{ field.placeholder|default:field.label }}"
+                               {% if field.is_required %}required{% endif %}>
+
+                        {% elif field.field_type == 'email' %}
+                        <input class="modal-input" type="email" name="{{ field.key }}"
+                               placeholder="{{ field.placeholder|default:field.label }}"
+                               {% if field.is_required %}required{% endif %}>
+
+                        {% elif field.field_type == 'phone' %}
+                        <input class="modal-input" type="tel" name="{{ field.key }}"
+                               placeholder="{{ field.placeholder|default:field.label }}"
+                               {% if field.is_required %}required{% endif %}>
+
+                        {% elif field.field_type == 'number' %}
+                        <input class="modal-input" type="text" inputmode="numeric" pattern="[0-9]*"
+                               name="{{ field.key }}"
+                               placeholder="{{ field.placeholder|default:field.label }}"
+                               {% if field.is_required %}required{% endif %}>
+
+                        {% elif field.field_type == 'textarea' %}
+                        <textarea class="modal-input" name="{{ field.key }}" rows="3"
+                                  placeholder="{{ field.placeholder|default:field.label }}"
+                                  {% if field.is_required %}required{% endif %}></textarea>
+
+                        {% elif field.field_type == 'select' %}
+                        <select class="modal-input" name="{{ field.key }}" {% if field.is_required %}required{% endif %}>
+                            <option value="">{{ field.placeholder|default:field.label }}</option>
+                            {% for choice in field.get_choices %}
+                            <option value="{{ choice.value }}">{{ choice.label }}</option>
+                            {% endfor %}
+                        </select>
+
+                        {% elif field.field_type == 'radio' %}
+                        <fieldset class="flex flex-col gap-2">
+                            <legend class="modal-label text-sm mb-1">{{ field.label }}</legend>
+                            {% for choice in field.get_choices %}
+                            <label class="modal-radio-label flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="{{ field.key }}" value="{{ choice.value }}"
+                                       class="modal-radio" {% if field.is_required %}required{% endif %}>
+                                <span>{{ choice.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </fieldset>
+
+                        {% elif field.field_type == 'checkbox' %}
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="{{ field.key }}" value="true" class="modal-checkbox">
+                            <span class="text-sm">{{ field.label }}</span>
+                        </label>
+                        {% endif %}
+
+                        <p class="modal-error hidden text-xs mt-1" data-error-for="{{ field.key }}"></p>
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn-macro small danger w-full text-center">{{ step.inquiry_form.submit_text }}</button>
+                </form>
+                {% endif %}
+
+            {% elif step.step_type == 'cta' %}
+                {% if step.text %}<div class="modal-text">{{ step.text|safe }}</div>{% endif %}
+                {% if step.cta_url %}
+                <a href="{{ step.cta_url }}" class="btn-macro small danger w-full text-center mt-auto">{{ step.cta_text }}</a>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+<!-- END interactive modal: {{ modal.slug }} -->
+{% endif %}

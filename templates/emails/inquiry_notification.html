@@ -1,0 +1,31 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Новая заявка: {{ form_title }}{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#000000;">
+    Новая заявка
+</h1>
+<p style="margin:0 0 24px;font-size:14px;color:#78716c;">
+    Форма: <strong style="color:#000;">{{ form_title }}</strong>
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e7e5e4;border-radius:8px;overflow:hidden;">
+    {% for field in fields %}
+    <tr>
+        <td style="padding:12px 16px;font-size:13px;color:#78716c;white-space:nowrap;vertical-align:top;{% if not forloop.last %}border-bottom:1px solid #f5f5f4;{% endif %}">
+            {{ field.label }}
+        </td>
+        <td style="padding:12px 16px;font-size:13px;color:#000000;font-weight:600;{% if not forloop.last %}border-bottom:1px solid #f5f5f4;{% endif %}">
+            {{ field.value }}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% if ip_address %}
+<p style="margin:24px 0 0;font-size:11px;color:#a8a29e;">
+    IP: {{ ip_address }}
+</p>
+{% endif %}
+{% endblock %}

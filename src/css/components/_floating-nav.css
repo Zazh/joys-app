@@ -1,0 +1,45 @@
+@layer components {
+    /* Mobile bottom bar */
+    .floating-nav {
+        @apply fixed bottom-0 left-0 right-0 z-40
+               flex justify-around items-center
+               bg-white/80 backdrop-blur-xl
+               border-t border-stone-50
+               py-2 px-4
+               lg:hidden;
+    }
+    .floating-nav__item {
+        @apply relative flex flex-col items-center gap-0.5 cursor-pointer
+               text-gray-500 hover:text-black p-2;
+    }
+    .floating-nav__item.active {
+        @apply text-black;
+    }
+    .floating-nav__icon {
+        @apply w-6 h-6;
+    }
+    .floating-nav__label {
+        @apply text-[10px] leading-tight;
+    }
+    .floating-nav__badge {
+        @apply absolute -top-0.5 -right-0.5 bg-red-500 text-white
+               text-[9px] font-bold rounded-full
+               min-w-4 h-4 flex items-center justify-center px-1;
+    }
+
+    /* Desktop floating buttons (right side) */
+    .floating-nav-desktop {
+        @apply hidden lg:flex fixed bottom-6 right-6 z-40
+               flex-col gap-3;
+    }
+    .floating-nav-desktop__btn {
+        @apply relative w-12 h-12 rounded-full
+               bg-white shadow-lg border border-stone-50
+               flex items-center justify-center
+               cursor-pointer text-gray-600 hover:text-black
+               hover:shadow-xl transition-shadow;
+    }
+    .floating-nav-desktop__btn .floating-nav__badge {
+        @apply absolute -top-1 -right-1;
+    }
+}

@@ -1,0 +1,190 @@
+@layer components {
+    .modal-overlay {
+        @apply fixed inset-0 z-50 flex justify-center items-start p-2 md:py-[5%]
+               bg-black/10 backdrop-blur-xl overflow-y-auto;
+    }
+    .modal-content {
+        @apply w-full max-w-xs bg-white rounded-2xl p-5 relative;
+    }
+    /* Wider variant for shop modals (cart, favorites, profile, delivery, etc.) */
+    .modal-content.modal-wide {
+        @apply max-w-sm md:max-w-md p-6;
+    }
+    .modal-header {
+        @apply flex justify-between items-center pb-2;
+    }
+    .modal-back,
+    .modal-close {
+        @apply cursor-pointer text-gray-500 hover:text-black;
+    }
+    .modal-title {
+        @apply font-benzin text-xl uppercase text-center leading-tight pb-4;
+    }
+
+    /* Form elements */
+    .modal-label {
+        @apply text-xs font-bold block pb-1;
+    }
+    .modal-input {
+        @apply w-full bg-stone-50 rounded-full p-3 text-xs outline-none;
+    }
+
+    /* Custom radio */
+    .modal-radio {
+        @apply appearance-none w-3.5 h-3.5 border border-gray-500 rounded-full shrink-0 cursor-pointer
+               checked:bg-black checked:border-black relative;
+    }
+    .modal-radio:checked::after {
+        content: '';
+        @apply absolute inset-0.5 bg-white rounded-full;
+    }
+    .modal-radio-label {
+        @apply flex items-center gap-2 cursor-pointer;
+    }
+    .modal-radio-text {
+        @apply text-xs leading-tight;
+    }
+
+    /* Dark variant */
+    .modal-dark {
+        @apply bg-black text-white flex flex-col
+               min-h-[calc(100dvh-1rem)] md:min-h-140;
+    }
+    .modal-dark .modal-back,
+    .modal-dark .modal-close {
+        @apply text-white/60 hover:text-white;
+    }
+    .modal-dark .modal-input {
+        @apply bg-gray-600 text-white placeholder:text-white/50;
+    }
+
+    /* Steps */
+    .modal-step {
+        @apply flex flex-col flex-1;
+    }
+
+    /* Figure inside modal */
+    .modal-figure {
+        @apply w-full pt-10 pb-4;
+    }
+    .modal-figure img {
+        @apply w-full rounded-2xl object-cover;
+        aspect-ratio: 1 / 1;
+    }
+
+    /* Text in modal */
+    .modal-text {
+        @apply text-sm text-center leading-tight pb-6 font-bold;
+    }
+
+    /* 21+ badge */
+    .modal-badge {
+        @apply flex justify-center pb-5;
+    }
+    .modal-badge-icon {
+        @apply w-20 h-20 rounded-full border-3 border-red-500 flex items-center justify-center;
+    }
+    .modal-badge-icon span {
+        @apply font-benzin text-2xl;
+    }
+
+    /* Error message */
+    .modal-error {
+        @apply text-red-500 text-xs pt-1 pl-3;
+    }
+
+    /* SSO buttons */
+    .btn-sso {
+        @apply flex items-center justify-center gap-3 w-full
+               bg-stone-50 hover:bg-stone-100 rounded-full py-3.5 px-6
+               text-xs font-bold cursor-pointer transition-colors;
+    }
+    .btn-sso svg {
+        @apply shrink-0;
+    }
+
+    /* Full-height modal (shared) */
+    .modal-fullscreen {
+        @apply min-h-[calc(100dvh-1rem)] md:min-h-140 flex flex-col;
+    }
+
+    /* Quiz */
+    .quiz-question {
+        @apply font-benzin text-xl uppercase text-center leading-tight;
+    }
+    .quiz-options {
+        @apply flex flex-col gap-3 items-center pt-8 w-full;
+    }
+    .quiz-option {
+        @apply rounded-full px-8 py-4 text-sm font-bold text-center cursor-pointer
+               bg-stone-50 min-w-48 transition-opacity hover:opacity-80;
+    }
+    .quiz-result-img {
+        @apply mx-auto py-6;
+        height: 230px;
+    }
+    .quiz-result-img img {
+        @apply h-full w-auto object-contain mx-auto;
+    }
+    .quiz-result-name {
+        @apply text-sm font-bold text-center leading-tight pb-6;
+    }
+
+    /* Dark result variant (applied via JS to .modal-content) */
+    .modal-result-dark .modal-back,
+    .modal-result-dark .modal-close {
+        @apply text-white/60 hover:text-white;
+    }
+    .modal-result-dark .quiz-question,
+    .modal-result-dark .quiz-result-name {
+        @apply text-white;
+    }
+
+    /* Cart & Favorites icons in header */
+    .header-icon {
+        @apply relative cursor-pointer text-stone-600 hover:text-black transition-colors;
+    }
+    .header-icon__badge {
+        @apply absolute -top-1.5 -right-1.5 bg-red-500 text-white
+               text-[9px] font-bold rounded-full w-4 h-4
+               flex items-center justify-center leading-none;
+    }
+
+    /* Region switcher (inside mainNav) */
+    .header-switcher {
+        @apply flex items-center gap-1 text-[10px] font-medium
+               px-2 py-1.5 rounded-full border border-stone-200
+               hover:border-black transition-colors cursor-pointer
+               bg-white/80 backdrop-blur-sm;
+    }
+
+    /* Language dropdown */
+    .lang-dropdown {
+        @apply relative z-10;
+    }
+    .lang-dropdown__trigger {
+        @apply flex items-center gap-1.5 text-base font-medium
+               cursor-pointer transition-colors text-stone-600 hover:text-black;
+    }
+    .lang-dropdown__arrow {
+        @apply w-2.5 h-2.5 transition-transform;
+    }
+    .lang-dropdown.open .lang-dropdown__arrow {
+        @apply rotate-180;
+    }
+    .lang-dropdown__menu {
+        @apply absolute left-0 bottom-full mb-2
+               bg-white rounded-lg shadow-lg border border-stone-100
+               py-1 min-w-[120px];
+    }
+    .lang-dropdown.ml-auto .lang-dropdown__menu {
+        @apply left-auto right-0;
+    }
+    .lang-dropdown__item {
+        @apply block px-4 py-2 text-xs text-stone-500
+               hover:text-black hover:bg-stone-50 transition-colors;
+    }
+    .lang-dropdown__item.active {
+        @apply text-black font-bold;
+    }
+}

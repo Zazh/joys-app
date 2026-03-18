@@ -1,0 +1,47 @@
+.blog-content {
+    @apply flex flex-col;
+}
+.blog-container {
+    @apply pb-20;
+}
+.blog-content p {
+    @apply py-3 hyphens-auto;
+}
+.blog-content h3 {
+    @apply pb-3 pt-8 font-benzin text-2xl uppercase;
+}
+.blog-content ul {
+    @apply list-disc pl-4 w-full md:w-[90%] lg:w-[80%];
+}
+.blog-content li {
+    @apply text-base py-3 pl-3 hyphens-auto;
+}
+.blog-content figure {
+    @apply w-full py-9;
+}
+.blog-content figure img {
+    @apply w-full object-cover rounded-2xl bg-gray-100;
+    aspect-ratio: 926 / 545;
+}
+.blog-content figcaption {
+    @apply text-xs italic text-right py-2;
+}
+.share-dropdown-menu {
+    @apply absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50 min-w-48
+           opacity-0 invisible transition-all duration-200;
+}
+.share-dropdown-menu.active {
+    @apply opacity-100 visible;
+}
+.share-dropdown-item {
+    @apply flex items-center gap-3 px-4 py-2.5 text-xs uppercase tracking-wide font-bold text-black hover:text-red-500 cursor-pointer w-full;
+}
+.share-dropdown-item svg {
+    @apply shrink-0;
+}
+.blog-content-video {
+    @apply w-full aspect-video relative overflow-hidden rounded-2xl;
+}
+.blog-content-video iframe {
+    @apply absolute inset-0 w-full h-full;
+}

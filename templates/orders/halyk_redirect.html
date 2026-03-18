@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Переход к оплате — DR.JOYS</title>
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafaf9; }
+        .loader { text-align: center; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #e7e5e4; border-top-color: #000; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        p { color: #78716c; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="spinner"></div>
+        <p>Переход к оплате...</p>
+    </div>
+    {{ payment_object_json|json_script:"halyk-payment-data" }}
+    <script src="{{ halyk_js_url }}"></script>
+    <script>
+        try {
+            var paymentData = JSON.parse(document.getElementById('halyk-payment-data').textContent);
+            halyk.pay(paymentData);
+        } catch (e) {
+            document.querySelector('.loader p').textContent = 'Ошибка загрузки платёжной формы. Обновите страницу.';
+        }
+    </script>
+</body>
+</html>

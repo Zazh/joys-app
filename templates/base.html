@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+{% load static i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+{% get_available_languages as AVAILABLE_LANGUAGES %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}DR.JOYS{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block meta %}{% endblock %}
+
+    <!-- Canonical -->
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    <!-- hreflang -->
+    {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+    <link rel="alternate" hreflang="{{ lang_code }}" href="{{ request.scheme }}://{{ request.get_host }}/{{ lang_code }}{{ request.path|slice:'3:' }}">
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}/ru{{ request.path|slice:'3:' }}">
+
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'dist/images/svgs/logo.svg' %}" type="image/svg+xml">
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="DR.JOYS">
+    <meta property="og:locale" content="{% if LANGUAGE_CODE == 'en' %}en_US{% elif LANGUAGE_CODE == 'kk' %}kk_KZ{% else %}ru_RU{% endif %}">
+    {% block og %}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}DR.JOYS — {% trans 'ультратонкие презервативы' %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{% trans 'Ультратонкие презервативы DR.JOYS — неощутимые на 95%' %}{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+    {% endblock %}
+
+    <!-- Twitter Card -->
+    {% block twitter %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DR.JOYS — {% trans 'ультратонкие презервативы' %}">
+    <meta name="twitter:description" content="{% trans 'Ультратонкие презервативы DR.JOYS — неощутимые на 95%' %}">
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+    {% endblock %}
+
+    <!-- Global JSON-LD -->
+    {% for jsonld_str in global_jsonld_blocks %}
+    <script type="application/ld+json">{{ jsonld_str|safe }}</script>
+    {% endfor %}
+
+    <link rel="stylesheet" href="{% static 'dist/css/styles.css' %}">
+</head>
+<body>
+<!-- BEGIN nav_wrapper: фиксированная обёртка шапки + меню, z-50 -->
+<section class="nav_wrapper [ flex flex-col mx-0 gap-0 ] left-0 right-0 top-0 fixed bg-white/75 backdrop-blur-xs z-50" >
+
+  <!-- BEGIN header: relative — является reference для absolute элементов внутри -->
+  <!-- home: фиксированная высота h-20 + бордер -->
+  <!-- внутренние: без фиксированной высоты, паддинг снизу -->
+  <header class="[ site-header ] pt-0 col-span-full relative z-100 h-18 border-b-1 border-stone-50 backdrop-blur-3xl">
+
+    <!-- BEGIN main-grid: 15-колоночная сетка шапки -->
+    <section class="flex px-3 md:px-4 h-18 ">
+
+      <!-- Колонка 1: Бургер-меню (col 1-3 mobile / col 1 desktop) -->
+      <div class="w-[25%] flex items-center">
+        <button id="menuBtn" class="btn-menu" type="button" aria-label="MenuButton">
+          <span class="line-item line-top     [ top-0 left-0 ]"></span>
+          <span class="line-item line-mid-1   [ lg:top-4 left-0 ]"></span>
+          <span class="line-item line-mid-2   [ lg:top-4 left-0 ]"></span>
+          <span class="line-item line-bottom  [ bottom-0 left-0 ]"></span>
+        </button>
+      </div>
+
+      <!-- Колонка 2: Логотип -->
+      <!-- home: col 4-6 mobile / col 2-14 desktop (широкий, на всю ширину) -->
+      <!-- внутренние: col 4-6 mobile / col 2-5 desktop (компактный) -->
+      <div class="w-[50%]" id="brand_wrapper">
+          {% include 'base/components/_logo_small.html' %}
+      </div>
+
+      <!-- Колонка 3: Правая часть шапки (хлебные крошки и т.д.) -->
+      <!-- home: СКРЫТА (hidden) — всё внутри тоже скрыто! -->
+      <!-- внутренние: col 1-6 mobile / col 9-14 desktop -->
+      <div class="w-[25%] flex">
+        <!-- Язык + Регион: absolute от header -->
+        <!-- ⚠️ Сейчас ВНУТРИ div header_right — на home скрыты вместе с ним -->
+        <!-- Чтобы видеть на всех страницах — вынести за пределы этого div, -->
+        <!-- прямым потомком <header> (после закрывающего </section> main-grid) -->
+        <div class="ml-auto flex items-center gap-4 md:gap-6">
+            <!-- Избранное -->
+            <div>
+                <button class="header-icon" data-open-modal="modalFavorites" type="button" aria-label="{% trans 'Избранное' %}">
+                    <svg class="w-6.5 md:w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                    </svg>
+                    <span class="header-icon__badge{% if not fav_count %} hidden{% endif %}" data-fav-count>{{ fav_count }}</span>
+                </button>
+            </div>
+            <!-- Корзина -->
+            <div>
+                <button class="header-icon" data-open-modal="modalCart" type="button" aria-label="{% trans 'Корзина' %}">
+                    <svg class="w-6.5 md:w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 01-8 0"/>
+                    </svg>
+                    <span class="header-icon__badge{% if not cart_count %} hidden{% endif %}" data-cart-count>{{ cart_count }}</span>
+                </button>
+            </div>
+        </div>
+
+      </div>
+    <!-- END main-grid -->
+    </section>
+  <!-- END header -->
+  </header>
+
+  <!-- BEGIN mainNav: выпадающее меню по клику на бургер -->
+  <!-- mobile: 90% ширины, desktop/tablet: auto ширина, полная высота -->
+  <div class="hidden flex-1 flex-col overflow-hidden w-full max-w-120" id="mainNav">
+    {% load menu_tags %}
+    <nav class="main-nav" role="navigation">
+        <ul class="main-nav__list" role="menubar">
+            {% get_menu as main_menu %}
+            {% for item in main_menu %}
+            <li class="main-nav__item{% if item.get_url == request.path %} active{% endif %}" role="menuitem"><a href="{{ item.get_url }}"{% if item.open_in_new_tab %} target="_blank" rel="noopener"{% endif %}>{{ item.title }}</a></li>
+            {% endfor %}
+        </ul>
+    </nav>
+    <div class="main-nav__footer">
+        <div class="pb-4">
+           {% if request.user.is_authenticated %}
+           <button class="btn-cat flex-1 font-benzin w-full bg-transparent hover:bg-red-500" type="button" data-open-modal="modalProfile">{% trans "Профиль" %}</button>
+           {% else %}
+           <button class="btn-cat flex-1 font-benzin w-full bg-transparent hover:bg-red-500" type="button" data-open-modal="modalAuth">{% trans "Войти" %}</button>
+           {% endif %}
+        </div>
+        <div class="flex gap-2">
+            <div class="flex flex-1 flex-col">
+                <div class="lang-dropdown" id="regionDropdown">
+                    <button type="button" class="lang-dropdown__trigger" id="regionSwitcherBtn" aria-label="{% trans 'Выбрать регион' %}">
+                        <span class="lang-dropdown__current">
+                            {% if current_region %}{{ current_region.flag_emoji }} {{ current_region.name }}{% else %}🌐 {% trans "Выберите" %}{% endif %}
+                        </span>
+                        <svg class="lang-dropdown__arrow" width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <ul class="lang-dropdown__menu hidden" id="regionMenu">
+                        {% for region in all_regions %}
+                        <li>
+                            <form method="post" action="{% url 'regions:set_region' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="region" value="{{ region.code }}">
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <button type="submit" class="lang-dropdown__item w-full text-left{% if region.code == region_code %} active{% endif %}">
+                                    {{ region.flag_emoji }} {{ region.name }} <span class="text-stone-400">{{ region.currency_code }}</span>
+                                </button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="flex flex-1 flex-col">
+                <div class="lang-dropdown ml-auto" id="langDropdown">
+                    <button type="button" class="lang-dropdown__trigger" id="langSwitcherBtn" aria-label="{% trans 'Выбрать язык' %}">
+                        <span class="lang-dropdown__current">
+                            {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}{% if lang_code == CURRENT_LANGUAGE %}{{ lang_name }}{% endif %}{% endfor %}
+                        </span>
+                        <svg class="lang-dropdown__arrow" width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <ul class="lang-dropdown__menu hidden" id="langMenu">
+                        {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+                        <li><a href="/{{ lang_code }}{{ request.path|slice:'3:' }}" class="lang-dropdown__item{% if lang_code == CURRENT_LANGUAGE %} active{% endif %}" data-lang="{{ lang_code }}">{{ lang_name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <!-- END mainNav -->
+</section>
+
+{% block content %}{% endblock %}
+{% include 'base/footer/_footer.html' %}
+
+{% block shop_ui %}{% endblock %}
+
+{% include 'base/components/_modal_cart.html' %}
+{% include 'base/components/_modal_favorites.html' %}
+{% include 'base/components/_modal_profile.html' %}
+{% include 'base/components/_modal_auth.html' %}
+{% include 'base/components/_modal_region.html' %}
+
+{% block scripts %}{% endblock %}
+<script>
+window.DRJOYS = {
+    region: '{{ region_code }}',
+    currencySymbol: '{{ currency_symbol }}',
+    currencyCode: '{{ currency_code }}',
+    paymentCurrencySymbol: '{{ payment_currency_symbol }}',
+    needsConversion: {{ needs_conversion|yesno:"true,false" }},
+    lang: '{{ CURRENT_LANGUAGE }}',
+    csrfToken: '{{ csrf_token }}',
+    isAuthenticated: {{ request.user.is_authenticated|yesno:"true,false" }},
+    placeholderUrl: '{{ placeholder_image_url }}',
+    i18n: {
+        added: '{% trans "Добавлено!" %}',
+        addMore: '{% trans "Добавить ещё" %}',
+    },
+};
+</script>
+<script src="{% static 'dist/js/main.js' %}"></script>
+</body>
+</html>

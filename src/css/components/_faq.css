@@ -1,0 +1,20 @@
+@layer components {
+    .faq-item {
+        @apply flex flex-col gap-1;
+    }
+    .faq-panel {
+        @apply text-xs;
+        @apply overflow-hidden transition-all duration-300 pr-6;
+        max-height: 0;
+        opacity: 0;
+    }
+    /* Когда открыто */
+    .faq-panel.is-open {
+        max-height: 1000px; /* Достаточно большое значение */
+        opacity: 1;
+    }
+
+    .faq-icon {
+        @apply flex-shrink-0 transition-transform duration-300;
+    }
+}

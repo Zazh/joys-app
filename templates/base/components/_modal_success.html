@@ -1,0 +1,29 @@
+<!-- BEGIN modal success -->
+<div class="modal-overlay hidden" id="modalSuccess">
+    <div class="modal-content modal-wide">
+        <!-- Header -->
+        <div class="modal-header">
+            <div></div>
+            <button class="modal-close" type="button" aria-label="Закрыть" onclick="closeModal(document.getElementById('modalSuccess'))">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="flex flex-col items-center gap-4 py-8">
+            <div class="w-16 h-16 rounded-full bg-green-600 flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h2 class="font-benzin text-xl uppercase text-center leading-tight" id="successTitle">Заказ<br>оформлен!</h2>
+            <p class="text-sm text-gray-500 text-center" id="successText">Мы свяжемся с вами для подтверждения</p>
+        </div>
+
+        <button class="btn-macro black w-full text-center text-xs" type="button" onclick="closeModal(document.getElementById('modalSuccess'))">ВЕРНУТЬСЯ К ПОКУПКАМ</button>
+    </div>
+</div>
+<!-- END modal success -->

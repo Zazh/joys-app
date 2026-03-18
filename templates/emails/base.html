@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DR.JOYS{% endblock %}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f4;padding:32px 16px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding:28px 32px 20px;border-bottom:1px solid #e7e5e4;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <span style="font-size:20px;font-weight:800;letter-spacing:2px;color:#000000;">DR.JOYS</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding:32px;">
+                            {% block content %}{% endblock %}
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:24px 32px;border-top:1px solid #e7e5e4;background-color:#fafaf9;">
+                            <p style="margin:0 0 8px;font-size:12px;color:#a8a29e;line-height:1.5;">
+                                Это письмо отправлено автоматически. Пожалуйста, не отвечайте на него.
+                            </p>
+                            <p style="margin:0;font-size:12px;color:#a8a29e;">
+                                &copy; {{ year|default:"2026" }} DR.JOYS — ультратонкие презервативы
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

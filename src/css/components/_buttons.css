@@ -1,0 +1,71 @@
+@layer components {
+    .btn-cat {
+        @apply uppercase border-red-500 border-1 text-red-500 bg-white hover:bg-red-500 hover:text-white cursor-pointer py-4 px-8 text-xs transition-colors;
+    }
+    .btn-cat.btn-cat--active {
+        @apply bg-red-500 text-white;
+    }
+    .btn-cat-list {
+        @apply cursor-pointer py-2 px-4 text-xs text-left flex items-center justify-between w-full hover:text-red-500;
+    }
+
+    .btn-menu {
+        @apply w-12 h-6 lg:w-16 lg:h-8 lg:my-4 relative cursor-pointer z-100;
+    }
+    .btn-menu > .line-item {
+        @apply w-full h-[1.5px] bg-black absolute transition-all duration-300;
+    }
+
+    .btn-link {
+        @apply uppercase text-gray-500 tracking-wide font-bold cursor-pointer text-sm hover:text-red-500;
+    }
+    .btn-link.active {
+        @apply text-black;
+    }
+
+    .faq-button {
+        @apply w-full text-sm text-left uppercase tracking-wider hover:text-red-500 flex items-center justify-between cursor-pointer py-2;
+    }
+    .faq-button[aria-expanded="true"] .faq-icon {
+        @apply rotate-45;
+    }
+
+    .product_links-item {
+        @apply text-sm tracking-wide font-bold uppercase hover:text-red-500;
+    }
+    .add-to-cart.active {
+        @apply border-1;
+    }
+
+    .btn-macro {
+        @apply font-benzin text-xs lg:text-base p-5 lg:p-7 cursor-pointer rounded-full leading-tight;
+    }
+    .btn-macro.small {
+        @apply font-benzin text-xs p-5 ;
+    }
+    .btn-macro.default {
+        @apply bg-gray-200 hover:bg-[#F9F9F9] text-black ;
+    }
+    .btn-macro.black {
+        @apply bg-black hover:bg-red-500 text-white hover:text-white font-bold;
+    }
+    .btn-macro.light {
+        @apply bg-stone-50 hover:bg-red-500 text-black hover:text-white font-bold;
+    }
+    .btn-wb {
+        @apply text-[#E313BF] hover:text-[#A813E3] bg-gradient-to-b from-[#A813E3] to-[#FF7CFF] hover:from-[#FF7CFF] hover:to-[#A813E3]
+               bg-stone-50 font-bold text-xs lg:text-base p-[2px] hover:p-[4px] hover:-m-[2px] cursor-pointer rounded-full leading-tight font-benzin;
+    }
+    .btn-wb > span {
+        @apply bg-white p-5 lg:p-7 rounded-full block;
+    }
+    .btn-macro.danger {
+        @apply bg-red-500 hover:bg-red-400 text-white;
+    }
+    .btn-macro.white-opacity {
+        @apply bg-white/30 hover:bg-white/20 text-white border-1 border-white backdrop-blur-2xl;
+    }
+    .btn-share {
+        @apply text-red-500 hover:text-red-400 uppercase text-xs font-bold tracking-wide flex gap-3 items-center cursor-pointer;
+    }
+}

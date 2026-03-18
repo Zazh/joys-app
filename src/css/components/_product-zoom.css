@@ -1,0 +1,7 @@
+.product-zoom-container {
+    @apply relative;
+}
+.product-zoom-image {
+    will-change: transform;
+    transform-origin: center center;
+}

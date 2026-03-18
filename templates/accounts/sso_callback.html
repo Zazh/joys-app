@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>DR.JOYS — SSO</title>
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafaf9; }
+        p { font-size: 14px; color: #78716c; }
+    </style>
+</head>
+<body>
+    <p>Завершаем авторизацию...</p>
+    <script>
+    (function() {
+        var success = {{ sso_success|yesno:"true,false" }};
+        var payload = { type: 'sso_complete', success: success };
+
+        // Попытка 1: postMessage (если opener жив)
+        if (window.opener && !window.opener.closed) {
+            try {
+                window.opener.postMessage(payload, window.location.origin);
+            } catch(e) {}
+            window.close();
+            return;
+        }
+
+        // Попытка 2: popup закроется, и fallback polling в main.js подхватит
+        // Просто закрываем окно — если это popup, main.js увидит ssoPopup.closed
+        try { window.close(); } catch(e) {}
+
+        // Если window.close() не сработал (не popup, а основное окно) —
+        // редирект на каталог
+        setTimeout(function() {
+            window.location.href = '/ru/catalog/';
+        }, 300);
+    })();
+    </script>
+</body>
+</html>

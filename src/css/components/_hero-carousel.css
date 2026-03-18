@@ -1,0 +1,70 @@
+/* Hero carousel */
+.hero-carousel-card {
+    @apply w-full aspect-[25/32] relative;
+    transition: transform 0.3s ease-out, z-index 0s;
+    transform: perspective(1000px) scale(0.70);
+    z-index: 1;
+}
+
+.hero-carousel-card-product_img {
+    @apply w-full;
+}
+
+
+/* Desktop */
+@media (min-width: 1024px) {
+    /* Active — базовый размер */
+    .hero-carousel-card.active {
+        transform: perspective(1000px) scale(1);
+        z-index: 10;
+    }
+
+    /* Когда hover на неактивной — active уменьшается */
+    .hero-carousel-container:has(.hero-carousel-card:not(.active):hover) .hero-carousel-card.active {
+        transform: perspective(1000px) scale(0.77);
+        z-index: 1;
+    }
+
+    /* Hover увеличивает до базового */
+    .hero-carousel-card:hover {
+        transform: perspective(1000px) scale(1);
+        z-index: 10;
+    }
+}
+
+/* Mobile */
+@media (max-width: 1023px) {
+    .hero-carousel-container {
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+    }
+
+    .hero-carousel-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari */
+    }
+
+    .hero-carousel-container > div {
+        scroll-snap-align: center;
+        flex-shrink: 0;
+    }
+
+    .hero-carousel-card {
+        transform: perspective(1000px) scale(0.85);
+    }
+
+    .hero-carousel-card.active {
+        transform: perspective(1000px) scale(1);
+        z-index: 10;
+    }
+}
+
+.hero-carousel-card_layer {
+    @apply absolute inset-0;
+}
+
+.hero-carousel-card_bg {
+    @apply w-full aspect-[67/75] bg-gray-200 rounded-xl relative overflow-hidden;
+}

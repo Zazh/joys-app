@@ -1,0 +1,56 @@
+{% load static %}
+<!-- BEGIN modal order quantity -->
+<div class="modal-overlay hidden" id="modalOrderQuantity">
+    <div class="modal-content modal-wide">
+        <!-- Header -->
+        <div class="modal-header">
+            <div></div>
+            <button class="modal-close" type="button" aria-label="Закрыть" onclick="closeModal(document.getElementById('modalOrderQuantity'))">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Title: product name (заполняется JS) -->
+        <h2 class="modal-title" id="orderProductName"></h2>
+
+        <!-- Size prominently (заполняется JS) -->
+        <div class="text-center pb-4">
+            <span class="inline-block text-md uppercase px-6" id="orderProductSize"></span>
+        </div>
+
+        <!-- Quantity selector -->
+        <div class="flex items-center justify-center gap-4 pb-4">
+            <button class="qty-btn" type="button" id="qtyMinus" aria-label="Уменьшить">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <span class="font-benzin text-2xl min-w-10 text-center" id="qtyValue">1</span>
+            <button class="qty-btn" type="button" id="qtyPlus" aria-label="Увеличить">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Price (заполняется JS через data-price) -->
+        <div class="flex justify-between items-center pb-2 text-sm">
+            <span>Цена за 1 шт.</span>
+            <span id="orderUnitPrice" data-price="0"></span>
+        </div>
+        <div class="flex justify-between items-center pb-6 font-bold">
+            <span class="font-benzin uppercase">Итого</span>
+            <span class="font-benzin text-lg text-red-500" id="orderTotalPrice"></span>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col gap-3">
+            <button class="btn-macro default small w-full text-center text-xs" type="button" id="addToCartBtn" data-size-id="">ДОБАВИТЬ В КОРЗИНУ</button>
+            <button class="btn-macro black w-full text-center text-xs" type="button" id="goToDeliveryBtn">ПРОДОЛЖИТЬ</button>
+        </div>
+    </div>
+</div>
+<!-- END modal order quantity -->

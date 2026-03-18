@@ -1,0 +1,40 @@
+.breadcrumb {
+    @apply flex gap-3 mt-auto flex-nowrap overflow-hidden;
+}
+
+.blog-breadcrumbs {
+    @apply flex flex-col md:flex-row py-8;
+}
+
+.blog-breadcrumb-item {
+    @apply text-xs uppercase tracking-wide md:border-r-1 md:px-3 md:py-0 md:border-b-0 border-b-1 py-1;
+}
+.blog-breadcrumb-item:first-child {
+    @apply md:pl-0;
+}
+.blog-breadcrumb-item:last-child {
+    @apply md:border-r-0;
+}
+
+.breadcrumb-item:last-child {
+    @apply text-black;
+}
+
+.breadcrumb-item {
+    @apply text-xs uppercase tracking-wider text-gray-500 hover:text-red-500 shrink-0 whitespace-nowrap;
+}
+.breadcrumb-item:last-child {
+    @apply shrink overflow-hidden text-ellipsis;
+}
+
+.breadcrumb-item a:hover {
+    @apply text-red-500;
+}
+
+.breadcrumb-separator {
+    @apply text-xs text-gray-400 shrink-0;
+}
+
+.breadcrumb-back {
+    @apply fixed top-20 lg:hidden aspect-square rounded-full w-14 flex justify-center items-center bg-black/10 backdrop-blur-[20px] text-white z-10 hover:text-red-500 mt-auto;
+}

@@ -1,0 +1,296 @@
+# DR.JOYS English translations
+# Copyright (C) 2026 DR.JOYS
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: DR.JOYS 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-04 21:35+0500\n"
+"PO-Revision-Date: 2026-02-28 23:34+0500\n"
+"Last-Translator: DR.JOYS Team\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "ультратонкие презервативы"
+msgstr "ultra-thin condoms"
+
+#, python-format
+msgid "Ультратонкие презервативы DR.JOYS — неощутимые на 95%%"
+msgstr "DR.JOYS ultra-thin condoms — 95%% undetectable"
+
+msgid "Избранное"
+msgstr "Favorites"
+
+msgid "Корзина"
+msgstr "Cart"
+
+msgid "Главная"
+msgstr "Home"
+
+msgid "О Dr.Joys"
+msgstr "About"
+
+msgid "Каталог"
+msgstr "Catalog"
+
+msgid "Партнерам"
+msgstr "Partners"
+
+msgid "Контакты"
+msgstr "Contact"
+
+msgid "Профиль"
+msgstr "Profile"
+
+msgid "Войти"
+msgstr "Sign in"
+
+msgid "Выбрать регион"
+msgstr "Select region"
+
+msgid "Выберите"
+msgstr "Select"
+
+msgid "Выбрать язык"
+msgstr "Select language"
+
+msgid "Добавлено!"
+msgstr "Added!"
+
+msgid "Добавить ещё"
+msgstr "Add more"
+
+msgid "Назад"
+msgstr "Back"
+
+msgid "Закрыть"
+msgstr "Close"
+
+msgid "Вход"
+msgstr "Sign in"
+
+msgid "Пароль"
+msgstr "Password"
+
+msgid "ВОЙТИ"
+msgstr "SIGN IN"
+
+msgid "или"
+msgstr "or"
+
+msgid "Войти через Google"
+msgstr "Sign in with Google"
+
+msgid "Войти через Яндекс"
+msgstr "Sign in with Yandex"
+
+msgid "Нет аккаунта? Зарегистрироваться"
+msgstr "No account? Sign up"
+
+msgid "Регистрация"
+msgstr "Sign up"
+
+msgid "Повторите пароль"
+msgstr "Confirm password"
+
+msgid "СОЗДАТЬ АККАУНТ"
+msgstr "CREATE ACCOUNT"
+
+msgid "Уже есть аккаунт? Войти"
+msgstr "Already have an account? Sign in"
+
+msgid "Корзина пуста"
+msgstr "Cart is empty"
+
+msgid "Итого"
+msgstr "Total"
+
+msgid "ОФОРМИТЬ ЗАКАЗ"
+msgstr "CHECKOUT"
+
+msgid "Продолжить покупки"
+msgstr "Continue shopping"
+
+msgid "Пока пусто"
+msgstr "Empty"
+
+msgid "Что для тебя"
+msgstr "What matters"
+
+msgid "важнее?"
+msgstr "most to you?"
+
+msgid "Текстура"
+msgstr "Texture"
+
+msgid "Аромат"
+msgstr "Scent"
+
+msgid "Неощутимость"
+msgstr "Sensitivity"
+
+msgid "Какой аромат"
+msgstr "Which scent"
+
+msgid "привлекает?"
+msgstr "do you prefer?"
+
+msgid "Банановый"
+msgstr "Banana"
+
+msgid "Клубничный"
+msgstr "Strawberry"
+
+msgid "Шоколадный"
+msgstr "Chocolate"
+
+msgid "Без аромата"
+msgstr "No scent"
+
+msgid "Как часто"
+msgstr "How often"
+
+msgid "случается"
+msgstr "do you have"
+
+msgid "близость?"
+msgstr "intimacy?"
+
+msgid "Несколько раз в день"
+msgstr "Several times a day"
+
+msgid "Несколько раз в неделю"
+msgstr "Several times a week"
+
+msgid "Несколько раз в месяц"
+msgstr "Several times a month"
+
+msgid "Несколько раз в год"
+msgstr "Several times a year"
+
+msgid "Используешь"
+msgstr "Do you use"
+
+msgid "дополнительную"
+msgstr "additional"
+
+msgid "смазку?"
+msgstr "lubricant?"
+
+msgid "Да, использую дополнительный лубрикант"
+msgstr "Yes, I use additional lubricant"
+
+msgid "Нет, хватает той, которая на презервативе"
+msgstr "No, the one on the condom is enough"
+
+msgid "Твой"
+msgstr "Your"
+
+msgid "идеальный"
+msgstr "perfect"
+
+msgid "Купить"
+msgstr "Buy"
+
+msgid "Ещё вариант"
+msgstr "Another option"
+
+msgid "Меню"
+msgstr "Menu"
+
+msgid "главная"
+msgstr "home"
+
+msgid "о компании"
+msgstr "about"
+
+msgid "каталог"
+msgstr "catalog"
+
+msgid "контакты"
+msgstr "contact"
+
+msgid "Правовая информация"
+msgstr "Legal"
+
+msgid "Политика конфиденциальности"
+msgstr "Privacy Policy"
+
+msgid "Условия покупки"
+msgstr "Terms of Purchase"
+
+msgid "Настройки файлов cookie"
+msgstr "Cookie Settings"
+
+msgid "сертификат соответствия"
+msgstr "certificate of conformity"
+
+msgid "© 2026 DR.JOYS - Все права защищены"
+msgstr "© 2026 DR.JOYS - All rights reserved"
+
+msgid "Товары не найдены"
+msgstr "No products found"
+
+#, python-format
+msgid "DR.JOYS — ультратонкие презервативы, неощутимые на 95%%"
+msgstr "DR.JOYS — ultra-thin condoms, 95%% undetectable"
+
+#, python-format
+msgid ""
+"Ультратонкие презервативы DR.JOYS толщиной 0,02 мм — неощутимые на 95%%. "
+"Классические, ребристые, ароматизированные."
+msgstr ""
+"DR.JOYS ultra-thin condoms 0.02 mm — 95%% undetectable. Classic, ribbed, "
+"flavored."
+
+msgid "Пройти опрос"
+msgstr "Take the quiz"
+
+msgid "АРТИКУЛ"
+msgstr "SKU"
+
+msgid "Выберите размер"
+msgstr "Select size"
+
+msgid "Нет в наличии"
+msgstr "Out of stock"
+
+msgid "Как выбрать размер?"
+msgstr "How to choose a size?"
+
+msgid "Стоимость"
+msgstr "Price"
+
+msgid "Добавить в корзину"
+msgstr "Add to cart"
+
+msgid "СОСТАВ И ХАРАКТЕРИСТИКИ"
+msgstr "COMPOSITION & SPECIFICATIONS"
+
+msgid "Инструкция по применению"
+msgstr "Instructions for use"
+
+msgid "противопоказания"
+msgstr "contraindications"
+
+msgid "Характеристики не заполнены"
+msgstr "No specifications available"
+
+msgid "Упаковка презервативов DR.JOYS"
+msgstr "DR.JOYS condom packaging"
+
+msgid "Презерватив в индивидуальной упаковке"
+msgstr "Condom in individual packaging"
+
+msgid "Вам может быть интересно"
+msgstr "You may also like"
+
+#~ msgid "В корзину"
+#~ msgstr "Add to cart"
+
+#~ msgid "Каталог презервативов"
+#~ msgstr "Condom Catalog"

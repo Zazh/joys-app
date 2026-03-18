@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}О компании — DR.JOYS{% endblock %}
+
+{% block meta %}
+<meta name="description" content="DR.JOYS — казахстанский бренд презервативов №1. Узнайте нашу историю, миссию и ценности.">
+{% endblock %}
+
+{% block og %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="О компании — DR.JOYS">
+<meta property="og:description" content="DR.JOYS — казахстанский бренд презервативов №1. История, миссия и ценности компании.">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
+            <div class="blog-container pt-46">
+                <!-- BEGIN заголовок -->
+                <div>
+                    <h1 class="display-2 uppercase font-benzin">О компании DR.JOYS</h1>
+                </div>
+                <!-- END заголовок -->
+
+                <!-- BEGIN content -->
+                <div class="blog-content">
+                    <div>
+                        <p>
+                            DR.JOYS — это казахстанский бренд ультратонких презервативов, который за несколько лет стал одним из самых узнаваемых в Центральной Азии. Мы создаём продукцию, которая сочетает в себе безопасность, качество и удовольствие.
+                        </p>
+                        <p>
+                            Наша компания была основана в 2019 году в Алматы с простой идеей — сделать качественные средства контрацепции доступными для каждого. Сегодня продукция DR.JOYS продаётся в тысячах торговых точек по всему Казахстану и за его пределами.
+                        </p>
+
+                        <h3>
+                            Наша миссия
+                        </h3>
+                        <p>
+                            Мы верим, что забота о здоровье должна быть простой, доступной и без стеснения. Наша миссия — разрушать табу вокруг темы интимного здоровья и предлагать продукцию, которой можно доверять.
+                        </p>
+                        <p>
+                            DR.JOYS — это не просто бренд. Это движение за открытость, осознанность и ответственное отношение к своему здоровью и здоровью партнёра.
+                        </p>
+
+                        <h3>
+                            Почему нам доверяют
+                        </h3>
+                        <ul>
+                            <li><b>Сертифицированное качество:</b> вся продукция проходит многоступенчатый контроль качества и соответствует международным стандартам ISO 4074.</li>
+                            <li><b>Ультратонкие технологии:</b> толщина стенки наших презервативов — от 0.01 мм, что обеспечивает максимальную чувствительность при полной защите.</li>
+                            <li><b>Уникальные вкусы и ароматы:</b> банан, клубника, шоколад — мы делаем защиту приятной и интересной.</li>
+                            <li><b>Доступная цена:</b> премиальное качество по честной цене — без переплат за бренд.</li>
+                        </ul>
+
+                        <figure>
+                            <img src="{% static 'dist/images/go_partner/partner.jpg' %}" alt="Команда DR.JOYS" loading="lazy">
+                            <figcaption>
+                                Команда DR.JOYS
+                            </figcaption>
+                        </figure>
+
+                        <h3>
+                            Наши достижения
+                        </h3>
+                        <ul>
+                            <li><b>2019:</b> основание компании в Алматы, запуск первой линейки продукции.</li>
+                            <li><b>2020:</b> выход на рынки Кыргызстана и Узбекистана.</li>
+                            <li><b>2021:</b> более 1 000 000 проданных упаковок. Запуск линейки с ароматами.</li>
+                            <li><b>2022:</b> партнёрство с крупнейшими аптечными сетями Казахстана.</li>
+                            <li><b>2023:</b> запуск рекламной кампании с охватом более 10 млн человек.</li>
+                            <li><b>2024:</b> расширение ассортимента — лубриканты и новые текстуры.</li>
+                        </ul>
+
+                        <h3>
+                            Где нас найти
+                        </h3>
+                        <p>
+                            Продукция DR.JOYS представлена в аптеках, супермаркетах и маркетплейсах по всему Казахстану. Мы также работаем с партнёрами в России, Кыргызстане, Узбекистане и Таджикистане.
+                        </p>
+                        <p>
+                            Следите за нами в социальных сетях, чтобы быть в курсе новинок, акций и конкурсов. Мы всегда рады обратной связи и открыты для сотрудничества.
+                        </p>
+
+                        <figure>
+                            <div class="blog-content-video">
+                                <iframe
+                                    src="https://www.youtube.com/embed/TGFDgNPNJhU?rel=0&modestbranding=1"
+                                    title="DR.JOYS — о компании"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen
+                                    loading="lazy"
+                                ></iframe>
+                            </div>
+                            <figcaption>
+                                DR.JOYS — о компании
+                            </figcaption>
+                        </figure>
+                    </div>
+                </div>
+                <!-- END content -->
+            </div>
+        </div>
+    </section>
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "name": "О компании — DR.JOYS",
+        "description": "DR.JOYS — казахстанский бренд презервативов №1. История, миссия и ценности компании.",
+        "url": "https://drjoys.kz/about/",
+        "publisher": {
+            "@type": "Organization",
+            "name": "DR.JOYS",
+            "foundingDate": "2019",
+            "foundingLocation": {
+                "@type": "Place",
+                "name": "Алматы, Казахстан"
+            }
+        }
+    }
+    </script>
+</main>
+{% endblock %}

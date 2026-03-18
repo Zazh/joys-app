@@ -1,0 +1,55 @@
+.blog-widgets {
+    @apply py-16 overflow-hidden bg-gray-100;
+}
+
+.blog-carousel {
+    @apply relative pb-8;
+}
+
+.blog-carousel-track {
+    @apply flex gap-3 md:gap-4;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    user-select: none;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    scroll-padding-left: 0.75rem;
+}
+
+.blog-carousel-track img,
+.blog-carousel-track a {
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+.blog-carousel-track img {
+    pointer-events: none;
+}
+
+.blog-carousel-track::-webkit-scrollbar {
+    display: none;
+}
+
+
+.blog-carousel-slide {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    width: calc(100vw - 3rem);
+}
+
+@media (min-width: 768px) {
+    .blog-carousel-slide {
+        width: 37.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .blog-carousel-track {
+        cursor: none;
+        padding-left: 5rem;
+        padding-right: 5rem;
+        scroll-padding-left: 5rem;
+    }
+}

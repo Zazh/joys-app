@@ -1,0 +1,73 @@
+{% load i18n quiz_tags %}
+
+{% get_quiz_questions as quiz_questions %}
+{% get_quiz_result_text as result_text %}
+
+<!-- BEGIN modal quiz -->
+<div class="modal-overlay hidden" id="modalQuiz">
+    <div class="modal-content modal-fullscreen" id="quizContent">
+
+        {% for question in quiz_questions %}
+        <!-- {{ question.key }}: {{ question.text|striptags|truncatechars:40 }} -->
+        <div class="modal-step{% if not forloop.first %} hidden{% endif %}" data-step="{{ forloop.counter }}" data-key="{{ question.key }}">
+            <div class="modal-header">
+                {% if not forloop.first %}
+                <button class="modal-back" type="button" aria-label="{% trans 'Назад' %}" data-prev-step="{{ forloop.counter|add:'-1' }}">
+                    <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                {% else %}
+                <div></div>
+                {% endif %}
+                <button class="modal-close modal-close-quiz" type="button" aria-label="{% trans 'Закрыть' %}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 flex flex-col justify-center items-center">
+                <h2 class="quiz-question">{{ question.text|safe }}</h2>
+                <div class="quiz-options">
+                    {% for option in question.options.all %}
+                    <button class="quiz-option" type="button"
+                            {% if forloop.parentloop.last %}data-last{% else %}data-next-step="{{ forloop.parentloop.counter|add:'1' }}"{% endif %}
+                            data-value="{{ option.value }}"
+                            {% if option.bg_color or option.text_color %}style="{% if option.bg_color %}background-color:{{ option.bg_color }};{% endif %}{% if option.text_color %}color:{{ option.text_color }};{% endif %}"{% endif %}
+                    >{{ option.label }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Result: заполняется JS из API -->
+        <div class="modal-step hidden" data-step="result">
+            <div class="modal-header">
+                <button class="modal-back" type="button" aria-label="{% trans 'Назад' %}" data-prev-step="{{ quiz_questions|length }}">
+                    <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button class="modal-close modal-close-quiz" type="button" aria-label="{% trans 'Закрыть' %}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 flex flex-col justify-center items-center text-center p-6">
+                <h2 class="quiz-question pb-2">{{ result_text.title|safe }}</h2>
+                <div class="quiz-result-img">
+                    <img id="quizResultImg" src="" alt="">
+                </div>
+                <p id="quizResultName" class="quiz-result-name"></p>
+                <a id="quizResultBtn" href="#" class="btn-macro small danger mt-4">{{ result_text.button_text }}</a>
+                <button id="quizNextVariant" type="button" class="text-xs text-stone-400 underline mt-3 hidden">{{ result_text.more_text }}</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- END modal quiz -->
