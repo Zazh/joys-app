@@ -32,7 +32,7 @@ class Command(BaseCommand):
             slug='prezervativy',
             defaults={
                 'name_ru': 'Презервативы',
-                'name_kk': 'Презервативтер',
+                'name_kk': 'Мүшеқаптар',
                 'name_en': 'Condoms',
                 'description_ru': 'Презервативы DR.JOYS — премиальное качество',
                 'description_en': 'DR.JOYS Condoms — premium quality',

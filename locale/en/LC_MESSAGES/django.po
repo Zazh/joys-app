@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DR.JOYS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-04 21:35+0500\n"
-"PO-Revision-Date: 2026-02-28 23:34+0500\n"
+"POT-Creation-Date: 2026-03-19 20:09+0500\n"
+"PO-Revision-Date: 2026-03-19 22:00+0500\n"
 "Last-Translator: DR.JOYS Team\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -14,6 +14,170 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Пользователь с таким email уже существует."
+msgstr "A user with this email already exists."
+
+msgid "Пароли не совпадают."
+msgstr "Passwords do not match."
+
+msgid "Вы уже авторизованы."
+msgstr "You are already signed in."
+
+msgid "Неверный email или пароль."
+msgstr "Invalid email or password."
+
+msgid "Требуется авторизация."
+msgstr "Authentication required."
+
+msgid "Укажите email."
+msgstr "Enter your email."
+
+msgid "Если аккаунт существует, письмо отправлено."
+msgstr "If the account exists, the email has been sent."
+
+msgid "Недействительная ссылка."
+msgstr "Invalid link."
+
+msgid "Ссылка истекла или уже использована."
+msgstr "The link has expired or has already been used."
+
+msgid "Минимум 8 символов."
+msgstr "Minimum 8 characters."
+
+msgid "Пароль успешно изменён."
+msgstr "Password changed successfully."
+
+msgid "Каталог презервативов DR.JOYS"
+msgstr "DR.JOYS Condom Catalog"
+
+msgid "Каталог презервативов DR.JOYS — классические, ребристые, ультратонкие"
+msgstr "DR.JOYS Condom Catalog — classic, ribbed, ultra-thin"
+
+msgid "Каталог"
+msgstr "Catalog"
+
+#, python-format
+msgid "Поле «%(label)s» обязательно."
+msgstr "The \"%(label)s\" field is required."
+
+msgid "Некорректный email."
+msgstr "Invalid email."
+
+#, python-format
+msgid "Минимальное значение: %(value)s."
+msgstr "Minimum value: %(value)s."
+
+#, python-format
+msgid "Максимальное значение: %(value)s."
+msgstr "Maximum value: %(value)s."
+
+msgid "Введите число."
+msgstr "Enter a number."
+
+msgid "Недопустимое значение."
+msgstr "Invalid value."
+
+msgid "Форма не найдена."
+msgstr "Form not found."
+
+msgid "Страна"
+msgstr "Country"
+
+msgid "Город"
+msgstr "City"
+
+msgid "Улица"
+msgstr "Street"
+
+msgid "Дом"
+msgstr "Building"
+
+msgid "Квартира"
+msgstr "Apartment"
+
+msgid "Имя"
+msgstr "First name"
+
+msgid "Фамилия"
+msgstr "Last name"
+
+msgid "Телефон"
+msgstr "Phone"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Размер не найден"
+msgstr "Size not found"
+
+msgid "Регион не определён"
+msgstr "Region not detected"
+
+msgid "Товары в корзине не найдены"
+msgstr "No items found in cart"
+
+msgid "Ошибка платёжной системы. Попробуйте позже."
+msgstr "Payment system error. Please try again later."
+
+msgid "Корзина пуста"
+msgstr "Cart is empty"
+
+#, python-format
+msgid "%(name)s (%(size)s) — нет в наличии"
+msgstr "%(name)s (%(size)s) — out of stock"
+
+#, python-format
+msgid "%(name)s (%(size)s) — недостаточно на складе"
+msgstr "%(name)s (%(size)s) — not enough in stock"
+
+msgid "Некорректная ссылка"
+msgstr "Invalid link"
+
+msgid "Заказ не найден"
+msgstr "Order not found"
+
+msgid "Сессия оплаты истекла. Попробуйте оформить заказ заново."
+msgstr "Payment session expired. Please place a new order."
+
+msgid "Проверьте почту"
+msgstr "Check your email"
+
+msgid "ПРОВЕРЬТЕ ПОЧТУ"
+msgstr "CHECK YOUR EMAIL"
+
+msgid "Мы отправили письмо с ссылкой для подтверждения на"
+msgstr "We sent a confirmation link to"
+
+msgid "НА ГЛАВНУЮ"
+msgstr "GO TO HOME"
+
+msgid "Email подтверждён"
+msgstr "Email confirmed"
+
+msgid "Ошибка"
+msgstr "Error"
+
+msgid "EMAIL ПОДТВЕРЖДЁН"
+msgstr "EMAIL CONFIRMED"
+
+msgid ""
+"Ваш email успешно подтверждён. Теперь вы можете пользоваться всеми функциями "
+"сайта."
+msgstr ""
+"Your email has been confirmed. You now have access to all site features."
+
+msgid "ПЕРЕЙТИ К ПОКУПКАМ"
+msgstr "START SHOPPING"
+
+msgid "ОШИБКА"
+msgstr "ERROR"
+
+msgid "Ссылка истекла или недействительна."
+msgstr "The link has expired or is invalid."
+
+msgid "Завершаем авторизацию..."
+msgstr "Completing authorization..."
 
 msgid "ультратонкие презервативы"
 msgstr "ultra-thin condoms"
@@ -27,21 +191,6 @@ msgstr "Favorites"
 
 msgid "Корзина"
 msgstr "Cart"
-
-msgid "Главная"
-msgstr "Home"
-
-msgid "О Dr.Joys"
-msgstr "About"
-
-msgid "Каталог"
-msgstr "Catalog"
-
-msgid "Партнерам"
-msgstr "Partners"
-
-msgid "Контакты"
-msgstr "Contact"
 
 msgid "Профиль"
 msgstr "Profile"
@@ -64,6 +213,57 @@ msgstr "Added!"
 msgid "Добавить ещё"
 msgstr "Add more"
 
+msgid "Уменьшить"
+msgstr "Decrease"
+
+msgid "Увеличить"
+msgstr "Increase"
+
+msgid "В корзину"
+msgstr "Add to cart"
+
+msgid "Удалить из избранного"
+msgstr "Remove from favorites"
+
+msgid "Ошибка загрузки"
+msgstr "Loading error"
+
+msgid "Заказ"
+msgstr "Order"
+
+msgid "Размер"
+msgstr "Size"
+
+msgid "шт."
+msgstr "pcs"
+
+msgid "Адрес доставки"
+msgstr "Delivery address"
+
+msgid "Итого"
+msgstr "Total"
+
+msgid "Ошибка входа."
+msgstr "Sign in error."
+
+msgid "Ошибка сети. Попробуйте ещё раз."
+msgstr "Network error. Please try again."
+
+msgid "Ошибка регистрации."
+msgstr "Registration error."
+
+msgid "Заказ<br>оформлен!"
+msgstr "Order<br>placed!"
+
+msgid "на сумму"
+msgstr "for the amount of"
+
+msgid "Все"
+msgstr "All"
+
+msgid "Навигация магазина"
+msgstr "Shop navigation"
+
 msgid "Назад"
 msgstr "Back"
 
@@ -75,6 +275,9 @@ msgstr "Sign in"
 
 msgid "Пароль"
 msgstr "Password"
+
+msgid "Показать пароль"
+msgstr "Show password"
 
 msgid "ВОЙТИ"
 msgstr "SIGN IN"
@@ -103,137 +306,283 @@ msgstr "CREATE ACCOUNT"
 msgid "Уже есть аккаунт? Войти"
 msgstr "Already have an account? Sign in"
 
-msgid "Корзина пуста"
-msgstr "Cart is empty"
-
-msgid "Итого"
-msgstr "Total"
-
 msgid "ОФОРМИТЬ ЗАКАЗ"
 msgstr "CHECKOUT"
 
 msgid "Продолжить покупки"
 msgstr "Continue shopping"
 
+msgid "Доставка"
+msgstr "Delivery"
+
+msgid "Имя получателя"
+msgstr "Recipient's first name"
+
+msgid "Фамилия получателя"
+msgstr "Recipient's last name"
+
+msgid "ПРОДОЛЖИТЬ"
+msgstr "CONTINUE"
+
 msgid "Пока пусто"
-msgstr "Empty"
+msgstr "Nothing here yet"
 
-msgid "Что для тебя"
-msgstr "What matters"
+msgid "Цена за 1 шт."
+msgstr "Price per unit"
 
-msgid "важнее?"
-msgstr "most to you?"
+msgid "ДОБАВИТЬ В КОРЗИНУ"
+msgstr "ADD TO CART"
 
-msgid "Текстура"
-msgstr "Texture"
+msgid "Стать"
+msgstr "Become"
 
-msgid "Аромат"
-msgstr "Scent"
+msgid "партнером"
+msgstr "a partner"
 
-msgid "Неощутимость"
-msgstr "Sensitivity"
+msgid "Страна проживания"
+msgstr "Country of residence"
 
-msgid "Какой аромат"
-msgstr "Which scent"
+msgid "Где планируете продавать"
+msgstr "Where do you plan to sell"
 
-msgid "привлекает?"
-msgstr "do you prefer?"
+msgid "На сколько заинтересованы в партнерстве?"
+msgstr "How interested are you in a partnership?"
 
-msgid "Банановый"
-msgstr "Banana"
+msgid "Готов инвестировать в ближайшее время"
+msgstr "Ready to invest soon"
 
-msgid "Клубничный"
-msgstr "Strawberry"
+msgid "Пока просто изучаю информацию"
+msgstr "Just exploring for now"
 
-msgid "Шоколадный"
-msgstr "Chocolate"
+msgid "Желаемый формат работы"
+msgstr "Preferred business format"
 
-msgid "Без аромата"
-msgstr "No scent"
+msgid "Стать дистрибьютором на всю страну"
+msgstr "Become a nationwide distributor"
 
-msgid "Как часто"
-msgstr "How often"
+msgid "Стать дистрибьютором на свой город"
+msgstr "Become a local distributor"
 
-msgid "случается"
-msgstr "do you have"
+msgid "Стать оптовиком"
+msgstr "Become a wholesaler"
 
-msgid "близость?"
-msgstr "intimacy?"
+msgid "У меня офлайн точка"
+msgstr "I have a physical store"
 
-msgid "Несколько раз в день"
-msgstr "Several times a day"
+msgid "Номер телефона"
+msgstr "Phone number"
 
-msgid "Несколько раз в неделю"
-msgstr "Several times a week"
+msgid "Способ связи"
+msgstr "Preferred contact method"
 
-msgid "Несколько раз в месяц"
-msgstr "Several times a month"
+msgid "Написать на WhatsApp"
+msgstr "Message on WhatsApp"
 
-msgid "Несколько раз в год"
-msgstr "Several times a year"
+msgid "Позвонить"
+msgstr "Call"
 
-msgid "Используешь"
-msgstr "Do you use"
+msgid "Отправить"
+msgstr "Submit"
 
-msgid "дополнительную"
-msgstr "additional"
+msgid "История заказов"
+msgstr "Order history"
 
-msgid "смазку?"
-msgstr "lubricant?"
+msgid "Контакты"
+msgstr "Contacts"
 
-msgid "Да, использую дополнительный лубрикант"
-msgstr "Yes, I use additional lubricant"
+msgid "Выйти"
+msgstr "Sign out"
 
-msgid "Нет, хватает той, которая на презервативе"
-msgstr "No, the one on the condom is enough"
+msgid "История"
+msgstr "History"
 
-msgid "Твой"
-msgstr "Your"
+msgid "заказов"
+msgstr "orders"
 
-msgid "идеальный"
-msgstr "perfect"
+msgid "Загрузка..."
+msgstr "Loading..."
 
-msgid "Купить"
-msgstr "Buy"
+msgid "Заказов пока нет"
+msgstr "No orders yet"
 
-msgid "Ещё вариант"
-msgstr "Another option"
+msgid "Ваш регион"
+msgstr "Your region"
+
+msgid "ДА, ВСЁ ВЕРНО"
+msgstr "YES, CORRECT"
+
+msgid "ВЫБРАТЬ ДРУГОЙ"
+msgstr "CHOOSE ANOTHER"
+
+msgid "Выберите регион"
+msgstr "Select a region"
+
+msgid "оформлен!"
+msgstr "placed!"
+
+msgid "Мы свяжемся с вами для подтверждения"
+msgstr "We will contact you for confirmation"
+
+msgid "ВЕРНУТЬСЯ К ПОКУПКАМ"
+msgstr "BACK TO SHOPPING"
+
+msgid "Тату с логотипом DR.JOYS"
+msgstr "DR.JOYS logo tattoo"
+
+msgid ""
+"Сделай тату с логотипом DR.JOYS (от 5x7 см) на любом месте. Мы оплачиваем "
+"работу твоего тату-мастера."
+msgstr ""
+"Get a DR.JOYS logo tattoo (from 5x7 cm) anywhere on your body. We cover "
+"the cost of your tattoo artist."
+
+msgid "Далее"
+msgstr "Next"
+
+msgid "Процесс нанесения тату"
+msgstr "Tattoo application process"
+
+msgid "Отправь фото и видео процесса и готового тату"
+msgstr "Send photos and videos of the process and the finished tattoo"
+
+msgid "Готовое тату DR.JOYS"
+msgstr "Finished DR.JOYS tattoo"
+
+msgid "Получи пожизненный запас DR.JOYS в подарок"
+msgstr "Get a lifetime supply of DR.JOYS as a gift"
+
+msgid ""
+"Оставляй заявку и мы расскажем подробнее про условия и поможем подобрать "
+"тату-мастера"
+msgstr ""
+"Leave a request and we'll tell you more about the conditions and help you "
+"find a tattoo artist"
+
+msgid "Возраст"
+msgstr "Age"
+
+msgid "Минимальный возраст — 18 лет"
+msgstr "Minimum age — 18 years"
+
+msgid "Страна и город проживания"
+msgstr "Country and city of residence"
+
+msgid "Оставить заявку"
+msgstr "Submit request"
+
+msgid "Аноним"
+msgstr "Anonymous"
+
+msgid "Достоинства"
+msgstr "Pros"
+
+msgid "Недостатки"
+msgstr "Cons"
+
+msgid "Комментарий"
+msgstr "Comment"
+
+msgid "Плюсы товара"
+msgstr "Product highlights"
+
+msgid "Ответ Dr.Joys"
+msgstr "Dr.Joys reply"
 
 msgid "Меню"
 msgstr "Menu"
 
-msgid "главная"
-msgstr "home"
-
-msgid "о компании"
-msgstr "about"
-
-msgid "каталог"
-msgstr "catalog"
-
-msgid "контакты"
-msgstr "contact"
-
 msgid "Правовая информация"
 msgstr "Legal"
 
-msgid "Политика конфиденциальности"
-msgstr "Privacy Policy"
+msgid "Все права защищены"
+msgstr "All rights reserved"
 
-msgid "Условия покупки"
-msgstr "Terms of Purchase"
+msgid "Оформление заказа"
+msgstr "Checkout"
 
-msgid "Настройки файлов cookie"
-msgstr "Cookie Settings"
+msgid "Для оформления заказа необходимо войти в аккаунт"
+msgstr "Please sign in to place an order"
 
-msgid "сертификат соответствия"
-msgstr "certificate of conformity"
+msgid "Ваш заказ"
+msgstr "Your order"
 
-msgid "© 2026 DR.JOYS - Все права защищены"
-msgstr "© 2026 DR.JOYS - All rights reserved"
+msgid "Без скидки"
+msgstr "No discount"
+
+msgid "Заказ оформлен"
+msgstr "Order placed"
+
+#, python-format
+msgid "Заказ #%(num)s на сумму %(total)s&nbsp;%(sym)s успешно создан."
+msgstr "Order #%(num)s for %(total)s&nbsp;%(sym)s has been placed."
+
+msgid "Мы свяжемся с вами для уточнения доставки."
+msgstr "We will contact you to confirm delivery details."
+
+msgid "Переход к оплате"
+msgstr "Proceed to payment"
+
+msgid "Переход к оплате..."
+msgstr "Redirecting to payment..."
+
+msgid "Заказ оплачен"
+msgstr "Order paid"
+
+msgid "Ошибка оплаты"
+msgstr "Payment error"
+
+msgid "оплачен!"
+msgstr "paid!"
+
+#, python-format
+msgid "Заказ #%(num)s на сумму %(total)s&nbsp;%(sym)s успешно оплачен."
+msgstr "Order #%(num)s for %(total)s&nbsp;%(sym)s has been paid."
+
+msgid "Оплата"
+msgstr "Payment"
+
+msgid "не прошла"
+msgstr "failed"
+
+msgid "Попробуйте ещё раз или свяжитесь с нами."
+msgstr "Please try again or contact us."
+
+msgid "ПОПРОБОВАТЬ СНОВА"
+msgstr "TRY AGAIN"
+
+msgid "Блог DR.JOYS"
+msgstr "DR.JOYS Blog"
+
+msgid "категория:"
+msgstr "category:"
+
+msgid "поделиться"
+msgstr "share"
+
+msgid "Копировать ссылку"
+msgstr "Copy link"
+
+msgid "Блог DR.JOYS — статьи о здоровье и отношениях"
+msgstr "DR.JOYS Blog — articles about health and relationships"
+
+msgid ""
+"Блог DR.JOYS — статьи об акциях, событиях, здоровье и отношениях. Читайте "
+"полезные материалы от команды DR.JOYS."
+msgstr ""
+"DR.JOYS Blog — articles about promotions, events, health and relationships. "
+"Read useful content from the DR.JOYS team."
+
+msgid "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS."
+msgstr "Articles about promotions, events, health and relationships from DR.JOYS."
+
+msgid "Пока нет опубликованных статей."
+msgstr "No published articles yet."
 
 msgid "Товары не найдены"
 msgstr "No products found"
+
+msgid "Страницы пока не добавлены."
+msgstr "No pages added yet."
 
 #, python-format
 msgid "DR.JOYS — ультратонкие презервативы, неощутимые на 95%%"
@@ -249,6 +598,35 @@ msgstr ""
 
 msgid "Пройти опрос"
 msgstr "Take the quiz"
+
+#, python-format
+msgid ""
+"Всего %(pct)s%% негативных отзывов. Мы за честный фидбек, поэтому не "
+"стесняемся, а наоборот — отвечаем с удовольствием :)"
+msgstr ""
+"Only %(pct)s%% negative reviews. We value honest feedback, so we don't shy "
+"away — we happily respond :)"
+
+msgid "Понравилось"
+msgstr "Liked"
+
+msgid "Не понравилось"
+msgstr "Disliked"
+
+msgid "Отзывы скоро появятся."
+msgstr "Reviews coming soon."
+
+msgid "Читать на WB"
+msgstr "Read on WB"
+
+msgid "Нет фото"
+msgstr "No photo"
+
+msgid "тут интересно,"
+msgstr "interesting stuff,"
+
+msgid "почитай"
+msgstr "read more"
 
 msgid "АРТИКУЛ"
 msgstr "SKU"
@@ -288,9 +666,3 @@ msgstr "Condom in individual packaging"
 
 msgid "Вам может быть интересно"
 msgstr "You may also like"
-
-#~ msgid "В корзину"
-#~ msgstr "Add to cart"
-
-#~ msgid "Каталог презервативов"
-#~ msgstr "Condom Catalog"
