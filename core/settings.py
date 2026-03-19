@@ -171,8 +171,8 @@ PAYMENT_BASE_URL = os.environ.get('PAYMENT_BASE_URL', '')
 # dev: http://localhost:8009, staging: https://app.dr-joys.com, prod: https://dr-joys.com
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8009')
 
-# Секретный URL админки (по умолчанию — случайный, переопределяется в .env)
-ADMIN_URL = os.environ.get('ADMIN_URL', 'manage-161754a7dc175682')
+# Секретный URL админки — обязательно задать в .env
+ADMIN_URL = os.environ['ADMIN_URL']
 
 # Wildberries API
 WB_API_TOKEN = os.environ.get('WB_API_TOKEN', '')
