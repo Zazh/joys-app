@@ -3,12 +3,47 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
+from django.http import HttpResponse
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from pages.views import HomeView
 
+
+def robots_txt(request):
+    lines = [
+        'User-agent: *',
+        'Allow: /',
+        f'Disallow: /{settings.ADMIN_URL}/',
+        'Disallow: /backoffice/',
+        'Disallow: /api/',
+        '',
+        f'Sitemap: {settings.SITE_URL}/sitemap.xml',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
+
+
+def llms_txt(request):
+    lines = [
+        '# DR.JOYS',
+        '',
+        '## About',
+        'DR.JOYS — e-commerce platform for personal care products.',
+        '',
+        '## Blocked paths',
+        f'- /{settings.ADMIN_URL}/ (admin panel)',
+        '- /backoffice/ (internal management)',
+        '- /api/ (internal API)',
+        '',
+        '## Contact',
+        'info@dr-joys.com',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
+
+
 # Без языкового префикса
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(f'{settings.ADMIN_URL}/', admin.site.urls),
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('llms.txt', llms_txt, name='llms_txt'),
     path('region/', include('regions.urls')),
     path('orders/', include('orders.urls')),
     path('accounts/', include('allauth.urls')),  # OAuth callbacks — без языкового префикса
