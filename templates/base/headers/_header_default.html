@@ -1,5 +1,5 @@
-<section class="nav_wrapper [ flex flex-col mx-0 gap-0 ] left-0 right-0 top-0 fixed overflow-hidden bg-white/75 backdrop-blur-xs z-50" >
-  <header class="site-header">
+<section class="nav_wrapper [ flex flex-col mx-0 gap-0 ] left-0 right-0 top-0 fixed overflow-hidden z-50" >
+  <header class="site-header bg-white/75 backdrop-blur-xl">
     <section class="main-grid">
       <div class="col-span-3 lg:col-span-1 flex items-center">
         <button id="menuBtn" class="btn-menu" type="button" aria-label="MenuButton">
@@ -47,45 +47,45 @@
     </section>
   </header>
 
-  <section class="[ main-grid mx-0 gap-0 ] col-span-full lg:flex-1 overflow-hidden hidden" id="mainNav">
-    <div class="col-span-1 hidden lg:block"></div>
+  <section class="col-span-full flex-1 overflow-hidden hidden" id="mainNav">
+    <div class="flex h-full">
+      <!-- Nav content panel -->
+      <div class="flex flex-col w-11/12 lg:w-auto lg:max-w-120 shrink-0 bg-white/75 backdrop-blur-xl overflow-y-auto" id="navPanel">
+        <nav class="overflow-auto hide-scrollbar" role="navigation">
+          <ul class="nav" role="menubar">
+            <li class="nav-item active" role="menuitem"><a href="#">Главная1</a></li>
+            <li class="nav-item" role="menuitem"><a href="#">О Dr.Joys</a></li>
+            <li class="nav-item" role="menuitem"><a href="#">Каталог</a></li>
+            <li class="nav-item" role="menuitem"><a href="#">Статьи</a></li>
+            <li class="nav-item" role="menuitem"><a href="#">Партнерам</a></li>
+            <li class="nav-item" role="menuitem"><a href="#">Контакты</a></li>
+          </ul>
+        </nav>
 
-    <nav class="col-span-full overflow-auto hide-scrollbar lg:col-span-3 " role="navigation">
-      <ul class="nav" role="menubar">
-        <li class="nav-item active" role="menuitem"><a href="#">Главная1</a></li>
-        <li class="nav-item" role="menuitem"><a href="#">О Dr.Joys</a></li>
-        <li class="nav-item" role="menuitem"><a href="#">Каталог</a></li>
-        <li class="nav-item" role="menuitem"><a href="#">Статьи</a></li>
-        <li class="nav-item" role="menuitem"><a href="#">Партнерам</a></li>
-        <li class="nav-item" role="menuitem"><a href="#">Контакты</a></li>
-      </ul>
-    </nav>
-
-    <section class="col-span-full lg:col-span-4 overflow-y-auto hide-scrollbar">
-      <div class="nav flex flex-col w-full px-4">
-        <!-- video -->
-        <div class="w-full aspect-video my-8 lg:my-0 overflow-hidden relative">
-          <iframe
-                  id="navYoutubeVideo"
-                  class="absolute w-full h-[110%] -top-[5%]"
-                  src="https://www.youtube.com/embed/TGFDgNPNJhU?si=lOKDgtNbcFbq2DUM&enablejsapi=1&controls=0&autoplay=0&mute=1&rel=0&modestbranding=1"
-                  title="YouTube video player"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerpolicy="strict-origin-when-cross-origin"
-                  allowfullscreen>
-          </iframe>
+        <div class="flex flex-col w-full px-4">
+          <!-- video -->
+          <div class="w-full aspect-video my-8 lg:my-0 overflow-hidden relative">
+            <iframe
+                    id="navYoutubeVideo"
+                    class="absolute w-full h-[110%] -top-[5%]"
+                    src="https://www.youtube.com/embed/TGFDgNPNJhU?si=lOKDgtNbcFbq2DUM&enablejsapi=1&controls=0&autoplay=0&mute=1&rel=0&modestbranding=1"
+                    title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+            </iframe>
+          </div>
+          <ul class="flex w-full flex-col gap-4 pb-12 lg:py-[2rem]">
+            <li class="nav-item text-xs"><a href="#">60 поз для секса</a></li>
+            <li class="nav-item text-xs"><a href="#">Пожизненный запас за тату</a></li>
+            <li class="nav-item text-xs"><a href="#">Краш тест презирвативов</a></li>
+            <li class="nav-item text-xs"><a href="#">Конкурс за самый длинный</a></li>
+          </ul>
         </div>
-        <ul class="flex w-full flex-col gap-4 pb-12 lg:py-[2rem]">
-          <li class="nav-item text-xs"><a href="#">60 поз для секса</a></li>
-          <li class="nav-item text-xs"><a href="#">Пожизненный запас за тату</a></li>
-          <li class="nav-item text-xs"><a href="#">Краш тест презирвативов</a></li>
-          <li class="nav-item text-xs"><a href="#">Конкурс за самый длинный</a></li>
-        </ul>
       </div>
-    </section>
-
-    <div class=" col-span-1 hidden lg:block"></div>
-
+      <!-- Dark backdrop — click to close -->
+      <div class="flex-1 bg-black/40" id="navBackdrop"></div>
+    </div>
   </section>
 </section>

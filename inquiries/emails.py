@@ -2,33 +2,30 @@ import logging
 
 from django.conf import settings
 
-from orders.emails import _send
+from orders.emails import _send_via_api
 
 logger = logging.getLogger(__name__)
 
 
 def send_inquiry_notification(submission):
-    """Уведомление администратору о новой заявке."""
+    """Уведомление администратору о новой заявке (plain text)."""
     form = submission.form
     if not form.email_notify_to:
         return
 
-    fields_data = []
-    for fv in submission.values.select_related('field').order_by('field__order'):
-        fields_data.append({
-            'label': fv.field.label,
-            'value': fv.display_value,
-        })
-
-    _send(
-        to=form.email_notify_to,
-        subject=f'Новая заявка: {form.title}',
-        template='inquiry_notification',
-        context={
-            'form_title': form.title,
-            'fields': fields_data,
-            'ip_address': submission.ip_address,
-            'created_at': submission.created_at,
-            'site_url': settings.PAYMENT_BASE_URL or 'https://dr-joys.com',
-        },
+    fields_text = '\n'.join(
+        f'  {fv.field.label}: {fv.display_value}'
+        for fv in submission.values.select_related('field').order_by('field__order')
     )
+
+    subject = f'Новая заявка: {form.title}'
+    body = (
+        f'Новая заявка: {form.title}\n\n'
+        f'{fields_text}\n\n'
+        f'IP: {submission.ip_address}\n'
+        f'Дата: {submission.created_at.strftime("%d.%m.%Y %H:%M")}\n'
+    )
+
+    ok, error = _send_via_api(form.email_notify_to, subject, body)
+    if not ok:
+        logger.error('Inquiry notification failed: %s — %s', form.email_notify_to, error)

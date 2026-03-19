@@ -10,9 +10,8 @@ from pages.views import HomeView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('region/', include('regions.urls')),
-    path('accounts/', include('accounts.urls')),
-    path('accounts/', include('allauth.urls')),
     path('orders/', include('orders.urls')),
+    path('accounts/', include('allauth.urls')),  # OAuth callbacks — без языкового префикса
     # API
     path('api/inquiries/', include('inquiries.urls')),
     path('api/modals/', include('modals.urls')),
@@ -23,6 +22,7 @@ urlpatterns = [
 
 # С языковым префиксом (/ru/, /kk/, /en/)
 urlpatterns += i18n_patterns(
+    path('accounts/', include('accounts.urls')),
     path('catalog/', include('catalog.urls')),
     path('quiz/', include('quiz.urls')),
     path('', HomeView.as_view(), name='home'),

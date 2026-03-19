@@ -33,3 +33,5 @@ def get_promo(slug):
         return PromoBlock.objects.prefetch_related('images').get(slug=slug, is_active=True)
     except PromoBlock.DoesNotExist:
         return None
+
+

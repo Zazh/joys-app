@@ -9,6 +9,8 @@ function openModal(overlay) {
     if (!overlay) return;
     overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    // Close burger menu if open
+    if (window._closeMenu) window._closeMenu();
     // Dispatch custom event for modals that need to load data
     overlay.dispatchEvent(new CustomEvent('modal:open'));
 }
@@ -151,43 +153,50 @@ function initMobileMenu() {
     const menuBtn = document.getElementById('menuBtn');
     const mainNav = document.getElementById('mainNav');
     const navWrapper = document.querySelector('.nav_wrapper');
-
     if (!menuBtn || !mainNav || !navWrapper) return;
 
     let isMenuActive = false;
 
-    menuBtn.addEventListener('click', () => {
-        isMenuActive = !isMenuActive;
+    function openMenu() {
+        isMenuActive = true;
         const lines = menuBtn.querySelectorAll('span');
+        lines[0].style.opacity = '0';
+        lines[1].style.transform = 'rotate(45deg)';
+        lines[2].style.transform = 'rotate(-45deg)';
+        lines[3].style.opacity = '0';
 
-        if (isMenuActive) {
-            // Бургер → крестик
-            lines[0].style.opacity = '0';
-            lines[1].style.transform = 'rotate(45deg)';
-            lines[2].style.transform = 'rotate(-45deg)';
-            lines[3].style.opacity = '0';
+        mainNav.classList.remove('hidden');
+        mainNav.classList.add('flex');
+        navWrapper.classList.add('bottom-0');
+        navWrapper.classList.add('bg-white/75', 'backdrop-blur-xl');
+    }
 
-            // Показываем меню
-            mainNav.classList.remove('hidden');
-            mainNav.classList.add('flex');
-            navWrapper.classList.add('bottom-0');
-            navWrapper.classList.remove('backdrop-blur-xs');
-            navWrapper.classList.add('backdrop-blur-xl');
-        } else {
-            // Крестик → бургер
-            lines[0].style.opacity = '1';
-            lines[1].style.transform = 'rotate(0deg)';
-            lines[2].style.transform = 'rotate(0deg)';
-            lines[3].style.opacity = '1';
+    function closeMenu() {
+        isMenuActive = false;
+        const lines = menuBtn.querySelectorAll('span');
+        lines[0].style.opacity = '1';
+        lines[1].style.transform = 'rotate(0deg)';
+        lines[2].style.transform = 'rotate(0deg)';
+        lines[3].style.opacity = '1';
 
-            // Скрываем меню
-            mainNav.classList.add('hidden');
-            mainNav.classList.remove('flex');
-            navWrapper.classList.remove('bottom-0');
-            navWrapper.classList.remove('backdrop-blur-xl');
-            navWrapper.classList.add('backdrop-blur-xs');
-        }
+        mainNav.classList.add('hidden');
+        mainNav.classList.remove('flex');
+        navWrapper.classList.remove('bottom-0');
+        navWrapper.classList.remove('bg-white/75', 'backdrop-blur-xl');
+    }
+
+    menuBtn.addEventListener('click', () => {
+        if (isMenuActive) closeMenu();
+        else openMenu();
     });
+
+    // Click on dark area (nav_wrapper, outside mainNav) closes menu
+    navWrapper.addEventListener('click', (e) => {
+        if (isMenuActive && e.target === navWrapper) closeMenu();
+    });
+
+    // Expose closeMenu for use by modals
+    window._closeMenu = closeMenu;
 }
 
 window.addEventListener('load', initMobileMenu);
@@ -1528,7 +1537,7 @@ function initProfileModal() {
     const logoutBtn = document.getElementById('profileLogoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
-            await apiPost('/accounts/logout/', {});
+            await apiPost(`/${window.DRJOYS.lang}/accounts/logout/`, {});
             location.reload();
         });
     }
@@ -1544,9 +1553,25 @@ window.addEventListener('load', initProfileModal);
 // --------------------------------------------
 // 16. AUTH MODAL — Email Login / Register / SSO
 // --------------------------------------------
+function initPasswordToggles() {
+    document.querySelectorAll('[data-toggle-password]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const inputId = btn.dataset.togglePassword;
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            btn.querySelector('.eye-open').classList.toggle('hidden', !isPassword);
+            btn.querySelector('.eye-closed').classList.toggle('hidden', isPassword);
+        });
+    });
+}
+
 function initAuthModal() {
     const authOverlay = document.getElementById('modalAuth');
     if (!authOverlay) return;
+
+    initPasswordToggles();
 
     const backBtn = document.getElementById('authBackBtn');
     let ssoPopup = null;
@@ -1603,41 +1628,70 @@ function initAuthModal() {
     }
 
     // --- EMAIL LOGIN ---
-    const loginBtn = document.getElementById('authLoginBtn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', async () => {
-            const email = document.getElementById('authLoginEmail').value;
+    const loginForm = document.getElementById('authLoginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const loginBtn = document.getElementById('authLoginBtn');
+            const email = document.getElementById('authLoginEmail').value.trim();
             const password = document.getElementById('authLoginPassword').value;
             const errorEl = document.getElementById('authLoginError');
             errorEl.classList.add('hidden');
+
             loginBtn.disabled = true;
-            const result = await apiPost('/accounts/login/', { email, password });
-            loginBtn.disabled = false;
-            if (result.ok) {
-                handleAuthSuccess();
-            } else {
-                showError(errorEl, result.errors);
+            try {
+                const result = await apiPost(`/${window.DRJOYS.lang}/accounts/login/`, { email, password });
+                loginBtn.disabled = false;
+                if (result.ok) {
+                    handleAuthSuccess();
+                } else {
+                    showError(errorEl, result.errors || {__all__: ['Ошибка входа.']});
+                }
+            } catch (err) {
+                loginBtn.disabled = false;
+                showError(errorEl, {__all__: ['Ошибка сети. Попробуйте ещё раз.']});
+                console.error('Login error:', err);
             }
         });
     }
 
     // --- REGISTER ---
-    const registerBtn = document.getElementById('authRegisterBtn');
-    if (registerBtn) {
-        registerBtn.addEventListener('click', async () => {
-            const email = document.getElementById('authRegEmail').value;
+    const registerForm = document.getElementById('authRegisterForm');
+    if (registerForm) {
+        let registerSubmitting = false;
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (registerSubmitting) return;
+            registerSubmitting = true;
+
+            const registerBtn = document.getElementById('authRegisterBtn');
+            const email = document.getElementById('authRegEmail').value.trim();
             const password1 = document.getElementById('authRegPassword1').value;
             const password2 = document.getElementById('authRegPassword2').value;
             const errorEl = document.getElementById('authRegError');
             errorEl.classList.add('hidden');
+
+            const originalText = registerBtn.textContent;
             registerBtn.disabled = true;
-            const result = await apiPost('/accounts/register/', { email, password1, password2 });
-            registerBtn.disabled = false;
-            if (result.ok) {
-                handleAuthSuccess();
-            } else {
-                showError(errorEl, result.errors);
+            registerBtn.textContent = '...';
+            try {
+                const result = await apiPost(`/${window.DRJOYS.lang}/accounts/register/`, { email, password1, password2 });
+                if (result.ok) {
+                    if (result.redirect_url) {
+                        window.location.href = result.redirect_url;
+                        return; // Не разблокируем — идёт редирект
+                    }
+                    handleAuthSuccess();
+                    return;
+                }
+                showError(errorEl, result.errors || {__all__: ['Ошибка регистрации.']});
+            } catch (err) {
+                showError(errorEl, {__all__: ['Ошибка сети. Попробуйте ещё раз.']});
+                console.error('Register error:', err);
             }
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText;
+            registerSubmitting = false;
         });
     }
 
@@ -1649,7 +1703,7 @@ function initAuthModal() {
             const left = (screen.width - w) / 2;
             const top = (screen.height - h) / 2;
             ssoPopup = window.open(
-                '/accounts/' + provider + '/login/?process=login',
+                `/accounts/${provider}/login/?process=login`,
                 'drjoys_sso',
                 'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',toolbar=no,menubar=no,scrollbars=yes'
             );
@@ -1667,7 +1721,7 @@ function initAuthModal() {
 
     async function checkAuthAfterSSO() {
         try {
-            const resp = await fetch('/accounts/profile/');
+            const resp = await fetch(`/${window.DRJOYS.lang}/accounts/profile/`);
             const data = await resp.json();
             if (data.ok) handleAuthSuccess();
         } catch (e) { /* not authenticated */ }
@@ -1702,7 +1756,7 @@ window.addEventListener('load', initAuthModal);
 async function openDeliveryWithProfile(deliveryOverlay) {
     openModal(deliveryOverlay);
     try {
-        const resp = await fetch('/accounts/profile/');
+        const resp = await fetch(`/${window.DRJOYS.lang}/accounts/profile/`);
         const data = await resp.json();
         if (data.ok && data.data) {
             const d = data.data;

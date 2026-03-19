@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Order, OrderItem
+from .models import Order, OrderItem, EmailLog
 
 
 class OrderItemInline(admin.TabularInline):
@@ -46,3 +46,22 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('expires_at', 'created_at', 'paid_at'),
         }),
     )
+
+
+@admin.register(EmailLog)
+class EmailLogAdmin(admin.ModelAdmin):
+    list_display = ('template_slug', 'to_email', 'status', 'attempts', 'created_at', 'sent_at')
+    list_filter = ('status', 'template_slug')
+    search_fields = ('to_email', 'subject')
+    readonly_fields = (
+        'to_email', 'template_slug', 'subject', 'body',
+        'status', 'attempts', 'next_retry_at', 'error',
+        'created_at', 'sent_at',
+    )
+    list_per_page = 50
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True

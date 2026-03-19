@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% if page %}{{ page.title }}{% else %}{% trans "Проверьте почту" %}{% endif %} — DR.JOYS{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full">
+
+            <div class="flex flex-col items-center justify-center min-h-dvh pt-24 pb-16 px-4 text-center">
+
+                <!-- Иконка письма -->
+                <div class="w-20 h-20 mb-8 rounded-full bg-stone-100 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-stone-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                        <path d="M22 4L12 13L2 4"/>
+                    </svg>
+                </div>
+
+                <h1 class="font-benzin text-xl uppercase mb-4">{% if page %}{{ page.title }}{% else %}{% trans "ПРОВЕРЬТЕ ПОЧТУ" %}{% endif %}</h1>
+
+                <p class="text-stone-600 text-sm leading-tight max-w-xs mb-2">
+                    {% if page %}{{ page.description }}{% else %}{% trans "Мы отправили письмо с ссылкой для подтверждения на" %}{% endif %}
+                </p>
+
+                {% if user_email %}
+                <p class="font-benzin text-base mb-6">{{ user_email }}</p>
+                {% endif %}
+
+                <a href="{% if page and page.button_url %}{{ page.button_url }}{% else %}/{% endif %}" class="btn-cat font-benzin">
+                    {% if page %}{{ page.button_text }}{% else %}{% trans "НА ГЛАВНУЮ" %}{% endif %}
+                </a>
+            </div>
+
+        </div>
+    </section>
+</main>
+{% endblock %}

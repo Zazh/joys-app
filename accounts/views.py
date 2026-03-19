@@ -1,9 +1,13 @@
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import redirect
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.translation import get_language
 from django.views.generic import TemplateView
+
+from pages.models import ServicePage
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -38,17 +42,22 @@ class RegisterView(APIView):
         user = serializer.save()
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         merge_session_to_db(request)
+
+        # Refresh user из БД чтобы last_login был актуальным после login()
+        user.refresh_from_db()
+
         send_welcome_email(user)
 
-        # Отправить письмо верификации
+        # Генерируем токен ПОСЛЕ login() — чтобы last_login в токене совпал с БД
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        base_url = settings.PAYMENT_BASE_URL or 'https://dr-joys.com'
-        verify_url = f'{base_url}/accounts/verify-email/{uid}/{token}/'
+        lang = get_language() or 'ru'
+        verify_url = f'{settings.SITE_URL}/{lang}/accounts/verify-email/{uid}/{token}/'
         send_email_verification(user, verify_url)
 
         return Response({
             'ok': True,
+            'redirect_url': f'/{lang}/accounts/check-email/',
             'data': {
                 'email': user.email,
                 'full_name': user.get_full_name(),
@@ -157,8 +166,8 @@ class PasswordResetRequestView(APIView):
             user = User.objects.get(email=email)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            base_url = settings.PAYMENT_BASE_URL or 'https://dr-joys.com'
-            reset_url = f'{base_url}/accounts/password-reset/{uid}/{token}/'
+            lang = get_language() or 'ru'
+            reset_url = f'{settings.SITE_URL}/{lang}/accounts/password-reset/{uid}/{token}/'
             send_password_reset(user, reset_url)
         except User.DoesNotExist:
             pass
@@ -198,29 +207,57 @@ class PasswordResetConfirmView(APIView):
         return Response({'ok': True, 'message': 'Пароль успешно изменён.'})
 
 
-class EmailVerifyView(APIView):
-    """Подтверждение email по токену из письма."""
+class EmailVerifyView(TemplateView):
+    """Подтверждение email по ссылке из письма — показывает страницу."""
 
-    @extend_schema(summary='Подтверждение email')
+    template_name = 'accounts/email_verified.html'
+
     def get(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return Response(
-                {'ok': False, 'errors': {'__all__': ['Недействительная ссылка.']}},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            page = ServicePage.objects.filter(slug='email_error').first()
+            return self.render_to_response({
+                'success': False,
+                'page': page,
+                'page_type': 'email_verify',
+            })
 
         if not default_token_generator.check_token(user, token):
-            return Response(
-                {'ok': False, 'errors': {'__all__': ['Ссылка истекла.']}},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            page = ServicePage.objects.filter(slug='email_error').first()
+            return self.render_to_response({
+                'success': False,
+                'page': page,
+                'page_type': 'email_verify',
+            })
 
         user.is_active = True
         user.save(update_fields=['is_active'])
-        return Response({'ok': True, 'message': 'Email подтверждён.'})
+
+        # Автоматически залогинить пользователя
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        page = ServicePage.objects.filter(slug='email_verified').first()
+        return self.render_to_response({
+            'success': True,
+            'page': page,
+            'page_type': 'email_verify',
+        })
+
+
+class CheckEmailView(TemplateView):
+    """Страница «Проверьте почту» после регистрации."""
+
+    template_name = 'accounts/check_email.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_type'] = 'check_email'
+        ctx['page'] = ServicePage.objects.filter(slug='check_email').first()
+        if self.request.user.is_authenticated:
+            ctx['user_email'] = self.request.user.email
+        return ctx
 
 
 class SSOCallbackView(TemplateView):

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from modeltranslation.admin import TabbedTranslationAdmin, TranslationStackedInline
 
-from .models import PageCategory, Page, BlogCategory, BlogPost, MenuItem, HeroSection, HeroCard, FeatureSlide, PromoBlock, PromoImage
+from .models import PageCategory, Page, BlogCategory, BlogPost, MenuItem, HeroSection, HeroCard, FeatureSlide, PromoBlock, PromoImage, EmailTemplate, ServicePage
 
 
 @admin.register(PageCategory)
@@ -149,3 +149,34 @@ class PromoBlockAdmin(TabbedTranslationAdmin):
         }),
     )
     inlines = [PromoImageInline]
+
+
+@admin.register(ServicePage)
+class ServicePageAdmin(TabbedTranslationAdmin):
+    list_display = ('slug', 'title')
+    search_fields = ('slug', 'title')
+    readonly_fields = ('slug',)
+    fieldsets = (
+        (None, {
+            'fields': ('slug', 'title', 'description'),
+        }),
+        ('Кнопка', {
+            'fields': ('button_text', 'button_url'),
+        }),
+    )
+
+
+@admin.register(EmailTemplate)
+class EmailTemplateAdmin(TabbedTranslationAdmin):
+    list_display = ('slug', 'subject', 'description')
+    search_fields = ('slug', 'subject')
+    readonly_fields = ('slug',)
+    fieldsets = (
+        (None, {
+            'fields': ('slug', 'subject', 'body'),
+        }),
+        ('Справка', {
+            'classes': ('collapse',),
+            'fields': ('description',),
+        }),
+    )

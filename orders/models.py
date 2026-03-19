@@ -221,6 +221,42 @@ class OrderItem(models.Model):
 
 # ─── Корзина (БД) ───
 
+# ─── Лог email-отправок ───
+
+class EmailLog(models.Model):
+    """Лог отправки email с retry-логикой."""
+
+    class Status(models.TextChoices):
+        SENT = 'sent', 'Отправлено'
+        RETRY = 'retry', 'Ожидает повтора'
+        FAILED = 'failed', 'Ошибка'
+
+    to_email = models.EmailField('Получатель')
+    template_slug = models.CharField('Шаблон', max_length=100)
+    subject = models.CharField('Тема', max_length=300)
+    body = models.TextField('Текст')
+    status = models.CharField(
+        'Статус', max_length=10,
+        choices=Status.choices, default=Status.SENT,
+    )
+    attempts = models.PositiveSmallIntegerField('Попыток', default=0)
+    next_retry_at = models.DateTimeField('Повторить после', null=True, blank=True)
+    error = models.TextField('Ошибка', blank=True)
+    created_at = models.DateTimeField('Создан', auto_now_add=True)
+    sent_at = models.DateTimeField('Отправлен', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Лог email'
+        verbose_name_plural = 'Логи email'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'next_retry_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.template_slug} → {self.to_email} [{self.status}]'
+
+
 class CartItem(models.Model):
     """Позиция корзины для авторизованного пользователя."""
     user = models.ForeignKey(

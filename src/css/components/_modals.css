@@ -29,6 +29,11 @@
         @apply w-full bg-stone-50 rounded-full p-3 text-xs outline-none;
     }
 
+    /* Password toggle (eye icon) */
+    .password-toggle {
+        @apply absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer p-0 bg-transparent border-none;
+    }
+
     /* Custom radio */
     .modal-radio {
         @apply appearance-none w-3.5 h-3.5 border border-gray-500 rounded-full shrink-0 cursor-pointer

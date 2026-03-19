@@ -10,6 +10,7 @@ ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 CSRF_TRUSTED_ORIGINS = [
     'https://dr-joys.com',
     'https://www.dr-joys.com',
+    'https://app.dr-joys.com',
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -152,6 +153,10 @@ HALYK_TERMINAL_ID = os.environ.get('HALYK_TERMINAL_ID', '')
 
 # Base URL для платёжных callback-ов (в dev — пустая, в prod — https://dr-joys.com)
 PAYMENT_BASE_URL = os.environ.get('PAYMENT_BASE_URL', '')
+
+# Базовый URL сайта для ссылок в email, редиректов и т.д.
+# dev: http://localhost:8009, staging: https://app.dr-joys.com, prod: https://dr-joys.com
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8009')
 
 # Wildberries API
 WB_API_TOKEN = os.environ.get('WB_API_TOKEN', '')

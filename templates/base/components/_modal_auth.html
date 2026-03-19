@@ -20,7 +20,7 @@
         <!-- Step 1: Вход (email + SSO) -->
         <div class="modal-step" data-step="1">
             <h2 class="modal-title">{% trans "Вход" %}</h2>
-            <div class="flex flex-col gap-3 pt-4">
+            <form class="flex flex-col gap-3 pt-4" id="authLoginForm" autocomplete="on">
                 <div>
                     <label class="modal-label" for="authLoginEmail">Email</label>
                     <input class="modal-input" type="email" id="authLoginEmail" name="email"
@@ -28,14 +28,28 @@
                 </div>
                 <div>
                     <label class="modal-label" for="authLoginPassword">{% trans "Пароль" %}</label>
-                    <input class="modal-input" type="password" id="authLoginPassword" name="password"
-                           placeholder="••••••••" autocomplete="current-password" required>
+                    <div class="relative">
+                        <input class="modal-input pr-10" type="password" id="authLoginPassword" name="password"
+                               placeholder="••••••••" autocomplete="current-password" required>
+                        <button class="password-toggle" type="button" data-toggle-password="authLoginPassword" aria-label="{% trans 'Показать пароль' %}">
+                            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg class="eye-closed hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <p class="text-xs text-red-500 hidden" id="authLoginError"></p>
-                <button class="btn-macro black w-full text-center text-xs" type="button" id="authLoginBtn">
+                <button class="btn-macro black w-full text-center text-xs mt-4" type="submit" id="authLoginBtn">
                     {% trans "ВОЙТИ" %}
                 </button>
+            </form>
 
+            <div class="flex flex-col gap-3 pt-3">
                 <!-- SSO divider -->
                 <div class="flex items-center gap-3">
                     <div class="flex-1 h-px bg-stone-200"></div>
@@ -73,7 +87,7 @@
         <!-- Step: Регистрация -->
         <div class="modal-step hidden" data-step="register">
             <h2 class="modal-title">{% trans "Регистрация" %}</h2>
-            <div class="flex flex-col gap-3 pt-4">
+            <form class="flex flex-col gap-3 pt-4" id="authRegisterForm" autocomplete="on">
                 <div>
                     <label class="modal-label" for="authRegEmail">Email</label>
                     <input class="modal-input" type="email" id="authRegEmail" name="email"
@@ -81,19 +95,45 @@
                 </div>
                 <div>
                     <label class="modal-label" for="authRegPassword1">{% trans "Пароль" %}</label>
-                    <input class="modal-input" type="password" id="authRegPassword1" name="password1"
-                           placeholder="••••••••" autocomplete="new-password" required>
+                    <div class="relative">
+                        <input class="modal-input pr-10" type="password" id="authRegPassword1" name="password1"
+                               placeholder="••••••••" autocomplete="new-password" required>
+                        <button class="password-toggle" type="button" data-toggle-password="authRegPassword1" aria-label="{% trans 'Показать пароль' %}">
+                            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg class="eye-closed hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div>
                     <label class="modal-label" for="authRegPassword2">{% trans "Повторите пароль" %}</label>
-                    <input class="modal-input" type="password" id="authRegPassword2" name="password2"
-                           placeholder="••••••••" autocomplete="new-password" required>
+                    <div class="relative">
+                        <input class="modal-input pr-10" type="password" id="authRegPassword2" name="password2"
+                               placeholder="••••••••" autocomplete="new-password" required>
+                        <button class="password-toggle" type="button" data-toggle-password="authRegPassword2" aria-label="{% trans 'Показать пароль' %}">
+                            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg class="eye-closed hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <p class="text-xs text-red-500 hidden" id="authRegError"></p>
-                <button class="btn-macro black w-full text-center text-xs" type="button" id="authRegisterBtn">
+                <button class="btn-macro black w-full text-center text-xs mt-4" type="submit" id="authRegisterBtn">
                     {% trans "СОЗДАТЬ АККАУНТ" %}
                 </button>
-                <button class="text-xs text-center text-gray-500 hover:text-black pt-1" type="button"
+            </form>
+            <div class="pt-3">
+                <button class="text-xs text-center text-gray-500 hover:text-black w-full" type="button"
                         data-auth-method="1">
                     {% trans "Уже есть аккаунт? Войти" %}
                 </button>

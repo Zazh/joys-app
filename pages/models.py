@@ -285,6 +285,64 @@ class PromoBlock(models.Model):
         return f'{self.slug} — {self.title[:50]}'
 
 
+class EmailTemplate(models.Model):
+    """Шаблон email-письма, редактируемый из админки."""
+    slug = models.SlugField('Ключ', max_length=100, unique=True,
+        help_text='email_verify, password_reset, welcome, order_created, order_paid, order_shipped',
+    )
+    subject = models.CharField('Тема письма', max_length=300,
+        help_text='Можно использовать {плейсхолдеры}: {order_number}, {user_name} и т.д.',
+    )
+    body = models.TextField('Текст письма',
+        help_text='Плейн-текст. Плейсхолдеры: {user_name}, {verify_url}, {order_number} и т.д.',
+    )
+    description = models.TextField('Описание (для админа)', blank=True,
+        help_text='Какие плейсхолдеры доступны, когда отправляется',
+    )
+
+    class Meta:
+        verbose_name = 'Шаблон письма'
+        verbose_name_plural = 'Шаблоны писем'
+        ordering = ['slug']
+
+    def __str__(self):
+        return f'{self.slug} — {self.subject}'
+
+    def render(self, context: dict) -> tuple:
+        """Рендерит subject и body, подставляя плейсхолдеры.
+
+        Returns:
+            (subject, body) — готовые строки.
+        """
+        safe = _SafeDict(context)
+        return self.subject.format_map(safe), self.body.format_map(safe)
+
+
+class _SafeDict(dict):
+    """dict, который возвращает {key} для отсутствующих ключей."""
+    def __missing__(self, key):
+        return '{' + key + '}'
+
+
+class ServicePage(models.Model):
+    """Служебная страница (подтверждение email, ошибки и т.д.), редактируемая из админки."""
+    slug = models.SlugField('Ключ', max_length=100, unique=True,
+        help_text='check_email, email_verified, email_error',
+    )
+    title = models.CharField('Заголовок', max_length=300)
+    description = models.TextField('Описание', blank=True)
+    button_text = models.CharField('Текст кнопки', max_length=200, blank=True)
+    button_url = models.CharField('Ссылка кнопки', max_length=500, blank=True, default='/')
+
+    class Meta:
+        verbose_name = 'Служебная страница'
+        verbose_name_plural = 'Служебные страницы'
+        ordering = ['slug']
+
+    def __str__(self):
+        return f'{self.slug} — {self.title}'
+
+
 class PromoImage(models.Model):
     """Картинка галереи промо-блока (тату и т.д.)."""
     promo = models.ForeignKey(

@@ -51,4 +51,4 @@ class User(AbstractUser):
 
     def get_full_name(self):
         name = f'{self.first_name} {self.last_name}'.strip()
-        return name or self.email
+        return name

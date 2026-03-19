@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% if page %}{{ page.title }}{% else %}{% if success %}{% trans "Email подтверждён" %}{% else %}{% trans "Ошибка" %}{% endif %}{% endif %} — DR.JOYS{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full">
+
+            <div class="flex flex-col items-center justify-center min-h-dvh pt-24 pb-16 px-4 text-center">
+
+                {% if success %}
+                <!-- BEGIN email-verified-success -->
+                <div class="w-20 h-20 mb-8 rounded-full bg-green-50 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                </div>
+
+                <h1 class="font-benzin text-xl uppercase mb-4">{% if page %}{{ page.title }}{% else %}{% trans "EMAIL ПОДТВЕРЖДЁН" %}{% endif %}</h1>
+
+                <p class="text-stone-600 text-sm leading-relaxed max-w-xs mb-10">
+                    {% if page %}{{ page.description }}{% else %}{% trans "Ваш email успешно подтверждён. Теперь вы можете пользоваться всеми функциями сайта." %}{% endif %}
+                </p>
+
+                <a href="{% if page and page.button_url %}{{ page.button_url }}{% else %}/{% endif %}" class="btn-cat font-benzin">
+                    {% if page %}{{ page.button_text }}{% else %}{% trans "ПЕРЕЙТИ К ПОКУПКАМ" %}{% endif %}
+                </a>
+                <!-- END email-verified-success -->
+
+                {% else %}
+                <!-- BEGIN email-verified-error -->
+                <div class="w-20 h-20 mb-8 rounded-full bg-red-50 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </div>
+
+                <h1 class="font-benzin text-xl uppercase mb-4">{% if page %}{{ page.title }}{% else %}{% trans "ОШИБКА" %}{% endif %}</h1>
+
+                <p class="text-stone-600 text-sm leading-relaxed max-w-xs mb-10">
+                    {% if page %}{{ page.description }}{% else %}{% trans "Ссылка истекла или недействительна." %}{% endif %}
+                </p>
+
+                <a href="{% if page and page.button_url %}{{ page.button_url }}{% else %}/{% endif %}" class="btn-cat font-benzin">
+                    {% if page %}{{ page.button_text }}{% else %}{% trans "НА ГЛАВНУЮ" %}{% endif %}
+                </a>
+                <!-- END email-verified-error -->
+                {% endif %}
+
+            </div>
+
+        </div>
+    </section>
+</main>
+{% endblock %}
