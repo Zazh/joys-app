@@ -101,6 +101,8 @@ class UserCreateView(SeniorStaffRequiredMixin, View):
         phone = request.POST.get('phone', '').strip()
         role = request.POST.get('role', User.Role.MANAGER)
         password = request.POST.get('password', '').strip()
+        generate_pwd = request.POST.get('generate_password') == 'on'
+        send_invite = request.POST.get('send_invite') == 'on'
 
         if not email:
             messages.error(request, 'Email обязателен.')
@@ -114,7 +116,9 @@ class UserCreateView(SeniorStaffRequiredMixin, View):
             messages.error(request, 'Недопустимая роль.')
             return redirect('backoffice:user_create')
 
-        if not password or len(password) < 8:
+        if generate_pwd:
+            password = User.objects.make_random_password(length=12)
+        elif not password or len(password) < 8:
             messages.error(request, 'Пароль должен быть не менее 8 символов.')
             return redirect('backoffice:user_create')
 
@@ -126,7 +130,14 @@ class UserCreateView(SeniorStaffRequiredMixin, View):
             phone=phone,
             role=role,
         )
-        messages.success(request, f'Сотрудник {user.email} создан.')
+
+        msg = f'Сотрудник {user.email} создан.'
+        if send_invite:
+            from emails.service import send_staff_invite
+            send_staff_invite(user, password)
+            msg += ' Доступ отправлен на почту.'
+
+        messages.success(request, msg)
         return redirect('backoffice:user_detail', pk=user.pk)
 
 

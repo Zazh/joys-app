@@ -301,6 +301,23 @@ def send_order_shipped_email(order):
     )
 
 
+def send_staff_invite(user, password):
+    """Письмо с доступом к бэкофису для нового сотрудника."""
+    role_display = dict(user.Role.choices).get(user.role, user.role)
+    _send_email(
+        to=user.email,
+        template_slug='staff_invite',
+        context={
+            'user_name': user.get_full_name() or user.email,
+            'user_email': user.email,
+            'password': password,
+            'role': role_display,
+            'login_url': f'{settings.SITE_URL}/backoffice/login/',
+            'site_url': settings.SITE_URL,
+        },
+    )
+
+
 def send_inquiry_notification(submission):
     """Уведомление администратору о новой заявке (plain text)."""
     form = submission.form

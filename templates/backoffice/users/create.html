@@ -41,11 +41,61 @@
             </select>
         </div>
         <div>
-            <label class="block text-xs text-stone-500 mb-1">Пароль * <span class="text-stone-400">(мин. 8 символов)</span></label>
-            <input type="password" name="password" required minlength="8" autocomplete="new-password"
-                   class="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs">
+            <div class="flex items-center justify-between mb-1">
+                <label class="text-xs text-stone-500">Пароль <span class="text-stone-400">(мин. 8 символов)</span></label>
+                <button type="button" id="generatePwdBtn"
+                        class="text-[10px] text-blue-600 hover:text-blue-800 font-medium">Сгенерировать</button>
+            </div>
+            <input type="text" name="password" id="passwordInput" minlength="8" autocomplete="new-password"
+                   class="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs font-mono">
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="checkbox" name="generate_password" id="generateCheckbox"
+                   class="rounded border-stone-300 text-stone-900 focus:ring-stone-400">
+            <label for="generateCheckbox" class="text-xs text-stone-600">Сгенерировать пароль автоматически</label>
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="checkbox" name="send_invite" id="sendInviteCheckbox" checked
+                   class="rounded border-stone-300 text-stone-900 focus:ring-stone-400">
+            <label for="sendInviteCheckbox" class="text-xs text-stone-600">Отправить доступ на почту сотруднику</label>
         </div>
         <button type="submit" class="w-full py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800">Создать сотрудника</button>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const pwdInput = document.getElementById('passwordInput');
+    const genBtn = document.getElementById('generatePwdBtn');
+    const genCheckbox = document.getElementById('generateCheckbox');
+
+    function generatePassword(len) {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+        let pwd = '';
+        const arr = new Uint32Array(len);
+        crypto.getRandomValues(arr);
+        for (let i = 0; i < len; i++) pwd += chars[arr[i] % chars.length];
+        return pwd;
+    }
+
+    genBtn.addEventListener('click', function() {
+        pwdInput.value = generatePassword(12);
+        genCheckbox.checked = false;
+        pwdInput.disabled = false;
+    });
+
+    genCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            pwdInput.value = '';
+            pwdInput.disabled = true;
+            pwdInput.placeholder = 'Будет сгенерирован автоматически';
+        } else {
+            pwdInput.disabled = false;
+            pwdInput.placeholder = '';
+        }
+    });
+})();
+</script>
 {% endblock %}

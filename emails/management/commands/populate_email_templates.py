@@ -252,6 +252,52 @@ TEMPLATES = [
         ),
         'description': 'Плейсхолдеры: {order_number}, {tracking_number}, {customer_name}, {site_url}',
     },
+    {
+        'slug': 'staff_invite',
+        'subject_ru': 'Доступ к панели управления — DR.JOYS',
+        'subject_kk': 'Басқару панеліне кіру — DR.JOYS',
+        'subject_en': 'Backoffice access — DR.JOYS',
+        'body_ru': (
+            'Здравствуйте, {user_name}!\n\n'
+            'Вам предоставлен доступ к панели управления DR.JOYS.\n\n'
+            'Данные для входа:\n'
+            '  Ссылка: {login_url}\n'
+            '  Email: {user_email}\n'
+            '  Пароль: {password}\n'
+            '  Роль: {role}\n\n'
+            'Рекомендуем сменить пароль после первого входа.\n\n'
+            '—\n'
+            'DR.JOYS\n'
+            '{site_url}'
+        ),
+        'body_kk': (
+            'Сәлеметсіз бе, {user_name}!\n\n'
+            'DR.JOYS басқару панеліне кіру мүмкіндігі берілді.\n\n'
+            'Кіру деректері:\n'
+            '  Сілтеме: {login_url}\n'
+            '  Email: {user_email}\n'
+            '  Құпия сөз: {password}\n'
+            '  Рөл: {role}\n\n'
+            'Бірінші кіргеннен кейін құпия сөзді ауыстыруды ұсынамыз.\n\n'
+            '—\n'
+            'DR.JOYS\n'
+            '{site_url}'
+        ),
+        'body_en': (
+            'Hello, {user_name}!\n\n'
+            'You have been granted access to the DR.JOYS backoffice.\n\n'
+            'Login credentials:\n'
+            '  URL: {login_url}\n'
+            '  Email: {user_email}\n'
+            '  Password: {password}\n'
+            '  Role: {role}\n\n'
+            'We recommend changing your password after the first login.\n\n'
+            '—\n'
+            'DR.JOYS\n'
+            '{site_url}'
+        ),
+        'description': 'Плейсхолдеры: {user_name}, {user_email}, {password}, {role}, {login_url}, {site_url}',
+    },
 ]
 
 
