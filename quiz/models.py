@@ -250,6 +250,32 @@ class QuizRule(models.Model):
         return matched
 
 
+class QuizSubmission(models.Model):
+    """Сохранённые ответы квиза для аналитики."""
+
+    q1 = models.CharField('Q1', max_length=50, blank=True)
+    q2 = models.CharField('Q2', max_length=50, blank=True)
+    q3 = models.CharField('Q3', max_length=50, blank=True)
+    q4 = models.CharField('Q4', max_length=50, blank=True)
+    result_product = models.ForeignKey(
+        Product, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='quiz_submissions',
+        verbose_name='Рекомендованный товар',
+    )
+    ip_address = models.GenericIPAddressField('IP', null=True, blank=True)
+    session_key = models.CharField('Сессия', max_length=40, blank=True)
+    created_at = models.DateTimeField('Дата', auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Прохождение квиза'
+        verbose_name_plural = 'Прохождения квиза'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.created_at:%d.%m.%Y %H:%M} — {self.q1}/{self.q2}/{self.q3}/{self.q4}'
+
+
 class QuizBackground(models.Model):
     """Фон для результата квиза."""
 

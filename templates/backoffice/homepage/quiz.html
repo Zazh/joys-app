@@ -3,9 +3,12 @@
 {% block title %}Квиз подбора товара{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h2 class="text-base font-bold">Квиз «Не можешь определиться?»</h2>
-    <p class="text-xs text-stone-500 mt-1">Вопросы, варианты ответов, правила подбора товаров и фоны результатов</p>
+<div class="mb-4 flex items-center justify-between">
+    <div>
+        <h2 class="text-base font-bold">Квиз «Не можешь определиться?»</h2>
+        <p class="text-xs text-stone-500 mt-1">Вопросы, варианты ответов, правила подбора товаров и фоны результатов</p>
+    </div>
+    <a href="{% url 'backoffice:quiz_analytics' %}" class="px-3 py-1.5 bg-stone-100 text-stone-700 text-xs rounded-lg hover:bg-stone-200">Аналитика</a>
 </div>
 
 <!-- Questions -->

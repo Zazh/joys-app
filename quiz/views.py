@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from catalog.models import ProductCharacteristic
-from .models import QuizRule, QuizBackground
+from .models import QuizRule, QuizBackground, QuizSubmission
 from .serializers import QuizAnswersSerializer, QuizProductSerializer
 
 
@@ -23,6 +23,18 @@ class QuizResultView(APIView):
         d = serializer.validated_data
 
         products = QuizRule.get_results(d['q1'], d['q2'], d['q3'], d['q4'])
+
+        # Сохранить ответы для аналитики
+        xff = request.META.get('HTTP_X_FORWARDED_FOR')
+        ip = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+        session_key = request.session.session_key or ''
+        QuizSubmission.objects.create(
+            q1=d['q1'], q2=d['q2'], q3=d['q3'], q4=d['q4'],
+            result_product=products[0] if products else None,
+            ip_address=ip,
+            session_key=session_key,
+        )
+
         if not products:
             return Response({'ok': False, 'error': 'No matching product'})
 

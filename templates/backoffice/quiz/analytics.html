@@ -1,0 +1,145 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Аналитика квиза{% endblock %}
+{% block page_title %}Аналитика квиза{% endblock %}
+
+{% block content %}
+<!-- Summary cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">Всего прохождений</p>
+        <p class="text-2xl font-bold mt-1">{{ total }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">Сегодня</p>
+        <p class="text-2xl font-bold mt-1">{{ today }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">За неделю</p>
+        <p class="text-2xl font-bold mt-1">{{ week }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">За месяц</p>
+        <p class="text-2xl font-bold mt-1">{{ month }}</p>
+    </div>
+</div>
+
+<!-- Chart: submissions per day -->
+<div class="bg-white rounded-xl border border-stone-200 p-4 mb-6">
+    <h3 class="text-sm font-bold mb-3">Прохождения за 30 дней</h3>
+    <canvas id="submissionsChart" height="160"></canvas>
+</div>
+
+<!-- Answer distribution -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    {% for q in questions_stats %}
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h3 class="text-sm font-bold mb-3">{{ q.key }}: распределение ответов <span class="text-stone-400 font-normal">({{ q.total }})</span></h3>
+        <div class="space-y-2">
+            {% for item in q.items %}
+            <div>
+                <div class="flex items-center justify-between text-xs mb-0.5">
+                    <span class="text-stone-700">{{ item.label }}</span>
+                    <span class="text-stone-500">{{ item.count }} ({{ item.pct }}%)</span>
+                </div>
+                <div class="w-full bg-stone-100 rounded-full h-2">
+                    <div class="bg-stone-700 h-2 rounded-full" style="width: {{ item.pct }}%"></div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-xs text-stone-400">Нет данных</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Top products + Recent submissions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <!-- Top products -->
+    <div class="bg-white rounded-xl border border-stone-200">
+        <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="text-sm font-bold">Топ рекомендуемых товаров</h3>
+        </div>
+        <div class="divide-y divide-stone-100">
+            {% for p in top_products %}
+            <div class="px-4 py-2.5 flex items-center justify-between text-xs">
+                <span class="font-medium text-stone-700">{{ p.result_product__name_ru }}</span>
+                <span class="px-2 py-0.5 bg-stone-100 rounded-full text-stone-600">{{ p.count }}</span>
+            </div>
+            {% empty %}
+            <div class="px-4 py-6 text-center text-xs text-stone-400">Нет данных</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent submissions -->
+    <div class="lg:col-span-2 bg-white rounded-xl border border-stone-200">
+        <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="text-sm font-bold">Последние прохождения</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="bg-stone-50 text-stone-500 text-left">
+                        <th class="px-4 py-2.5 font-medium">Дата</th>
+                        <th class="px-4 py-2.5 font-medium">Q1</th>
+                        <th class="px-4 py-2.5 font-medium">Q2</th>
+                        <th class="px-4 py-2.5 font-medium">Q3</th>
+                        <th class="px-4 py-2.5 font-medium">Q4</th>
+                        <th class="px-4 py-2.5 font-medium">Товар</th>
+                        <th class="px-4 py-2.5 font-medium">IP</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for s in recent %}
+                    <tr class="hover:bg-stone-50">
+                        <td class="px-4 py-2 text-stone-500">{{ s.created_at|date:"d.m.Y H:i" }}</td>
+                        <td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-stone-100 rounded text-[10px]">{{ s.q1|default:"-" }}</span></td>
+                        <td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-stone-100 rounded text-[10px]">{{ s.q2|default:"-" }}</span></td>
+                        <td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-stone-100 rounded text-[10px]">{{ s.q3|default:"-" }}</span></td>
+                        <td class="px-4 py-2"><span class="px-1.5 py-0.5 bg-stone-100 rounded text-[10px]">{{ s.q4|default:"-" }}</span></td>
+                        <td class="px-4 py-2 font-medium text-stone-700">{{ s.result_product.name_ru|default:"-" }}</td>
+                        <td class="px-4 py-2 text-stone-400 font-mono">{{ s.ip_address|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-stone-400">Нет прохождений</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('submissionsChart'), {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            data: {{ chart_data|safe }},
+            borderColor: '#292524',
+            backgroundColor: 'rgba(41,37,36,0.05)',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#a8a29e' } },
+            y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#a8a29e', stepSize: 1 }, grid: { color: '#f5f5f4' } }
+        }
+    },
+});
+</script>
+{% endblock %}

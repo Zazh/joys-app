@@ -32,6 +32,7 @@ from .views.users import (
 from .views.emails import EmailLogListView, EmailLogDetailView, EmailLogRetryView
 from .views.stock import StockListView, StockUpdateView
 from .views.reviews import ReviewListView, ReviewToggleView, ReviewSyncView
+from .views.quiz_analytics import QuizAnalyticsView
 from .views.homepage import (
     HomepageOverviewView, HeroEditView, HeroCardUploadView, HeroCardUpdateView, HeroCardDeleteView,
     FeatureSlideListView, FeatureSlideEditView, FeatureSlideCreateView, FeatureSlideDeleteView,
@@ -111,6 +112,7 @@ urlpatterns = [
     path('modals/<int:pk>/steps/<int:step_pk>/delete/', ModalStepDeleteView.as_view(), name='modal_step_delete'),
     # Квиз
     path('quiz/', QuizOverviewView.as_view(), name='quiz_overview'),
+    path('quiz/analytics/', QuizAnalyticsView.as_view(), name='quiz_analytics'),
     path('quiz/questions/save/', QuizQuestionSaveView.as_view(), name='quiz_questions_save'),
     path('quiz/result-text/save/', QuizResultTextSaveView.as_view(), name='quiz_result_text_save'),
     path('quiz/rules/create/', QuizRuleCreateView.as_view(), name='quiz_rule_create'),
