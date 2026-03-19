@@ -16,5 +16,5 @@ def order_status_changed(sender, instance, **kwargs):
         return
 
     if old.status != instance.status and instance.status == Order.Status.SHIPPED:
-        from .emails import send_order_shipped_email
+        from emails.service import send_order_shipped_email
         send_order_shipped_email(instance)

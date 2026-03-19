@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'catalog',
     'orders',
     'pages',
+    'emails',
     'accounts',
     'modals',
     'quiz',

@@ -372,7 +372,7 @@ class HalykGatewayTest(PaymentTestBase):
 class ConfirmPaymentTest(PaymentTestBase):
     """Тесты бизнес-логики подтверждения оплаты."""
 
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_confirm_payment_updates_status(self, mock_email):
         order = self._create_order(gateway='halyk', payment_id='test-inv-1')
 
@@ -382,7 +382,7 @@ class ConfirmPaymentTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PAID)
         self.assertIsNotNone(order.paid_at)
 
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_confirm_payment_deducts_stock(self, mock_email):
         order = self._create_order(gateway='halyk', payment_id='test-inv-2')
         stock = Stock.objects.get(size=self.size_m, region=self.region_kz)
@@ -395,7 +395,7 @@ class ConfirmPaymentTest(PaymentTestBase):
         self.assertEqual(stock.quantity, qty_before - 2)  # item.quantity = 2
         self.assertEqual(stock.reserved, reserved_before - 2)
 
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_confirm_payment_sends_email(self, mock_email):
         order = self._create_order(gateway='halyk', payment_id='test-inv-3')
 
@@ -405,7 +405,7 @@ class ConfirmPaymentTest(PaymentTestBase):
         called_order = mock_email.call_args[0][0]
         self.assertEqual(called_order.pk, order.pk)
 
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_confirm_payment_idempotent(self, mock_email):
         """Повторный вызов confirm_payment не меняет статус (идемпотентность)."""
         order = self._create_order(gateway='halyk', payment_id='test-inv-4')
@@ -433,7 +433,7 @@ class PaymentCallbackViewTest(PaymentTestBase):
         self.assertEqual(response.status_code, 404)
 
     @patch.object(VTBGateway, '_post')
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_vtb_callback_confirms_payment(self, mock_email, mock_post):
         mock_post.return_value = {'orderStatus': 2}
         order = self._create_order(
@@ -468,7 +468,7 @@ class PaymentCallbackViewTest(PaymentTestBase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
 
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_halyk_callback_json_confirms_payment(self, mock_email):
         order = self._create_order(region=self.region_kz, gateway='halyk')
         invoice_id = order.number.replace('-', '')
@@ -490,7 +490,7 @@ class PaymentCallbackViewTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PAID)
         mock_email.assert_called_once()
 
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_halyk_callback_form_confirms_payment(self, mock_email):
         order = self._create_order(region=self.region_kz, gateway='halyk')
         invoice_id = order.number.replace('-', '')
@@ -531,7 +531,7 @@ class PaymentCallbackViewTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PENDING)
 
     @patch.object(VTBGateway, '_post')
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_vtb_callback_get_method(self, mock_email, mock_post):
         """VTB может слать callback через GET."""
         mock_post.return_value = {'orderStatus': 2}
@@ -548,7 +548,7 @@ class PaymentCallbackViewTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PAID)
 
     @patch.object(VTBGateway, '_post')
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_double_callback_idempotent(self, mock_email, mock_post):
         """Два одинаковых callback не дублируют списание."""
         mock_post.return_value = {'orderStatus': 2}
@@ -589,7 +589,7 @@ class PaymentReturnViewTest(PaymentTestBase):
         self.assertContains(response, 'Заказ не найден')
 
     @patch.object(VTBGateway, '_post')
-    @patch('orders.emails.send_payment_confirmed_email')
+    @patch('emails.service.send_payment_confirmed_email')
     def test_return_vtb_checks_status_and_confirms(self, mock_email, mock_post):
         mock_post.return_value = {'orderStatus': 2}
         order = self._create_order(

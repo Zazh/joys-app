@@ -9,6 +9,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
@@ -18,7 +19,7 @@ from rest_framework.views import APIView
 
 from catalog.models import ProductSize, Stock
 from .cart import Cart, Favorites
-from .emails import send_order_created_email
+from emails.service import send_order_created_email
 from .forms import CheckoutForm
 from .gateways import get_gateway, get_gateway_by_code
 from .models import Order, OrderItem
@@ -89,7 +90,7 @@ class CartAddView(APIView):
         qty = serializer.validated_data['qty']
 
         if not ProductSize.objects.filter(pk=size_id).exists():
-            return Response({'ok': False, 'error': 'Размер не найден'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'ok': False, 'error': _('Размер не найден')}, status=status.HTTP_404_NOT_FOUND)
 
         cart = Cart(request)
         cart.add(size_id, qty)
@@ -224,7 +225,7 @@ class OrderHistoryView(APIView):
     def get(self, request):
         if not request.user.is_authenticated:
             return Response(
-                {'ok': False, 'error': 'Требуется авторизация.'},
+                {'ok': False, 'error': _('Требуется авторизация.')},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         orders = (
@@ -318,10 +319,10 @@ class CheckoutView(View):
 
         region = request.region
         if not region:
-            return _render_with_error(form, 'Регион не определён')
+            return _render_with_error(form, _('Регион не определён'))
 
         if not cart_items:
-            return _render_with_error(form, 'Товары в корзине не найдены')
+            return _render_with_error(form, _('Товары в корзине не найдены'))
 
         cd = form.cleaned_data
         first_name = cd['first_name']
@@ -344,7 +345,7 @@ class CheckoutView(View):
 
         payment_url = self._register_payment(request, order, cart)
         if payment_url is None:
-            return _render_with_error(form, 'Ошибка платёжной системы. Попробуйте позже.')
+            return _render_with_error(form, _('Ошибка платёжной системы. Попробуйте позже.'))
         elif payment_url:
             return redirect(payment_url)
         else:
@@ -377,18 +378,18 @@ class CheckoutView(View):
         cart = Cart(request)
         if not cart:
             from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': 'Корзина пуста'}, status=400)
+            return JsonResponse({'ok': False, 'error': _('Корзина пуста')}, status=400)
 
         d = serializer.validated_data
         region = request.region
         if not region:
             from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': 'Регион не определён'}, status=400)
+            return JsonResponse({'ok': False, 'error': _('Регион не определён')}, status=400)
 
         cart_items = cart.get_items()
         if not cart_items:
             from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': 'Товары в корзине не найдены'}, status=400)
+            return JsonResponse({'ok': False, 'error': _('Товары в корзине не найдены')}, status=400)
 
         total = sum(i['subtotal'] for i in cart_items)
 
@@ -408,7 +409,7 @@ class CheckoutView(View):
         if payment_url is None:
             return JsonResponse({
                 'ok': False,
-                'error': 'Ошибка платёжной системы. Попробуйте позже.',
+                'error': _('Ошибка платёжной системы. Попробуйте позже.'),
             }, status=502)
         elif payment_url:
             return JsonResponse({
@@ -472,11 +473,11 @@ class CheckoutView(View):
                     )
                 except Stock.DoesNotExist:
                     raise ValueError(
-                        f'{item["name"]} ({item["size_name"]}) — нет в наличии'
+                        _('%(name)s (%(size)s) — нет в наличии') % {'name': item["name"], 'size': item["size_name"]}
                     )
                 if stock.available < item['qty']:
                     raise ValueError(
-                        f'{item["name"]} ({item["size_name"]}) — недостаточно на складе'
+                        _('%(name)s (%(size)s) — недостаточно на складе') % {'name': item["name"], 'size': item["size_name"]}
                     )
                 stock.reserved += item['qty']
                 stock.save(update_fields=['reserved', 'updated_at'])
@@ -571,7 +572,7 @@ class PaymentReturnView(View):
         if not payment_id:
             return render(request, 'orders/payment_result.html', {
                 'success': False,
-                'error_message': 'Некорректная ссылка',
+                'error_message': _('Некорректная ссылка'),
             })
 
         try:
@@ -579,7 +580,7 @@ class PaymentReturnView(View):
         except Order.DoesNotExist:
             return render(request, 'orders/payment_result.html', {
                 'success': False,
-                'error_message': 'Заказ не найден',
+                'error_message': _('Заказ не найден'),
             })
 
         if order.payment_gateway and order.status == Order.Status.PENDING:
@@ -627,7 +628,7 @@ class HalykPayView(View):
         if not payment_object:
             return render(request, 'orders/payment_result.html', {
                 'success': False,
-                'error_message': 'Сессия оплаты истекла. Попробуйте оформить заказ заново.',
+                'error_message': _('Сессия оплаты истекла. Попробуйте оформить заказ заново.'),
             })
 
         return render(request, 'orders/halyk_redirect.html', {

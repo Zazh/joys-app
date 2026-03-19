@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework import status
 from rest_framework.response import Response
@@ -22,7 +23,7 @@ class InquiryFormDetailView(APIView):
         try:
             form = InquiryForm.objects.prefetch_related('fields').get(slug=slug, is_active=True)
         except InquiryForm.DoesNotExist:
-            return Response({'error': 'Форма не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': _('Форма не найдена.')}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = InquiryFormSerializer(form)
         return Response(serializer.data)
@@ -47,7 +48,7 @@ class InquirySubmitView(APIView):
         try:
             form = InquiryForm.objects.prefetch_related('fields').get(slug=slug, is_active=True)
         except InquiryForm.DoesNotExist:
-            return Response({'error': 'Форма не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': _('Форма не найдена.')}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = InquirySubmissionSerializer(data=request.data, inquiry_form=form)
         if not serializer.is_valid():
@@ -81,7 +82,7 @@ class InquirySubmitView(APIView):
             InquiryFieldValue.objects.bulk_create(field_values)
 
         # Email-уведомление администратору
-        from .emails import send_inquiry_notification
+        from emails.service import send_inquiry_notification
         send_inquiry_notification(submission)
 
         return Response({

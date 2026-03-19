@@ -1,7 +1,7 @@
 from django.contrib import admin
 from modeltranslation.admin import TabbedTranslationAdmin, TranslationStackedInline
 
-from .models import PageCategory, Page, BlogCategory, BlogPost, MenuItem, HeroSection, HeroCard, FeatureSlide, PromoBlock, PromoImage, EmailTemplate, ServicePage
+from .models import PageCategory, Page, BlogCategory, BlogPost, MenuItem, HeroSection, HeroCard, FeatureSlide, PromoBlock, PromoImage, ServicePage
 
 
 @admin.register(PageCategory)
@@ -162,21 +162,5 @@ class ServicePageAdmin(TabbedTranslationAdmin):
         }),
         ('Кнопка', {
             'fields': ('button_text', 'button_url'),
-        }),
-    )
-
-
-@admin.register(EmailTemplate)
-class EmailTemplateAdmin(TabbedTranslationAdmin):
-    list_display = ('slug', 'subject', 'description')
-    search_fields = ('slug', 'subject')
-    readonly_fields = ('slug',)
-    fieldsets = (
-        (None, {
-            'fields': ('slug', 'subject', 'body'),
-        }),
-        ('Справка', {
-            'classes': ('collapse',),
-            'fields': ('description',),
         }),
     )

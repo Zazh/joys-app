@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from orders.emails import retry_pending_emails
+from emails.service import retry_pending_emails
 
 
 class Command(BaseCommand):

@@ -4,7 +4,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import redirect
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.translation import get_language
+from django.utils.translation import get_language, gettext as _
 from django.views.generic import TemplateView
 
 from pages.models import ServicePage
@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from orders.cart import merge_session_to_db
-from orders.emails import send_welcome_email, send_password_reset, send_email_verification
+from emails.service import send_welcome_email, send_password_reset, send_email_verification
 from .models import User
 from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
 
@@ -31,7 +31,7 @@ class RegisterView(APIView):
     def post(self, request):
         if request.user.is_authenticated:
             return Response(
-                {'ok': False, 'errors': {'__all__': ['Вы уже авторизованы.']}},
+                {'ok': False, 'errors': {'__all__': [_('Вы уже авторизованы.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -76,7 +76,7 @@ class LoginView(APIView):
     def post(self, request):
         if request.user.is_authenticated:
             return Response(
-                {'ok': False, 'errors': {'__all__': ['Вы уже авторизованы.']}},
+                {'ok': False, 'errors': {'__all__': [_('Вы уже авторизованы.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -91,7 +91,7 @@ class LoginView(APIView):
         )
         if user is None:
             return Response(
-                {'ok': False, 'errors': {'__all__': ['Неверный email или пароль.']}},
+                {'ok': False, 'errors': {'__all__': [_('Неверный email или пароль.')]}},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
@@ -123,7 +123,7 @@ class ProfileView(APIView):
     def get(self, request):
         if not request.user.is_authenticated:
             return Response(
-                {'ok': False, 'errors': {'__all__': ['Требуется авторизация.']}},
+                {'ok': False, 'errors': {'__all__': [_('Требуется авторизация.')]}},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         user = request.user
@@ -136,7 +136,7 @@ class ProfileView(APIView):
     def post(self, request):
         if not request.user.is_authenticated:
             return Response(
-                {'ok': False, 'errors': {'__all__': ['Требуется авторизация.']}},
+                {'ok': False, 'errors': {'__all__': [_('Требуется авторизация.')]}},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         serializer = ProfileSerializer(request.user, data=request.data, partial=True)
@@ -157,7 +157,7 @@ class PasswordResetRequestView(APIView):
         email = request.data.get('email', '').strip().lower()
         if not email:
             return Response(
-                {'ok': False, 'errors': {'email': ['Укажите email.']}},
+                {'ok': False, 'errors': {'email': [_('Укажите email.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -172,7 +172,7 @@ class PasswordResetRequestView(APIView):
         except User.DoesNotExist:
             pass
 
-        return Response({'ok': True, 'message': 'Если аккаунт существует, письмо отправлено.'})
+        return Response({'ok': True, 'message': _('Если аккаунт существует, письмо отправлено.')})
 
 
 class PasswordResetConfirmView(APIView):
@@ -185,26 +185,26 @@ class PasswordResetConfirmView(APIView):
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response(
-                {'ok': False, 'errors': {'__all__': ['Недействительная ссылка.']}},
+                {'ok': False, 'errors': {'__all__': [_('Недействительная ссылка.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if not default_token_generator.check_token(user, token):
             return Response(
-                {'ok': False, 'errors': {'__all__': ['Ссылка истекла или уже использована.']}},
+                {'ok': False, 'errors': {'__all__': [_('Ссылка истекла или уже использована.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         password = request.data.get('password', '')
         if len(password) < 8:
             return Response(
-                {'ok': False, 'errors': {'password': ['Минимум 8 символов.']}},
+                {'ok': False, 'errors': {'password': [_('Минимум 8 символов.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         user.set_password(password)
         user.save()
-        return Response({'ok': True, 'message': 'Пароль успешно изменён.'})
+        return Response({'ok': True, 'message': _('Пароль успешно изменён.')})
 
 
 class EmailVerifyView(TemplateView):

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from pages.models import EmailTemplate
+from emails.models import EmailTemplate
 
 TEMPLATES = [
     {
@@ -95,7 +95,7 @@ TEMPLATES = [
         ),
         'body_kk': (
             'Сәлеметсіз бе, {user_name}!\n\n'
-            'DR.JOYS-қа қош келдіңіз — жаңа буынның ультра жіңішке презервативтері.\n\n'
+            'DR.JOYS-қа қош келдіңіз — жаңа буынның ультра жұқа мүшеқаптары.\n\n'
             'Сіздің аккаунтыңыз жасалды. Жақсы сатып алу!\n\n'
             '—\n'
             'DR.JOYS\n'
