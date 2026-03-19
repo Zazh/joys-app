@@ -1,0 +1,195 @@
+<script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
+<script>
+(function() {
+    // CSS that mirrors .blog-content styles from the frontend
+    const contentCSS = `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #1c1917;
+            padding: 12px 16px;
+            margin: 0;
+        }
+        p { padding: 0.75rem 0; hyphens: auto; margin: 0; }
+        h3 {
+            padding-bottom: 0.75rem;
+            padding-top: 2rem;
+            font-weight: 800;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin: 0;
+        }
+        ul { list-style-type: disc; padding-left: 1rem; width: 80%; }
+        li { font-size: 1rem; padding: 0.75rem 0 0.75rem 0.75rem; hyphens: auto; }
+        figure { width: 100%; padding: 2.25rem 0; margin: 0; }
+        figure img {
+            width: 100%;
+            object-fit: cover;
+            border-radius: 1rem;
+            background: #f3f4f6;
+            aspect-ratio: 926 / 545;
+        }
+        figcaption {
+            font-size: 0.75rem;
+            font-style: italic;
+            text-align: right;
+            padding: 0.5rem 0;
+            color: #78716c;
+        }
+        .blog-content-video {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            margin: 1rem 0;
+        }
+        .blog-content-video iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        img { max-width: 100%; height: auto; border-radius: 0.5rem; }
+        a { color: #2563eb; text-decoration: underline; }
+        blockquote {
+            border-left: 3px solid #d6d3d1;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: #57534e;
+        }
+    `;
+
+    const videoTemplate = '<div class="blog-content-video"><iframe src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe></div>';
+
+    function getCookie(name) {
+        const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return v ? v.pop() : '';
+    }
+
+    function initEditors() {
+        const textareas = document.querySelectorAll('textarea.richtext-editor');
+        if (!textareas.length) return;
+
+        textareas.forEach(function(ta) {
+            if (ta.id && tinymce.get(ta.id)) return; // already init
+            if (!ta.id) ta.id = 'rte_' + Math.random().toString(36).substr(2, 9);
+
+            tinymce.init({
+                target: ta,
+                license_key: 'gpl',
+                plugins: 'lists link image media code fullscreen table',
+                toolbar: 'blocks | bold italic underline | bullist numlist | link image insertvideo | table | fullscreen code',
+                block_formats: 'Параграф=p; Подзаголовок=h3',
+                menubar: false,
+                statusbar: true,
+                branding: false,
+                promotion: false,
+                height: 450,
+                content_style: contentCSS,
+                images_upload_url: '/backoffice/upload/image/',
+                images_upload_credentials: true,
+                automatic_uploads: true,
+                images_reuse_filename: false,
+                convert_urls: false,
+                relative_urls: false,
+
+                // Image upload with CSRF
+                images_upload_handler: function(blobInfo) {
+                    return new Promise(function(resolve, reject) {
+                        var formData = new FormData();
+                        formData.append('file', blobInfo.blob(), blobInfo.filename());
+                        fetch('/backoffice/upload/image/', {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                            body: formData
+                        })
+                        .then(function(resp) { return resp.json(); })
+                        .then(function(data) {
+                            if (data.location) resolve(data.location);
+                            else reject(data.error || 'Ошибка загрузки');
+                        })
+                        .catch(function() { reject('Ошибка сети'); });
+                    });
+                },
+
+                // Custom figure insert
+                image_caption: true,
+                image_class_list: [
+                    { title: 'По умолчанию', value: '' },
+                    { title: 'Закруглённое', value: 'rounded-2xl' },
+                ],
+
+                setup: function(editor) {
+                    // Video embed button
+                    editor.ui.registry.addButton('insertvideo', {
+                        icon: 'embed',
+                        tooltip: 'Вставить видео (YouTube/Vimeo)',
+                        onAction: function() {
+                            editor.windowManager.open({
+                                title: 'Вставить видео',
+                                body: {
+                                    type: 'panel',
+                                    items: [{
+                                        type: 'input',
+                                        name: 'videourl',
+                                        label: 'Ссылка на видео (YouTube или Vimeo)'
+                                    }]
+                                },
+                                buttons: [
+                                    { type: 'cancel', text: 'Отмена' },
+                                    { type: 'submit', text: 'Вставить', primary: true }
+                                ],
+                                onSubmit: function(api) {
+                                    var url = api.getData().videourl.trim();
+                                    var embedUrl = '';
+
+                                    // YouTube
+                                    var ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+                                    if (ytMatch) {
+                                        embedUrl = 'https://www.youtube.com/embed/' + ytMatch[1];
+                                    }
+                                    // Vimeo
+                                    var vmMatch = url.match(/vimeo\.com\/(\d+)/);
+                                    if (vmMatch) {
+                                        embedUrl = 'https://player.vimeo.com/video/' + vmMatch[1];
+                                    }
+
+                                    if (embedUrl) {
+                                        editor.insertContent(
+                                            '<div class="blog-content-video">' +
+                                            '<iframe src="' + embedUrl + '" frameborder="0" allowfullscreen></iframe>' +
+                                            '</div><p>&nbsp;</p>'
+                                        );
+                                    } else {
+                                        editor.notificationManager.open({
+                                            text: 'Не удалось распознать ссылку. Используйте YouTube или Vimeo.',
+                                            type: 'error'
+                                        });
+                                    }
+                                    api.close();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // Init on load
+    document.addEventListener('DOMContentLoaded', initEditors);
+
+    // Re-init when Alpine.js shows hidden tabs (for x-show)
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[\\@click*="tab="], [x-on\\:click*="tab="]');
+        if (btn) {
+            setTimeout(initEditors, 100);
+        }
+    });
+})();
+</script>

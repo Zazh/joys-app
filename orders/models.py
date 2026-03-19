@@ -191,6 +191,31 @@ class Order(models.Model):
         self.status = locked.status
 
 
+class OrderStatusLog(models.Model):
+    """История изменений статуса заказа."""
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE,
+        related_name='status_logs', verbose_name='Заказ',
+    )
+    old_status = models.CharField('Старый статус', max_length=20, choices=Order.Status.choices)
+    new_status = models.CharField('Новый статус', max_length=20, choices=Order.Status.choices)
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='Кто изменил',
+    )
+    changed_at = models.DateTimeField('Дата', auto_now_add=True)
+    comment = models.TextField('Комментарий', blank=True)
+
+    class Meta:
+        verbose_name = 'История статуса заказа'
+        verbose_name_plural = 'История статусов заказов'
+        ordering = ['-changed_at']
+
+    def __str__(self):
+        return f'{self.order.number}: {self.old_status} → {self.new_status}'
+
+
 class OrderItem(models.Model):
     """Позиция в заказе."""
     order = models.ForeignKey(

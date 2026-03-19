@@ -1,0 +1,97 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Заявки{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="text-base font-bold">Заявки</h2>
+</div>
+
+<!-- Filters -->
+<form method="get" class="bg-white rounded-xl border border-stone-200 p-4 mb-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Форма</label>
+            <select name="form" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                <option value="">Все</option>
+                {% for form in forms %}
+                <option value="{{ form.slug }}" {% if current_form == form.slug %}selected{% endif %}>{{ form.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Обработано</label>
+            <select name="processed" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                <option value="">Все</option>
+                <option value="no" {% if current_processed == 'no' %}selected{% endif %}>Нет</option>
+                <option value="yes" {% if current_processed == 'yes' %}selected{% endif %}>Да</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Дата от</label>
+            <input type="date" name="date_from" value="{{ current_date_from }}"
+                   class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+        </div>
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Дата до</label>
+            <input type="date" name="date_to" value="{{ current_date_to }}"
+                   class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+        </div>
+    </div>
+    <div class="mt-3 flex gap-2">
+        <button type="submit" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Применить</button>
+        <a href="{% url 'backoffice:inquiry_list' %}" class="px-4 py-1.5 border border-stone-300 text-xs rounded-lg hover:bg-stone-100">Сбросить</a>
+    </div>
+</form>
+
+<!-- Table -->
+<div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="border-b border-stone-100 text-left text-stone-500 bg-stone-50">
+                    <th class="px-4 py-2.5 font-medium">#</th>
+                    <th class="px-4 py-2.5 font-medium">Форма</th>
+                    <th class="px-4 py-2.5 font-medium">Обработано</th>
+                    <th class="px-4 py-2.5 font-medium">IP</th>
+                    <th class="px-4 py-2.5 font-medium">Дата</th>
+                    <th class="px-4 py-2.5 font-medium"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in submissions %}
+                <tr class="border-b border-stone-50 hover:bg-stone-50">
+                    <td class="px-4 py-2.5 font-medium">{{ sub.id }}</td>
+                    <td class="px-4 py-2.5">
+                        <span class="inline-block px-2 py-0.5 rounded-full text-xs bg-stone-100 text-stone-700">{{ sub.form.title }}</span>
+                    </td>
+                    <td class="px-4 py-2.5">
+                        <form method="post" action="{% url 'backoffice:inquiry_toggle' pk=sub.pk %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="inline-block px-2 py-0.5 rounded-full text-xs font-medium
+                                {% if sub.is_processed %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {% if sub.is_processed %}Да{% else %}Нет{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                    <td class="px-4 py-2.5 text-stone-500">{{ sub.ip_address|default:"—" }}</td>
+                    <td class="px-4 py-2.5 text-stone-500">{{ sub.created_at|date:"d.m.Y H:i" }}</td>
+                    <td class="px-4 py-2.5">
+                        <a href="{% url 'backoffice:inquiry_detail' pk=sub.pk %}" class="text-stone-500 hover:text-stone-800">
+                            Открыть →
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-4 py-12 text-center text-stone-400">Заявок не найдено</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'backoffice/components/_pagination.html' %}
+{% endblock %}

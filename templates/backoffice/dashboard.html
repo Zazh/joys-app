@@ -1,0 +1,84 @@
+{% extends 'backoffice/base.html' %}
+{% load backoffice_tags %}
+
+{% block title %}Дашборд{% endblock %}
+
+{% block content %}
+<!-- Summary cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">Заказы сегодня</p>
+        <p class="text-2xl font-bold mt-1">{{ orders_today }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">За неделю</p>
+        <p class="text-2xl font-bold mt-1">{{ orders_week }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">За месяц</p>
+        <p class="text-2xl font-bold mt-1">{{ orders_month }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <p class="text-xs text-stone-500">Заявки (необработ.)</p>
+        <p class="text-2xl font-bold mt-1">{{ unprocessed_inquiries }}</p>
+    </div>
+</div>
+
+<!-- Status breakdown -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
+        <p class="text-xs text-yellow-700">Ожидают оплаты</p>
+        <p class="text-xl font-bold text-yellow-800 mt-1">{{ pending_count }}</p>
+    </div>
+    <div class="bg-green-50 rounded-xl border border-green-200 p-4">
+        <p class="text-xs text-green-700">Оплачены</p>
+        <p class="text-xl font-bold text-green-800 mt-1">{{ paid_count }}</p>
+    </div>
+    <div class="bg-blue-50 rounded-xl border border-blue-200 p-4">
+        <p class="text-xs text-blue-700">Отправлены</p>
+        <p class="text-xl font-bold text-blue-800 mt-1">{{ shipped_count }}</p>
+    </div>
+</div>
+
+<!-- Recent orders -->
+<div class="bg-white rounded-xl border border-stone-200">
+    <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+        <h2 class="font-bold text-sm">Последние заказы</h2>
+        <a href="{% url 'backoffice:order_list' %}" class="text-xs text-stone-500 hover:text-stone-800">Все заказы →</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="border-b border-stone-100 text-left text-stone-500">
+                    <th class="px-4 py-2 font-medium">Номер</th>
+                    <th class="px-4 py-2 font-medium">Статус</th>
+                    <th class="px-4 py-2 font-medium">Клиент</th>
+                    <th class="px-4 py-2 font-medium">Сумма</th>
+                    <th class="px-4 py-2 font-medium">Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr class="border-b border-stone-50 hover:bg-stone-50">
+                    <td class="px-4 py-2">
+                        <a href="{% url 'backoffice:order_detail' number=order.number %}" class="font-medium text-stone-900 hover:underline">
+                            #{{ order.number }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-2">{{ order.status|status_badge }}</td>
+                    <td class="px-4 py-2 text-stone-600">{{ order.customer_name|default:"—" }}</td>
+                    <td class="px-4 py-2 font-medium">
+                        {{ order.display_amount|floatformat:0 }} {{ order.region.currency_symbol|default:"₸" }}
+                    </td>
+                    <td class="px-4 py-2 text-stone-500">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-stone-400">Заказов пока нет</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

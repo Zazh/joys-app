@@ -8,10 +8,12 @@
     "copy:fonts": "npx cpy \"src/fonts/**\" static/dist/fonts",
     "copy:images": "npx cpy \"src/images/**\" static/dist/images",
     "copy:assets": "pnpm run copy:fonts && pnpm run copy:images",
+    "dev:css:bo": "tailwindcss -i src/css/backoffice.css -o static/dist/css/backoffice.css --watch",
     "build:css": "cross-env NODE_ENV=production tailwindcss -i src/css/main.css -o static/dist/css/styles.css --minify",
+    "build:css:bo": "cross-env NODE_ENV=production tailwindcss -i src/css/backoffice.css -o static/dist/css/backoffice.css --minify",
     "build:js": "esbuild src/js/*.js --bundle --minify --outdir=static/dist/js",
-    "build": "pnpm run copy:assets && pnpm run build:css && pnpm run build:js",
-    "dev": "pnpm run copy:assets && concurrently -k -n \"css,js\" -c \"magenta,cyan\" \"pnpm run dev:css\" \"pnpm run dev:js\""
+    "build": "pnpm run copy:assets && pnpm run build:css && pnpm run build:css:bo && pnpm run build:js",
+    "dev": "pnpm run copy:assets && concurrently -k -n \"css,bo,js\" -c \"magenta,green,cyan\" \"pnpm run dev:css\" \"pnpm run dev:css:bo\" \"pnpm run dev:js\""
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.15",

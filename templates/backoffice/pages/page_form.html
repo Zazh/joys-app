@@ -1,0 +1,133 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}{% if page %}Редактировать: {{ page.title_ru }}{% else %}Новая страница{% endif %}{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-4 mb-4">
+    <a href="{% url 'backoffice:page_list' %}" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800">&larr; Все страницы</a>
+    {% if page %}
+    <a href="{{ page.get_absolute_url }}" target="_blank" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        Просмотреть на сайте
+    </a>
+    {% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 space-y-4">
+            <!-- Content -->
+            <div class="bg-white rounded-xl border border-stone-200" x-data="{ tab: 'ru' }">
+                <div class="px-4 py-3 border-b border-stone-100 flex items-center gap-4">
+                    <h3 class="text-sm font-bold">Контент</h3>
+                    <div class="flex gap-1 ml-auto">
+                        <button type="button" @click="tab='ru'" :class="tab==='ru' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">RU</button>
+                        <button type="button" @click="tab='kk'" :class="tab==='kk' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">KK</button>
+                        <button type="button" @click="tab='en'" :class="tab==='en' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">EN</button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div x-show="tab==='ru'" class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заголовок (RU) <span class="text-red-500">*</span></label>
+                            <input type="text" name="title_ru" value="{{ page.title_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Содержимое (RU)</label>
+                            <textarea name="body_ru" rows="12" class="richtext-editor">{{ page.body_ru|default:'' }}</textarea>
+                        </div>
+                    </div>
+                    <div x-show="tab==='kk'" x-cloak class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заголовок (KK)</label>
+                            <input type="text" name="title_kk" value="{{ page.title_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Содержимое (KK)</label>
+                            <textarea name="body_kk" rows="12" class="richtext-editor">{{ page.body_kk|default:'' }}</textarea>
+                        </div>
+                    </div>
+                    <div x-show="tab==='en'" x-cloak class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заголовок (EN)</label>
+                            <input type="text" name="title_en" value="{{ page.title_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Содержимое (EN)</label>
+                            <textarea name="body_en" rows="12" class="richtext-editor">{{ page.body_en|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO -->
+            <div class="bg-white rounded-xl border border-stone-200" x-data="{ tab: 'ru' }">
+                <div class="px-4 py-3 border-b border-stone-100 flex items-center gap-4">
+                    <h3 class="text-sm font-bold">SEO</h3>
+                    <div class="flex gap-1 ml-auto">
+                        <button type="button" @click="tab='ru'" :class="tab==='ru' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">RU</button>
+                        <button type="button" @click="tab='kk'" :class="tab==='kk' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">KK</button>
+                        <button type="button" @click="tab='en'" :class="tab==='en' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">EN</button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div x-show="tab==='ru'" class="space-y-3">
+                        <div><label class="block text-xs text-stone-500 mb-1">META Title (RU)</label><input type="text" name="meta_title_ru" value="{{ page.meta_title_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"></div>
+                        <div><label class="block text-xs text-stone-500 mb-1">META Description (RU)</label><textarea name="meta_description_ru" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ page.meta_description_ru|default:'' }}</textarea></div>
+                    </div>
+                    <div x-show="tab==='kk'" x-cloak class="space-y-3">
+                        <div><label class="block text-xs text-stone-500 mb-1">META Title (KK)</label><input type="text" name="meta_title_kk" value="{{ page.meta_title_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"></div>
+                        <div><label class="block text-xs text-stone-500 mb-1">META Description (KK)</label><textarea name="meta_description_kk" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ page.meta_description_kk|default:'' }}</textarea></div>
+                    </div>
+                    <div x-show="tab==='en'" x-cloak class="space-y-3">
+                        <div><label class="block text-xs text-stone-500 mb-1">META Title (EN)</label><input type="text" name="meta_title_en" value="{{ page.meta_title_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"></div>
+                        <div><label class="block text-xs text-stone-500 mb-1">META Description (EN)</label><textarea name="meta_description_en" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ page.meta_description_en|default:'' }}</textarea></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-white rounded-xl border border-stone-200 p-4">
+                <h3 class="text-sm font-bold mb-3">Настройки</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Slug <span class="text-red-500">*</span></label>
+                        <input type="text" name="slug" value="{{ page.slug|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Категория</label>
+                        <select name="category" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                            <option value="">Без категории</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if page and page.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Порядок</label>
+                        <input type="number" name="order" value="{{ page.order|default:0 }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_published" id="is_published" {% if not page or page.is_published %}checked{% endif %} class="rounded border-stone-300">
+                        <label for="is_published" class="text-xs text-stone-700">Опубликовано</label>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">OG Image</label>
+                        {% if page and page.og_image %}
+                        <img src="{{ page.og_image.url }}" alt="" class="w-full h-20 rounded-lg object-cover mb-2">
+                        {% endif %}
+                        <input type="file" name="og_image" accept="image/*" class="w-full">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="w-full py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">
+                {% if page %}Сохранить{% else %}Создать{% endif %}
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block richtext %}{% include 'backoffice/components/_richtext.html' %}{% endblock %}

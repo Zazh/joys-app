@@ -1,0 +1,97 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Редактировать: {{ page.slug }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'backoffice:service_page_list' %}" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 mb-4">
+    &larr; Все служебные страницы
+</a>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Left: content -->
+        <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white rounded-xl border border-stone-200" x-data="{ tab: 'ru' }">
+                <div class="px-4 py-3 border-b border-stone-100 flex items-center gap-4">
+                    <h3 class="text-sm font-bold">Контент</h3>
+                    <div class="flex gap-1 ml-auto">
+                        <button type="button" @click="tab='ru'" :class="tab==='ru' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">RU</button>
+                        <button type="button" @click="tab='kk'" :class="tab==='kk' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">KK</button>
+                        <button type="button" @click="tab='en'" :class="tab==='en' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">EN</button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <!-- RU -->
+                    <div x-show="tab==='ru'" class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заголовок (RU)</label>
+                            <input type="text" name="title_ru" value="{{ page.title_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Описание (RU)</label>
+                            <textarea name="description_ru" rows="4" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ page.description_ru|default:'' }}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Текст кнопки (RU)</label>
+                            <input type="text" name="button_text_ru" value="{{ page.button_text_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                    </div>
+                    <!-- KK -->
+                    <div x-show="tab==='kk'" x-cloak class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заголовок (KK)</label>
+                            <input type="text" name="title_kk" value="{{ page.title_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Описание (KK)</label>
+                            <textarea name="description_kk" rows="4" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ page.description_kk|default:'' }}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Текст кнопки (KK)</label>
+                            <input type="text" name="button_text_kk" value="{{ page.button_text_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                    </div>
+                    <!-- EN -->
+                    <div x-show="tab==='en'" x-cloak class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заголовок (EN)</label>
+                            <input type="text" name="title_en" value="{{ page.title_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Описание (EN)</label>
+                            <textarea name="description_en" rows="4" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ page.description_en|default:'' }}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Текст кнопки (EN)</label>
+                            <input type="text" name="button_text_en" value="{{ page.button_text_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: sidebar -->
+        <div class="space-y-4">
+            <div class="bg-white rounded-xl border border-stone-200 p-4">
+                <h3 class="text-sm font-bold mb-3">Настройки</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Slug</label>
+                        <p class="px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm text-stone-600 font-mono">{{ page.slug }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Ссылка кнопки</label>
+                        <input type="text" name="button_url" value="{{ page.button_url|default:'/' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">
+                Сохранить
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

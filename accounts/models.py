@@ -30,9 +30,20 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
+    class Role(models.TextChoices):
+        CUSTOMER = 'customer', 'Покупатель'
+        MANAGER = 'manager', 'Менеджер'
+        SUPER_MANAGER = 'super_manager', 'Супер-менеджер'
+        OWNER = 'owner', 'Владелец'
+
     username = None
     email = models.EmailField('Email', unique=True)
     phone = models.CharField('Телефон', max_length=20, blank=True)
+    role = models.CharField(
+        'Роль', max_length=20,
+        choices=Role.choices, default=Role.CUSTOMER,
+        db_index=True,
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -52,3 +63,11 @@ class User(AbstractUser):
     def get_full_name(self):
         name = f'{self.first_name} {self.last_name}'.strip()
         return name
+
+    @property
+    def is_staff_role(self):
+        return self.role in (self.Role.MANAGER, self.Role.SUPER_MANAGER, self.Role.OWNER)
+
+    @property
+    def is_senior_staff(self):
+        return self.role in (self.Role.SUPER_MANAGER, self.Role.OWNER)

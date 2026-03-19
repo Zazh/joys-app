@@ -1,0 +1,296 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Квиз подбора товара{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="text-base font-bold">Квиз «Не можешь определиться?»</h2>
+    <p class="text-xs text-stone-500 mt-1">Вопросы, варианты ответов, правила подбора товаров и фоны результатов</p>
+</div>
+
+<!-- Questions -->
+<form method="post" action="{% url 'backoffice:quiz_questions_save' %}">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl border border-stone-200 p-4 max-w-3xl space-y-4 mb-4">
+        <h3 class="text-sm font-bold">Вопросы ({{ questions|length }})</h3>
+
+        {% for q in questions %}
+        <div class="border border-stone-200 rounded-lg p-3" x-data="{ open: true }">
+            <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-mono text-stone-400">{{ q.key }}</span>
+                    <span class="text-xs font-bold text-stone-700">{{ q.text_ru|striptags|truncatewords:8 }}</span>
+                    <span class="text-[10px] text-stone-400">{{ q.options.count }} вариантов</span>
+                    {% if not q.is_active %}
+                    <span class="text-[10px] text-red-400">Выкл</span>
+                    {% endif %}
+                </div>
+                <svg class="w-4 h-4 text-stone-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+            </div>
+
+            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-stone-100 space-y-3">
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="col-span-3" x-data="{ ql: 'ru' }">
+                        <div class="flex gap-1 mb-1">
+                            <button type="button" @click="ql = 'ru'" :class="ql === 'ru' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2 py-0.5 text-[10px] rounded">RU</button>
+                            <button type="button" @click="ql = 'kk'" :class="ql === 'kk' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2 py-0.5 text-[10px] rounded">KK</button>
+                            <button type="button" @click="ql = 'en'" :class="ql === 'en' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2 py-0.5 text-[10px] rounded">EN</button>
+                        </div>
+                        <textarea x-show="ql === 'ru'" name="q_{{ q.pk }}_text_ru" rows="2" class="w-full px-2 py-1 border border-stone-300 rounded-lg text-xs">{{ q.text_ru|default:'' }}</textarea>
+                        <textarea x-show="ql === 'kk'" name="q_{{ q.pk }}_text_kk" rows="2" class="w-full px-2 py-1 border border-stone-300 rounded-lg text-xs">{{ q.text_kk|default:'' }}</textarea>
+                        <textarea x-show="ql === 'en'" name="q_{{ q.pk }}_text_en" rows="2" class="w-full px-2 py-1 border border-stone-300 rounded-lg text-xs">{{ q.text_en|default:'' }}</textarea>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] text-stone-500">Порядок</label>
+                        <input type="number" name="q_{{ q.pk }}_order" value="{{ q.order }}" class="w-full px-2 py-1 border border-stone-300 rounded-lg text-xs">
+                        <label class="flex items-center gap-1 text-[10px] text-stone-500 mt-1">
+                            <input type="checkbox" name="q_{{ q.pk }}_is_active" {% if q.is_active %}checked{% endif %} class="rounded border-stone-300 w-3 h-3">
+                            Вкл
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div class="space-y-2">
+                    <p class="text-[10px] uppercase tracking-wider text-stone-400">Варианты ответа</p>
+                    {% for opt in q.options.all %}
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-1">
+                            <input type="text" name="opt_{{ opt.pk }}_value" value="{{ opt.value }}" class="w-full px-1 py-1 border border-stone-300 rounded text-[10px] text-center" title="Значение (key)">
+                        </div>
+                        <div class="col-span-5" x-data="{ ol: 'ru' }">
+                            <div class="flex gap-0.5 mb-0.5">
+                                <button type="button" @click="ol = 'ru'" :class="ol === 'ru' ? 'font-bold text-stone-700' : 'text-stone-400'" class="text-[10px]">RU</button>
+                                <button type="button" @click="ol = 'kk'" :class="ol === 'kk' ? 'font-bold text-stone-700' : 'text-stone-400'" class="text-[10px]">KK</button>
+                                <button type="button" @click="ol = 'en'" :class="ol === 'en' ? 'font-bold text-stone-700' : 'text-stone-400'" class="text-[10px]">EN</button>
+                            </div>
+                            <input x-show="ol === 'ru'" type="text" name="opt_{{ opt.pk }}_label_ru" value="{{ opt.label_ru|default:'' }}" class="w-full px-2 py-1 border border-stone-300 rounded text-xs" placeholder="Текст кнопки">
+                            <input x-show="ol === 'kk'" type="text" name="opt_{{ opt.pk }}_label_kk" value="{{ opt.label_kk|default:'' }}" class="w-full px-2 py-1 border border-stone-300 rounded text-xs">
+                            <input x-show="ol === 'en'" type="text" name="opt_{{ opt.pk }}_label_en" value="{{ opt.label_en|default:'' }}" class="w-full px-2 py-1 border border-stone-300 rounded text-xs">
+                        </div>
+                        <div class="col-span-2">
+                            <input type="text" name="opt_{{ opt.pk }}_bg_color" value="{{ opt.bg_color }}" class="w-full px-2 py-1 border border-stone-300 rounded text-[10px]" placeholder="#E8C840"
+                                   {% if opt.bg_color %}style="background:{{ opt.bg_color }}; color:{{ opt.text_color|default:'#000' }}"{% endif %}>
+                        </div>
+                        <div class="col-span-2">
+                            <input type="text" name="opt_{{ opt.pk }}_text_color" value="{{ opt.text_color }}" class="w-full px-2 py-1 border border-stone-300 rounded text-[10px]" placeholder="#fff">
+                        </div>
+                        <div class="col-span-1">
+                            <input type="number" name="opt_{{ opt.pk }}_order" value="{{ opt.order }}" class="w-full px-1 py-1 border border-stone-300 rounded text-[10px] text-center" title="Порядок">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="px-6 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">Сохранить вопросы</button>
+    </div>
+</form>
+
+<!-- Result text -->
+<form method="post" action="{% url 'backoffice:quiz_result_text_save' %}">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl border border-stone-200 p-4 max-w-3xl space-y-3 mb-4">
+        <h3 class="text-sm font-bold">Тексты экрана результата</h3>
+
+        <div x-data="{ rl: 'ru' }">
+            <div class="flex gap-1 mb-2">
+                <button type="button" @click="rl = 'ru'" :class="rl === 'ru' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2 py-0.5 text-[10px] rounded">RU</button>
+                <button type="button" @click="rl = 'kk'" :class="rl === 'kk' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2 py-0.5 text-[10px] rounded">KK</button>
+                <button type="button" @click="rl = 'en'" :class="rl === 'en' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2 py-0.5 text-[10px] rounded">EN</button>
+            </div>
+            <div x-show="rl === 'ru'" class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок (RU)</label>
+                    <input type="text" name="title_ru" value="{{ result_text.title_ru|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Кнопка (RU)</label>
+                    <input type="text" name="button_text_ru" value="{{ result_text.button_text_ru|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Ещё вариант (RU)</label>
+                    <input type="text" name="more_text_ru" value="{{ result_text.more_text_ru|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+            </div>
+            <div x-show="rl === 'kk'" class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок (KK)</label>
+                    <input type="text" name="title_kk" value="{{ result_text.title_kk|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Кнопка (KK)</label>
+                    <input type="text" name="button_text_kk" value="{{ result_text.button_text_kk|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Ещё вариант (KK)</label>
+                    <input type="text" name="more_text_kk" value="{{ result_text.more_text_kk|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+            </div>
+            <div x-show="rl === 'en'" class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок (EN)</label>
+                    <input type="text" name="title_en" value="{{ result_text.title_en|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Кнопка (EN)</label>
+                    <input type="text" name="button_text_en" value="{{ result_text.button_text_en|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Ещё вариант (EN)</label>
+                    <input type="text" name="more_text_en" value="{{ result_text.more_text_en|default:'' }}" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Сохранить</button>
+    </div>
+</form>
+
+<!-- Rules -->
+<div class="bg-white rounded-xl border border-stone-200 p-4 max-w-3xl space-y-4 mb-4">
+    <h3 class="text-sm font-bold">Правила подбора ({{ rules|length }})</h3>
+    <p class="text-xs text-stone-400">Пустое поле = любой ответ. Чем выше приоритет, тем важнее правило.</p>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="border-b border-stone-100 text-left text-stone-500 bg-stone-50">
+                    <th class="px-2 py-2 font-medium">Приор.</th>
+                    <th class="px-2 py-2 font-medium">Q1</th>
+                    <th class="px-2 py-2 font-medium">Q2</th>
+                    <th class="px-2 py-2 font-medium">Q3</th>
+                    <th class="px-2 py-2 font-medium">Q4</th>
+                    <th class="px-2 py-2 font-medium">Товар</th>
+                    <th class="px-2 py-2 font-medium">Статус</th>
+                    <th class="px-2 py-2 font-medium"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                <tr class="border-b border-stone-50 hover:bg-stone-50">
+                    <td class="px-2 py-2 font-mono">{{ rule.priority }}</td>
+                    <td class="px-2 py-2 text-stone-500">{{ rule.get_q1_important_display|default:"*" }}</td>
+                    <td class="px-2 py-2 text-stone-500">{{ rule.get_q2_aroma_display|default:"*" }}</td>
+                    <td class="px-2 py-2 text-stone-500">{{ rule.get_q3_frequency_display|default:"*" }}</td>
+                    <td class="px-2 py-2 text-stone-500">{{ rule.get_q4_lube_display|default:"*" }}</td>
+                    <td class="px-2 py-2 font-medium">{{ rule.product.name_ru|truncatewords:4 }}</td>
+                    <td class="px-2 py-2">
+                        {% if rule.is_active %}<span class="text-green-600">Вкл</span>{% else %}<span class="text-stone-400">Выкл</span>{% endif %}
+                    </td>
+                    <td class="px-2 py-2">
+                        <form method="post" action="{% url 'backoffice:quiz_rule_delete' pk=rule.pk %}" onsubmit="return confirm('Удалить правило?')" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-400 hover:text-red-600">&times;</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="px-2 py-6 text-center text-stone-400">Правил нет</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add rule -->
+    <div class="border-t border-stone-100 pt-3" x-data="{ open: false }">
+        <button type="button" @click="open = !open" class="text-xs font-medium text-stone-700 hover:text-stone-900">+ Добавить правило</button>
+        <div x-show="open" x-cloak class="mt-3">
+            <form method="post" action="{% url 'backoffice:quiz_rule_create' %}">
+                {% csrf_token %}
+                <div class="grid grid-cols-6 gap-2 mb-3">
+                    <div>
+                        <label class="block text-[10px] text-stone-500 mb-1">Q1</label>
+                        <select name="q1_important" class="w-full px-1 py-1 border border-stone-300 rounded text-xs">
+                            <option value="">Любой</option>
+                            {% for val, label in q1_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-stone-500 mb-1">Q2</label>
+                        <select name="q2_aroma" class="w-full px-1 py-1 border border-stone-300 rounded text-xs">
+                            <option value="">Любой</option>
+                            {% for val, label in q2_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-stone-500 mb-1">Q3</label>
+                        <select name="q3_frequency" class="w-full px-1 py-1 border border-stone-300 rounded text-xs">
+                            <option value="">Любой</option>
+                            {% for val, label in q3_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-stone-500 mb-1">Q4</label>
+                        <select name="q4_lube" class="w-full px-1 py-1 border border-stone-300 rounded text-xs">
+                            <option value="">Любой</option>
+                            {% for val, label in q4_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-stone-500 mb-1">Товар <span class="text-red-500">*</span></label>
+                        <select name="product" required class="w-full px-1 py-1 border border-stone-300 rounded text-xs">
+                            <option value="">—</option>
+                            {% for p in products %}
+                            <option value="{{ p.pk }}">{{ p.name_ru|truncatewords:3 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-stone-500 mb-1">Приоритет</label>
+                        <input type="number" name="priority" value="0" class="w-full px-1 py-1 border border-stone-300 rounded text-xs">
+                    </div>
+                </div>
+                <button type="submit" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Добавить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backgrounds -->
+<form method="post" action="{% url 'backoffice:quiz_backgrounds_save' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl border border-stone-200 p-4 max-w-3xl space-y-4">
+        <h3 class="text-sm font-bold">Фоны результатов ({{ backgrounds|length }})</h3>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {% for bg in backgrounds %}
+            <div class="border border-stone-200 rounded-lg p-2">
+                {% if bg.image %}
+                <img src="{{ bg.image.url }}" alt="{{ bg.key }}" class="w-full h-20 object-cover rounded mb-2">
+                {% else %}
+                <div class="w-full h-20 bg-stone-100 rounded mb-2 flex items-center justify-center text-stone-300 text-xs">—</div>
+                {% endif %}
+                <p class="text-xs font-mono text-stone-600 mb-1">{{ bg.key }}</p>
+                <input type="file" name="bg_{{ bg.pk }}_image" accept="image/*" class="w-full text-[10px] file:mr-1 file:px-1 file:py-0.5 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-[10px] mb-1">
+                <div class="flex gap-3">
+                    <label class="flex items-center gap-1 text-[10px] text-stone-500">
+                        <input type="checkbox" name="bg_{{ bg.pk }}_is_dark" {% if bg.is_dark_theme %}checked{% endif %} class="rounded border-stone-300 w-3 h-3">
+                        Тёмная
+                    </label>
+                    <label class="flex items-center gap-1 text-[10px] text-stone-500">
+                        <input type="checkbox" name="bg_{{ bg.pk }}_is_active" {% if bg.is_active %}checked{% endif %} class="rounded border-stone-300 w-3 h-3">
+                        Вкл
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if backgrounds %}
+        <button type="submit" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Сохранить фоны</button>
+        {% else %}
+        <p class="text-xs text-stone-400">Фонов нет. Добавьте через Django admin.</p>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}

@@ -108,6 +108,32 @@ class InquirySubmission(models.Model):
         return {fv.field.key: fv.value for fv in self.values.select_related('field')}
 
 
+class InquiryStatusLog(models.Model):
+    """История изменений статуса обработки заявки."""
+    submission = models.ForeignKey(
+        InquirySubmission, on_delete=models.CASCADE,
+        related_name='status_logs', verbose_name='Заявка',
+    )
+    action = models.CharField('Действие', max_length=20, choices=[
+        ('processed', 'Обработана'),
+        ('unprocessed', 'Снята обработка'),
+    ])
+    changed_by = models.ForeignKey(
+        'accounts.User', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='Кто изменил',
+    )
+    changed_at = models.DateTimeField('Дата', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'История статуса заявки'
+        verbose_name_plural = 'История статусов заявок'
+        ordering = ['-changed_at']
+
+    def __str__(self):
+        return f'Заявка #{self.submission_id}: {self.get_action_display()}'
+
+
 class InquiryFieldValue(models.Model):
     """Значение поля в заявке — нормализованное хранение."""
 

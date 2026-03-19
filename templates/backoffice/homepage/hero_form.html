@@ -1,0 +1,226 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Hero-секция{% endblock %}
+
+{% block content %}
+<a href="{% url 'backoffice:homepage_overview' %}" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 mb-4">&larr; Главная страница</a>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl border border-stone-200 p-4 max-w-2xl space-y-4 mb-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold">Hero-секция</h3>
+            <label class="flex items-center gap-2 text-xs">
+                <input type="checkbox" name="is_active" {% if hero.is_active %}checked{% endif %}
+                       class="rounded border-stone-300 text-stone-900 focus:ring-stone-400">
+                Активна
+            </label>
+        </div>
+
+        <!-- Language tabs -->
+        <div x-data="{ lang: 'ru' }">
+            <div class="flex gap-1 mb-3">
+                <button type="button" @click="lang = 'ru'" :class="lang === 'ru' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-3 py-1 text-xs rounded-lg">RU</button>
+                <button type="button" @click="lang = 'kk'" :class="lang === 'kk' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-3 py-1 text-xs rounded-lg">KK</button>
+                <button type="button" @click="lang = 'en'" :class="lang === 'en' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-3 py-1 text-xs rounded-lg">EN</button>
+            </div>
+
+            <!-- RU -->
+            <div x-show="lang === 'ru'" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок H1 (RU) <span class="text-red-500">*</span></label>
+                    <textarea name="title_ru" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ hero.title_ru|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Подзаголовок H2 (RU)</label>
+                    <textarea name="subtitle_ru" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ hero.subtitle_ru|default:'' }}</textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Каталог» (RU)</label>
+                        <input type="text" name="button_catalog_text_ru" value="{{ hero.button_catalog_text_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (RU)</label>
+                        <input type="text" name="button_buy_text_ru" value="{{ hero.button_buy_text_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- KK -->
+            <div x-show="lang === 'kk'" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок H1 (KK)</label>
+                    <textarea name="title_kk" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ hero.title_kk|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Подзаголовок H2 (KK)</label>
+                    <textarea name="subtitle_kk" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ hero.subtitle_kk|default:'' }}</textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Каталог» (KK)</label>
+                        <input type="text" name="button_catalog_text_kk" value="{{ hero.button_catalog_text_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (KK)</label>
+                        <input type="text" name="button_buy_text_kk" value="{{ hero.button_buy_text_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- EN -->
+            <div x-show="lang === 'en'" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок H1 (EN)</label>
+                    <textarea name="title_en" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ hero.title_en|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Подзаголовок H2 (EN)</label>
+                    <textarea name="subtitle_en" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ hero.subtitle_en|default:'' }}</textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Каталог» (EN)</label>
+                        <input type="text" name="button_catalog_text_en" value="{{ hero.button_catalog_text_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (EN)</label>
+                        <input type="text" name="button_buy_text_en" value="{{ hero.button_buy_text_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Ссылка кнопки «Купить»</label>
+            <input type="text" name="button_buy_url" value="{{ hero.button_buy_url|default:'' }}"
+                   class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm" placeholder="https://...">
+        </div>
+
+        <button type="submit" class="px-6 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">Сохранить</button>
+    </div>
+</form>
+
+<!-- Hero Cards -->
+<div class="bg-white rounded-xl border border-stone-200 p-4 max-w-2xl">
+    <h3 class="text-sm font-bold mb-1">Карточки товаров</h3>
+    <p class="text-xs text-stone-400 mb-4">Каждая карточка — это товар с изображением и SVG-счётчиком количества (5, 17, 30 шт.)</p>
+
+    {% if hero.cards.count > 0 %}
+    <div class="space-y-3 mb-4">
+        {% for card in hero.cards.all %}
+        <div class="border border-stone-200 rounded-lg p-3" x-data="{ editing: false }">
+            <!-- Preview mode -->
+            <div x-show="!editing" class="flex items-center gap-4">
+                <div class="flex items-center gap-3 flex-1">
+                    <span class="text-xs text-stone-400 w-6 text-center">#{{ card.order }}</span>
+                    <img src="{{ card.image.url }}" alt="" class="w-14 h-20 object-contain bg-stone-50 rounded-lg">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs text-stone-500">Товар</span>
+                        <span class="text-[10px] text-stone-400 truncate max-w-[200px]">{{ card.image.name|truncatechars:30 }}</span>
+                    </div>
+                    {% if card.count_image %}
+                    <div class="flex flex-col items-center gap-1 ml-auto">
+                        <img src="{{ card.count_image.url }}" alt="" class="w-10 h-10 object-contain">
+                        <span class="text-[10px] text-stone-400">SVG</span>
+                    </div>
+                    {% else %}
+                    <div class="flex flex-col items-center gap-1 ml-auto">
+                        <div class="w-10 h-10 bg-stone-100 rounded flex items-center justify-center text-stone-300 text-xs">—</div>
+                        <span class="text-[10px] text-stone-400">нет SVG</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="editing = true" class="text-xs text-stone-500 hover:text-stone-800">Изм.</button>
+                    <form method="post" action="{% url 'backoffice:homepage_hero_card_delete' %}"
+                          onsubmit="return confirm('Удалить карточку #{{ card.order }}?')">
+                        {% csrf_token %}
+                        <input type="hidden" name="card_id" value="{{ card.pk }}">
+                        <button type="submit" class="text-xs text-red-400 hover:text-red-600">&times;</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit mode -->
+            <div x-show="editing" x-cloak>
+                <form method="post" action="{% url 'backoffice:homepage_hero_card_update' card_pk=card.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="flex items-start gap-4 mb-3">
+                        <!-- Current image -->
+                        <div class="flex flex-col items-center gap-1">
+                            <img src="{{ card.image.url }}" alt="" class="w-14 h-20 object-contain bg-stone-50 rounded-lg">
+                            <span class="text-[10px] text-stone-400">Текущее</span>
+                        </div>
+                        <!-- Current SVG -->
+                        <div class="flex flex-col items-center gap-1">
+                            {% if card.count_image %}
+                            <img src="{{ card.count_image.url }}" alt="" class="w-14 h-14 object-contain bg-stone-50 rounded-lg">
+                            {% else %}
+                            <div class="w-14 h-14 bg-stone-100 rounded-lg flex items-center justify-center text-stone-300 text-xs">—</div>
+                            {% endif %}
+                            <span class="text-[10px] text-stone-400">SVG</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заменить фото</label>
+                            <input type="file" name="image" accept="image/*"
+                                   class="w-full text-[10px] file:mr-1 file:px-2 file:py-0.5 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-[10px]">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Заменить SVG</label>
+                            <input type="file" name="count_image" accept=".svg,image/svg+xml"
+                                   class="w-full text-[10px] file:mr-1 file:px-2 file:py-0.5 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-[10px]">
+                            {% if card.count_image %}
+                            <label class="flex items-center gap-1 mt-1 text-[10px] text-stone-400">
+                                <input type="checkbox" name="clear_count_image" class="rounded border-stone-300 w-3 h-3">
+                                Убрать SVG
+                            </label>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-xs text-stone-500 mb-1">Порядок</label>
+                            <input type="number" name="order" value="{{ card.order }}"
+                                   class="w-full px-2 py-1 border border-stone-300 rounded-lg text-xs">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="submit" class="px-3 py-1 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Сохранить</button>
+                        <button type="button" @click="editing = false" class="px-3 py-1 bg-stone-100 text-stone-600 text-xs rounded-lg hover:bg-stone-200">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-stone-400 mb-4">Карточек пока нет</p>
+    {% endif %}
+
+    <!-- Add new card -->
+    <div class="border-t border-stone-100 pt-3" x-data="{ open: false }">
+        <button type="button" @click="open = !open" class="text-xs font-medium text-stone-700 hover:text-stone-900">+ Добавить карточку</button>
+        <div x-show="open" x-cloak class="mt-3">
+            <form method="post" action="{% url 'backoffice:homepage_hero_card_upload' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Изображение товара <span class="text-red-500">*</span></label>
+                        <input type="file" name="image" accept="image/*" required
+                               class="w-full text-xs file:mr-2 file:px-3 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">SVG количества</label>
+                        <input type="file" name="count_image" accept=".svg,image/svg+xml"
+                               class="w-full text-xs file:mr-2 file:px-3 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+                        <p class="text-[10px] text-stone-400 mt-1">SVG с числом (5.svg, 17.svg, 30.svg)</p>
+                    </div>
+                </div>
+                <button type="submit" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Добавить</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

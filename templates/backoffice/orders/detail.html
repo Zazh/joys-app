@@ -1,0 +1,144 @@
+{% extends 'backoffice/base.html' %}
+{% load backoffice_tags %}
+
+{% block title %}Заказ #{{ order.number }}{% endblock %}
+
+{% block content %}
+<!-- Back -->
+<a href="{% url 'backoffice:order_list' %}" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 mb-4">
+    ← Все заказы
+</a>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Left: order info -->
+    <div class="lg:col-span-2 space-y-4">
+        <!-- Header -->
+        <div class="bg-white rounded-xl border border-stone-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-base font-bold">Заказ #{{ order.number }}</h2>
+                {{ order.status|status_badge }}
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs text-stone-500">
+                <p>Создан: <span class="text-stone-800">{{ order.created_at|date:"d.m.Y H:i" }}</span></p>
+                {% if order.paid_at %}
+                <p>Оплачен: <span class="text-stone-800">{{ order.paid_at|date:"d.m.Y H:i" }}</span></p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="bg-white rounded-xl border border-stone-200">
+            <div class="px-4 py-3 border-b border-stone-100">
+                <h3 class="text-sm font-bold">Товары</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-stone-100 text-left text-stone-500">
+                            <th class="px-4 py-2 font-medium">Товар</th>
+                            <th class="px-4 py-2 font-medium">Размер</th>
+                            <th class="px-4 py-2 font-medium text-right">Цена</th>
+                            <th class="px-4 py-2 font-medium text-center">Кол-во</th>
+                            <th class="px-4 py-2 font-medium text-right">Итого</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr class="border-b border-stone-50">
+                            <td class="px-4 py-2.5 font-medium">{{ item.product_name }}</td>
+                            <td class="px-4 py-2.5 text-stone-500">{{ item.size_name }}</td>
+                            <td class="px-4 py-2.5 text-right">{{ item.price|floatformat:0 }}</td>
+                            <td class="px-4 py-2.5 text-center">{{ item.quantity }}</td>
+                            <td class="px-4 py-2.5 text-right font-medium">{{ item.subtotal|floatformat:0 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-stone-50">
+                            <td colspan="4" class="px-4 py-2.5 text-right font-bold">Итого:</td>
+                            <td class="px-4 py-2.5 text-right font-bold">
+                                {{ order.display_amount|floatformat:0 }} {{ order.region.currency_symbol|default:"₸" }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: customer + actions -->
+    <div class="space-y-4">
+        <!-- Customer info -->
+        <div class="bg-white rounded-xl border border-stone-200 p-4">
+            <h3 class="text-sm font-bold mb-3">Клиент</h3>
+            <dl class="space-y-2 text-xs">
+                <div>
+                    <dt class="text-stone-500">Имя</dt>
+                    <dd class="font-medium">{{ order.customer_name|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-stone-500">Телефон</dt>
+                    <dd class="font-medium">{{ order.customer_phone|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-stone-500">Email</dt>
+                    <dd class="font-medium">{{ order.customer_email|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-stone-500">Адрес</dt>
+                    <dd class="font-medium">{{ order.city|default:"" }}{% if order.address %}, {{ order.address }}{% endif %}</dd>
+                </div>
+                <div>
+                    <dt class="text-stone-500">Регион</dt>
+                    <dd class="font-medium">{{ order.region.name|default:"—" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Status actions -->
+        {% if transitions %}
+        <div class="bg-white rounded-xl border border-stone-200 p-4">
+            <h3 class="text-sm font-bold mb-3">Действия</h3>
+            <div class="space-y-2">
+                {% for new_status, label, color in transitions %}
+                <form method="post" action="{% url 'backoffice:order_status' number=order.number %}"
+                      onsubmit="return confirm('{{ label }}?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="new_status" value="{{ new_status }}">
+                    <button type="submit" class="w-full py-2 text-xs font-medium rounded-lg transition-colors
+                        {% if color == 'green' %}bg-green-50 text-green-700 border border-green-200 hover:bg-green-100
+                        {% elif color == 'blue' %}bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100
+                        {% elif color == 'red' %}bg-red-50 text-red-700 border border-red-200 hover:bg-red-100
+                        {% endif %}">
+                        {{ label }}
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Status history -->
+        {% if order.status_logs.all %}
+        <div class="bg-white rounded-xl border border-stone-200 p-4">
+            <h3 class="text-sm font-bold mb-3">История статусов</h3>
+            <div class="space-y-2">
+                {% for log in order.status_logs.all %}
+                <div class="flex items-start gap-2 text-xs">
+                    <div class="w-1.5 h-1.5 rounded-full bg-stone-400 mt-1.5 shrink-0"></div>
+                    <div>
+                        <p class="text-stone-800">
+                            {{ log.get_old_status_display }} → {{ log.get_new_status_display }}
+                        </p>
+                        <p class="text-stone-400 mt-0.5">
+                            {{ log.changed_by.email|default:"Система" }} &middot; {{ log.changed_at|date:"d.m.Y H:i" }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

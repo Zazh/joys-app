@@ -1,0 +1,154 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Промо: {{ promo.slug }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'backoffice:homepage_overview' %}" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 mb-4">&larr; Главная страница</a>
+
+<div class="flex items-center gap-3 mb-4">
+    <h2 class="text-base font-bold">Промо-блок: {{ promo.slug }}</h2>
+    {% if modal %}
+    <a href="{% url 'backoffice:modal_edit' pk=modal.pk %}"
+       class="inline-flex items-center gap-1 px-3 py-1 bg-stone-100 text-stone-700 text-xs rounded-lg hover:bg-stone-200">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        Модалка «{{ modal.title }}»
+    </a>
+    {% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl border border-stone-200 p-4 max-w-2xl space-y-4 mb-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold">Контент блока</h3>
+            <label class="flex items-center gap-2 text-xs">
+                <input type="checkbox" name="is_active" {% if promo.is_active %}checked{% endif %}
+                       class="rounded border-stone-300 text-stone-900 focus:ring-stone-400">
+                Активен
+            </label>
+        </div>
+
+        <!-- Language tabs -->
+        <div x-data="{ lang: 'ru' }">
+            <div class="flex gap-1 mb-3">
+                <button type="button" @click="lang = 'ru'" :class="lang === 'ru' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-3 py-1 text-xs rounded-lg">RU</button>
+                <button type="button" @click="lang = 'kk'" :class="lang === 'kk' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-3 py-1 text-xs rounded-lg">KK</button>
+                <button type="button" @click="lang = 'en'" :class="lang === 'en' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-3 py-1 text-xs rounded-lg">EN</button>
+            </div>
+
+            <!-- RU -->
+            <div x-show="lang === 'ru'" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок (RU)</label>
+                    <textarea name="title_ru" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.title_ru|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Подзаголовок (RU)</label>
+                    <textarea name="subtitle_ru" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.subtitle_ru|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Текст (RU)</label>
+                    <textarea name="text_ru" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.text_ru|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Текст кнопки (RU)</label>
+                    <input type="text" name="button_text_ru" value="{{ promo.button_text_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                </div>
+            </div>
+
+            <!-- KK -->
+            <div x-show="lang === 'kk'" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок (KK)</label>
+                    <textarea name="title_kk" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.title_kk|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Подзаголовок (KK)</label>
+                    <textarea name="subtitle_kk" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.subtitle_kk|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Текст (KK)</label>
+                    <textarea name="text_kk" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.text_kk|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Текст кнопки (KK)</label>
+                    <input type="text" name="button_text_kk" value="{{ promo.button_text_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                </div>
+            </div>
+
+            <!-- EN -->
+            <div x-show="lang === 'en'" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Заголовок (EN)</label>
+                    <textarea name="title_en" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.title_en|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Подзаголовок (EN)</label>
+                    <textarea name="subtitle_en" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.subtitle_en|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Текст (EN)</label>
+                    <textarea name="text_en" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ promo.text_en|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Текст кнопки (EN)</label>
+                    <input type="text" name="button_text_en" value="{{ promo.button_text_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Ссылка кнопки</label>
+            <input type="text" name="button_url" value="{{ promo.button_url|default:'' }}"
+                   class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm" placeholder="URL или пусто если открывает модалку">
+        </div>
+
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Основная картинка</label>
+            {% if promo.image %}
+            <img src="{{ promo.image.url }}" alt="" class="w-24 h-16 object-cover rounded mb-2">
+            {% endif %}
+            <input type="file" name="image" accept="image/*"
+                   class="w-full text-xs file:mr-2 file:px-3 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+        </div>
+
+        <button type="submit" class="px-6 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">Сохранить</button>
+    </div>
+</form>
+
+<!-- Gallery -->
+<div class="bg-white rounded-xl border border-stone-200 p-4 max-w-2xl">
+    <h3 class="text-sm font-bold mb-3">Галерея ({{ promo.images.count }} фото)</h3>
+
+    {% if promo.images.count > 0 %}
+    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 mb-4">
+        {% for img in promo.images.all %}
+        <div class="relative group">
+            <img src="{{ img.image.url }}" alt="" class="w-full h-16 object-cover rounded-lg">
+            <div class="absolute bottom-0.5 left-1 text-[10px] text-white bg-black/40 px-1 rounded">{{ img.order }}</div>
+            <form method="post" action="{% url 'backoffice:homepage_promo_gallery_delete' pk=promo.pk %}"
+                  onsubmit="return confirm('Удалить фото?')" class="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {% csrf_token %}
+                <input type="hidden" name="image_id" value="{{ img.pk }}">
+                <button type="submit" class="w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">&times;</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'backoffice:homepage_promo_gallery_upload' pk=promo.pk %}" enctype="multipart/form-data"
+          class="border-t border-stone-100 pt-3"
+          x-data="{ files: null }">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="block text-xs text-stone-500 mb-1">Добавить фото</label>
+            <input type="file" name="images" multiple accept="image/*"
+                   @change="files = $event.target.files"
+                   class="w-full text-xs file:mr-2 file:px-3 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+            <p x-show="files && files.length > 0" class="text-[10px] text-stone-400 mt-1" x-text="files ? files.length + ' файл(ов) выбрано' : ''"></p>
+        </div>
+        <button type="submit" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Загрузить</button>
+    </form>
+</div>
+{% endblock %}

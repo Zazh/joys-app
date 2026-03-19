@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'reviews',
     'redirects',
     'qrcodes',
+    'backoffice',
 ]
 
 MIDDLEWARE = [

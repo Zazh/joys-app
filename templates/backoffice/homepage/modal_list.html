@@ -1,0 +1,61 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Модалки{% endblock %}
+
+{% block content %}
+<a href="{% url 'backoffice:homepage_overview' %}" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 mb-4">&larr; Главная страница</a>
+
+<div class="mb-4">
+    <h2 class="text-base font-bold">Интерактивные модалки</h2>
+    <p class="text-xs text-stone-500 mt-1">Модальные окна, которые открываются из промо-блоков на главной странице</p>
+</div>
+
+<div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="border-b border-stone-100 text-left text-stone-500 bg-stone-50">
+                    <th class="px-4 py-2.5 font-medium">Название</th>
+                    <th class="px-4 py-2.5 font-medium">Slug</th>
+                    <th class="px-4 py-2.5 font-medium">Тема</th>
+                    <th class="px-4 py-2.5 font-medium text-center">Шагов</th>
+                    <th class="px-4 py-2.5 font-medium text-center">Статус</th>
+                    <th class="px-4 py-2.5 font-medium">Связанный промо</th>
+                    <th class="px-4 py-2.5 font-medium"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for modal in modals %}
+                <tr class="border-b border-stone-50 hover:bg-stone-50">
+                    <td class="px-4 py-2.5 font-medium">{{ modal.title }}</td>
+                    <td class="px-4 py-2.5 text-stone-500">{{ modal.slug }}</td>
+                    <td class="px-4 py-2.5">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] {% if modal.theme == 'dark' %}bg-stone-800 text-white{% else %}bg-stone-100 text-stone-600{% endif %}">
+                            {{ modal.get_theme_display }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2.5 text-center text-stone-500">{{ modal.steps.count }}</td>
+                    <td class="px-4 py-2.5 text-center">
+                        {% if modal.is_active %}
+                        <span class="text-green-600">Вкл</span>
+                        {% else %}
+                        <span class="text-stone-400">Выкл</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2.5 text-stone-500">
+                        {% for promo in modal.linked_promos %}
+                        <a href="{% url 'backoffice:homepage_promo_edit' pk=promo.pk %}" class="text-stone-500 hover:text-stone-800 underline">{{ promo.slug }}</a>
+                        {% empty %}—{% endfor %}
+                    </td>
+                    <td class="px-4 py-2.5">
+                        <a href="{% url 'backoffice:modal_edit' pk=modal.pk %}" class="text-stone-500 hover:text-stone-800">Ред.</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="px-4 py-12 text-center text-stone-400">Модалок нет</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

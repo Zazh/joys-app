@@ -1,0 +1,40 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}QR-коды{% endblock %}
+
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+    <h2 class="text-base font-bold">QR-коды</h2>
+    <a href="{% url 'backoffice:qrcode_create' %}" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">
+        + Создать
+    </a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    {% for qr in qrcodes %}
+    <a href="{% url 'backoffice:qrcode_detail' pk=qr.pk %}"
+       class="bg-white rounded-xl border border-stone-200 overflow-hidden hover:shadow-md transition-shadow">
+        {% if qr.preview %}
+        <div class="p-6 flex justify-center bg-stone-50">
+            <img src="{{ qr.preview.url }}" alt="{{ qr.title }}" class="w-32 h-32">
+        </div>
+        {% else %}
+        <div class="p-6 flex justify-center bg-stone-50">
+            <div class="w-32 h-32 bg-stone-200 rounded flex items-center justify-center text-stone-400 text-xs">Нет превью</div>
+        </div>
+        {% endif %}
+        <div class="px-4 py-3 border-t border-stone-100">
+            <p class="text-sm font-medium truncate">{{ qr.title|default:"Без названия" }}</p>
+            <p class="text-xs text-stone-500 truncate mt-0.5">{{ qr.content|truncatechars:50 }}</p>
+            <p class="text-xs text-stone-400 mt-1">{{ qr.created_at|date:"d.m.Y H:i" }}</p>
+        </div>
+    </a>
+    {% empty %}
+    <div class="col-span-full bg-white rounded-xl border border-stone-200 px-4 py-12 text-center text-stone-400 text-sm">
+        QR-кодов пока нет
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'backoffice/components/_pagination.html' %}
+{% endblock %}
