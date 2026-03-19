@@ -40,11 +40,94 @@
     </div>
 </div>
 
+<!-- Charts row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    <!-- Orders chart -->
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h3 class="text-sm font-bold mb-3">Заказы за 30 дней</h3>
+        <canvas id="ordersChart" height="200"></canvas>
+    </div>
+
+    <!-- Reviews stats -->
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold">Отзывы</h3>
+            <div class="text-xs text-stone-500">
+                Всего: <span class="font-medium text-stone-700">{{ review_total }}</span>
+                &middot; Ср. оценка: <span class="font-medium text-stone-700">{{ review_avg|floatformat:1 }}</span>
+            </div>
+        </div>
+        <canvas id="ratingChart" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Weekly rating trend -->
+{% if chart_weekly_data != '[]' %}
+<div class="bg-white rounded-xl border border-stone-200 p-4 mb-6">
+    <h3 class="text-sm font-bold mb-3">Динамика средней оценки (по неделям)</h3>
+    <canvas id="weeklyChart" height="120"></canvas>
+</div>
+{% endif %}
+
+<!-- Monthly sales report -->
+{% if monthly_report %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <!-- Monthly revenue chart -->
+    <div class="lg:col-span-2 bg-white rounded-xl border border-stone-200 p-4">
+        <h3 class="text-sm font-bold mb-3">Выручка по месяцам</h3>
+        <canvas id="monthlyRevenueChart" height="180"></canvas>
+    </div>
+    <!-- Monthly orders chart -->
+    <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h3 class="text-sm font-bold mb-3">Оплаченные заказы</h3>
+        <canvas id="monthlyOrdersChart" height="180"></canvas>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl border border-stone-200 mb-6">
+    <div class="px-4 py-3 border-b border-stone-100">
+        <h2 class="font-bold text-sm">Отчёт продаж по месяцам</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="bg-stone-50 text-stone-500 text-left">
+                    <th class="px-4 py-3 font-medium">Месяц</th>
+                    <th class="px-4 py-3 font-medium text-right">Всего заказов</th>
+                    <th class="px-4 py-3 font-medium text-right">Оплачено</th>
+                    <th class="px-4 py-3 font-medium text-right">В ожидании</th>
+                    <th class="px-4 py-3 font-medium text-right">Отменено</th>
+                    <th class="px-4 py-3 font-medium text-right">Товаров продано</th>
+                    <th class="px-4 py-3 font-medium text-right">Выручка (&#8376;)</th>
+                    <th class="px-4 py-3 font-medium text-right">Ср. чек (&#8376;)</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+                {% for row in monthly_report %}
+                <tr class="hover:bg-stone-50">
+                    <td class="px-4 py-2.5 font-medium">{{ row.label }}</td>
+                    <td class="px-4 py-2.5 text-right text-stone-700">{{ row.total }}</td>
+                    <td class="px-4 py-2.5 text-right">
+                        <span class="text-green-700 font-medium">{{ row.paid }}</span>
+                    </td>
+                    <td class="px-4 py-2.5 text-right text-yellow-600">{{ row.pending }}</td>
+                    <td class="px-4 py-2.5 text-right text-red-500">{{ row.cancelled }}</td>
+                    <td class="px-4 py-2.5 text-right text-stone-600">{{ row.items_sold }}</td>
+                    <td class="px-4 py-2.5 text-right font-medium text-stone-900">{{ row.revenue|floatformat:0 }}</td>
+                    <td class="px-4 py-2.5 text-right text-stone-600">{{ row.avg_check|floatformat:0 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 <!-- Recent orders -->
 <div class="bg-white rounded-xl border border-stone-200">
     <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
         <h2 class="font-bold text-sm">Последние заказы</h2>
-        <a href="{% url 'backoffice:order_list' %}" class="text-xs text-stone-500 hover:text-stone-800">Все заказы →</a>
+        <a href="{% url 'backoffice:order_list' %}" class="text-xs text-stone-500 hover:text-stone-800">Все заказы &rarr;</a>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-xs">
@@ -81,4 +164,132 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const baseOpts = {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#a8a29e' } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#a8a29e', stepSize: 1 }, grid: { color: '#f5f5f4' } }
+    }
+};
+
+// Orders line chart
+new Chart(document.getElementById('ordersChart'), {
+    type: 'line',
+    data: {
+        labels: {{ chart_orders_labels|safe }},
+        datasets: [{
+            data: {{ chart_orders_data|safe }},
+            borderColor: '#292524',
+            backgroundColor: 'rgba(41,37,36,0.05)',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: baseOpts,
+});
+
+// Rating distribution bar chart
+new Chart(document.getElementById('ratingChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ chart_rating_labels|safe }},
+        datasets: [{
+            data: {{ chart_rating_data|safe }},
+            backgroundColor: ['#16a34a', '#65a30d', '#eab308', '#f97316', '#ef4444'],
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        ...baseOpts,
+        indexAxis: 'y',
+        scales: {
+            x: { beginAtZero: true, grid: { color: '#f5f5f4' }, ticks: { font: { size: 10 }, color: '#a8a29e' } },
+            y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#57534e' } },
+        }
+    },
+});
+
+// Weekly trend chart
+{% if chart_weekly_data != '[]' %}
+new Chart(document.getElementById('weeklyChart'), {
+    type: 'line',
+    data: {
+        labels: {{ chart_weekly_labels|safe }},
+        datasets: [{
+            data: {{ chart_weekly_data|safe }},
+            borderColor: '#eab308',
+            backgroundColor: 'rgba(234,179,8,0.08)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: '#eab308',
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: {
+        ...baseOpts,
+        scales: {
+            ...baseOpts.scales,
+            y: { ...baseOpts.scales.y, min: 1, max: 5, ticks: { ...baseOpts.scales.y.ticks, stepSize: 0.5 } }
+        }
+    },
+});
+{% endif %}
+
+// Monthly revenue bar chart
+{% if monthly_report %}
+new Chart(document.getElementById('monthlyRevenueChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ chart_monthly_labels|safe }},
+        datasets: [{
+            label: 'Выручка',
+            data: {{ chart_monthly_revenue|safe }},
+            backgroundColor: 'rgba(22,163,74,0.15)',
+            borderColor: '#16a34a',
+            borderWidth: 1,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        ...baseOpts,
+        scales: {
+            ...baseOpts.scales,
+            y: {
+                ...baseOpts.scales.y,
+                ticks: {
+                    ...baseOpts.scales.y.ticks,
+                    callback: v => v >= 1000 ? (v/1000).toFixed(0) + 'k' : v,
+                }
+            }
+        }
+    },
+});
+
+new Chart(document.getElementById('monthlyOrdersChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ chart_monthly_labels|safe }},
+        datasets: [{
+            label: 'Заказов',
+            data: {{ chart_monthly_orders|safe }},
+            backgroundColor: 'rgba(41,37,36,0.12)',
+            borderColor: '#292524',
+            borderWidth: 1,
+            borderRadius: 4,
+        }]
+    },
+    options: baseOpts,
+});
+{% endif %}
+</script>
 {% endblock %}

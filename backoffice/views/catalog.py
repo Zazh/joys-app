@@ -23,8 +23,8 @@ class ProductListView(BackofficeAccessMixin, ListView):
 
     def get_queryset(self):
         qs = Product.objects.select_related('category').annotate(
-            sizes_count=Count('sizes'),
-            images_count=Count('main_images'),
+            sizes_count=Count('sizes', distinct=True),
+            images_count=Count('main_images', distinct=True),
         ).order_by('-created_at')
 
         q = self.request.GET.get('q', '').strip()
@@ -424,7 +424,9 @@ class ProductImageCoverView(BackofficeAccessMixin, View):
 class CharacteristicListView(BackofficeAccessMixin, View):
     """Справочник характеристик."""
     def get(self, request):
-        chars = Characteristic.objects.select_related('unit').order_by('order', 'name_ru')
+        chars = Characteristic.objects.select_related('unit').annotate(
+            products_count=Count('productcharacteristic'),
+        ).order_by('order', 'name_ru')
         units = UnitOfMeasure.objects.order_by('name_ru')
         return TemplateResponse(request, 'backoffice/catalog/characteristic_list.html', {
             'characteristics': chars,

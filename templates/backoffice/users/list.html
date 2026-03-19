@@ -1,0 +1,96 @@
+{% extends 'backoffice/base.html' %}
+{% load backoffice_tags %}
+
+{% block title %}Пользователи{% endblock %}
+{% block page_title %}Пользователи{% endblock %}
+
+{% block content %}
+<!-- Tabs -->
+<div class="flex items-center gap-4 mb-4">
+    <a href="?tab=all" class="text-sm font-medium pb-1 {% if current_tab == 'all' %}text-stone-900 border-b-2 border-stone-900{% else %}text-stone-400 hover:text-stone-600{% endif %}">
+        Все
+    </a>
+    <a href="?tab=staff" class="text-sm font-medium pb-1 {% if current_tab == 'staff' %}text-stone-900 border-b-2 border-stone-900{% else %}text-stone-400 hover:text-stone-600{% endif %}">
+        Сотрудники <span class="text-xs text-stone-400">({{ total_staff }})</span>
+    </a>
+    <a href="?tab=customers" class="text-sm font-medium pb-1 {% if current_tab == 'customers' %}text-stone-900 border-b-2 border-stone-900{% else %}text-stone-400 hover:text-stone-600{% endif %}">
+        Клиенты <span class="text-xs text-stone-400">({{ total_customers }})</span>
+    </a>
+    {% if request.user.is_senior_staff %}
+    <a href="{% url 'backoffice:user_create' %}" class="ml-auto px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">+ Сотрудник</a>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<form method="get" class="bg-white rounded-xl border border-stone-200 p-4 mb-4">
+    {% if current_tab %}<input type="hidden" name="tab" value="{{ current_tab }}">{% endif %}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div>
+            <input type="text" name="q" value="{{ current_q }}" placeholder="Поиск по email, имени, телефону"
+                   class="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+        </div>
+        <div>
+            <select name="role" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">Все роли</option>
+                {% for value, label in roles %}
+                <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <select name="active" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">Все статусы</option>
+                <option value="1" {% if current_active == '1' %}selected{% endif %}>Активные</option>
+                <option value="0" {% if current_active == '0' %}selected{% endif %}>Заблокированные</option>
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-4 py-2 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Найти</button>
+            <a href="{% url 'backoffice:user_list' %}{% if current_tab != 'all' %}?tab={{ current_tab }}{% endif %}" class="px-4 py-2 border border-stone-300 text-xs rounded-lg hover:bg-stone-50">Сброс</a>
+        </div>
+    </div>
+</form>
+
+<!-- Table -->
+<div class="bg-white rounded-xl border border-stone-200 overflow-x-auto">
+    <table class="w-full text-xs">
+        <thead>
+            <tr class="bg-stone-50 text-stone-500 text-left">
+                <th class="px-4 py-3 font-medium">Email</th>
+                <th class="px-4 py-3 font-medium">Имя</th>
+                <th class="px-4 py-3 font-medium">Телефон</th>
+                <th class="px-4 py-3 font-medium">Роль</th>
+                <th class="px-4 py-3 font-medium">Заказов</th>
+                <th class="px-4 py-3 font-medium">Последний вход</th>
+                <th class="px-4 py-3 font-medium">Статус</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+            {% for u in users %}
+            <tr class="hover:bg-stone-50 cursor-pointer" onclick="window.location='{% url 'backoffice:user_detail' pk=u.pk %}'">
+                <td class="px-4 py-3 font-medium">{{ u.email }}</td>
+                <td class="px-4 py-3 text-stone-600">{{ u.get_full_name|default:"-" }}</td>
+                <td class="px-4 py-3 text-stone-600">{{ u.phone|default:"-" }}</td>
+                <td class="px-4 py-3">{{ u.get_role_display }}</td>
+                <td class="px-4 py-3 text-stone-600">{{ u.orders_count }}</td>
+                <td class="px-4 py-3 text-stone-500">
+                    {% if u.last_login %}{{ u.last_login|date:"d.m.Y H:i" }}{% else %}-{% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% if u.is_active %}
+                    <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700">Активен</span>
+                    {% else %}
+                    <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700">Заблокирован</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="px-4 py-8 text-center text-stone-400">Пользователи не найдены</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include 'backoffice/components/_pagination.html' %}
+</div>
+{% endblock %}

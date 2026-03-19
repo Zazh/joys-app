@@ -61,6 +61,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.TrackUserActivityMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -81,6 +82,7 @@ TEMPLATES = [
                 'catalog.context_processors.global_jsonld',
                 'regions.context_processors.region_context',
                 'orders.context_processors.cart_context',
+                'backoffice.context_processors.backoffice_badges',
             ],
         },
     },

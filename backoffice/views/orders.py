@@ -119,10 +119,12 @@ class OrderStatusUpdateView(BackofficeAccessMixin, View):
             order.save(update_fields=['status'])
             messages.success(request, f'Заказ #{number} — доставлен.')
 
+        # Refresh from DB — confirm_payment()/cancel() may set a different status
+        order.refresh_from_db(fields=['status'])
         OrderStatusLog.objects.create(
             order=order,
             old_status=old_status,
-            new_status=new_status,
+            new_status=order.status,
             changed_by=request.user,
         )
 

@@ -44,6 +44,8 @@ class User(AbstractUser):
         choices=Role.choices, default=Role.CUSTOMER,
         db_index=True,
     )
+    last_ip = models.GenericIPAddressField('Последний IP', null=True, blank=True)
+    last_user_agent = models.CharField('Браузер', max_length=300, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

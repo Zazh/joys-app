@@ -26,6 +26,12 @@ from .views.redirects import (
     RedirectListView, RedirectCreateView, RedirectEditView, RedirectDeleteView,
 )
 from .views.upload import ImageUploadView
+from .views.users import (
+    UserListView, UserDetailView, UserCreateView, UserEditView, UserToggleActiveView,
+)
+from .views.emails import EmailLogListView, EmailLogDetailView, EmailLogRetryView
+from .views.stock import StockListView, StockUpdateView
+from .views.reviews import ReviewListView, ReviewToggleView, ReviewSyncView
 from .views.homepage import (
     HomepageOverviewView, HeroEditView, HeroCardUploadView, HeroCardUpdateView, HeroCardDeleteView,
     FeatureSlideListView, FeatureSlideEditView, FeatureSlideCreateView, FeatureSlideDeleteView,
@@ -110,6 +116,23 @@ urlpatterns = [
     path('quiz/rules/create/', QuizRuleCreateView.as_view(), name='quiz_rule_create'),
     path('quiz/rules/<int:pk>/delete/', QuizRuleDeleteView.as_view(), name='quiz_rule_delete'),
     path('quiz/backgrounds/save/', QuizBackgroundSaveView.as_view(), name='quiz_backgrounds_save'),
+    # Пользователи
+    path('users/', UserListView.as_view(), name='user_list'),
+    path('users/create/', UserCreateView.as_view(), name='user_create'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user_detail'),
+    path('users/<int:pk>/edit/', UserEditView.as_view(), name='user_edit'),
+    path('users/<int:pk>/toggle-active/', UserToggleActiveView.as_view(), name='user_toggle_active'),
+    # Логи писем
+    path('emails/', EmailLogListView.as_view(), name='email_log_list'),
+    path('emails/<int:pk>/', EmailLogDetailView.as_view(), name='email_log_detail'),
+    path('emails/<int:pk>/retry/', EmailLogRetryView.as_view(), name='email_log_retry'),
+    # Склад
+    path('stock/', StockListView.as_view(), name='stock_list'),
+    path('stock/update/', StockUpdateView.as_view(), name='stock_update'),
+    # Отзывы
+    path('reviews/', ReviewListView.as_view(), name='review_list'),
+    path('reviews/<int:pk>/toggle/', ReviewToggleView.as_view(), name='review_toggle'),
+    path('reviews/sync/', ReviewSyncView.as_view(), name='review_sync'),
     # Загрузка
     path('upload/image/', ImageUploadView.as_view(), name='upload_image'),
 ]

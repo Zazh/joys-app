@@ -1,0 +1,67 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Остатки{% endblock %}
+{% block page_title %}Управление остатками{% endblock %}
+
+{% block content %}
+<!-- Search -->
+<form method="get" class="mb-4 flex gap-2 max-w-md">
+    <input type="text" name="q" value="{{ current_q }}" placeholder="Поиск по названию товара"
+           class="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+    <button type="submit" class="px-4 py-2 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">Найти</button>
+    {% if current_q %}<a href="{% url 'backoffice:stock_list' %}" class="px-4 py-2 border border-stone-300 text-xs rounded-lg hover:bg-stone-50">Сброс</a>{% endif %}
+</form>
+
+{% if data %}
+<form method="post" action="{% url 'backoffice:stock_update' %}">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl border border-stone-200 overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="bg-stone-50 text-stone-500 text-left">
+                    <th class="px-4 py-3 font-medium">Товар</th>
+                    <th class="px-4 py-3 font-medium">Размер</th>
+                    <th class="px-4 py-3 font-medium">Артикул</th>
+                    {% for region in regions %}
+                    <th class="px-3 py-3 font-medium text-center">{{ region.code }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+                {% for item in data %}
+                {% for sd in item.sizes %}
+                <tr class="hover:bg-stone-50">
+                    {% if forloop.first %}
+                    <td class="px-4 py-2 font-medium" rowspan="{{ item.sizes|length }}">
+                        <a href="{% url 'backoffice:product_edit' pk=item.product.pk %}" class="hover:text-stone-600">{{ item.product.name }}</a>
+                    </td>
+                    {% endif %}
+                    <td class="px-4 py-2 text-stone-600">{{ sd.size.name }}</td>
+                    <td class="px-4 py-2 text-stone-400 font-mono">{{ sd.size.sku }}</td>
+                    {% for rs in sd.region_stocks %}
+                    <td class="px-1 py-1 text-center">
+                        <input type="number" name="stock_{{ sd.size.pk }}_{{ rs.region_id }}"
+                               value="{{ rs.quantity }}" min="0"
+                               class="w-16 px-2 py-1 border border-stone-200 rounded text-xs text-center focus:outline-none focus:ring-1 focus:ring-stone-400
+                                      {% if rs.quantity == 0 %}bg-red-50 border-red-200{% endif %}">
+                        {% if rs.reserved > 0 %}
+                        <div class="text-[10px] text-stone-400 mt-0.5">{{ rs.reserved }} рез.</div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-4">
+        <button type="submit" class="px-6 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800">Сохранить остатки</button>
+    </div>
+</form>
+{% else %}
+<div class="bg-white rounded-xl border border-stone-200 p-8 text-center text-stone-400 text-sm">
+    {% if current_q %}Товары не найдены{% else %}Нет активных товаров с размерами{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,12 +1,15 @@
+import json
 from datetime import timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Avg, Count, Q, Sum
+from django.db.models.functions import TruncDate, TruncMonth, TruncWeek
 from django.utils import timezone
 from django.views.generic import TemplateView
 
 from backoffice.mixins import BackofficeAccessMixin
 from inquiries.models import InquirySubmission
 from orders.models import Order
+from reviews.models import Review
 
 
 class DashboardView(BackofficeAccessMixin, TemplateView):
@@ -34,5 +37,125 @@ class DashboardView(BackofficeAccessMixin, TemplateView):
 
         ctx['unprocessed_inquiries'] = InquirySubmission.objects.filter(is_processed=False).count()
         ctx['recent_orders'] = orders.select_related('region').order_by('-created_at')[:5]
+
+        # --- Charts data ---
+
+        # Orders by day (last 30 days)
+        thirty_days_ago = today - timedelta(days=30)
+        daily_orders = (
+            orders.filter(created_at__date__gte=thirty_days_ago)
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(count=Count('id'))
+            .order_by('day')
+        )
+        # Fill missing days
+        days_map = {item['day']: item['count'] for item in daily_orders}
+        chart_labels = []
+        chart_data = []
+        for i in range(30):
+            d = thirty_days_ago + timedelta(days=i)
+            chart_labels.append(d.strftime('%d.%m'))
+            chart_data.append(days_map.get(d, 0))
+
+        ctx['chart_orders_labels'] = json.dumps(chart_labels)
+        ctx['chart_orders_data'] = json.dumps(chart_data)
+
+        # --- Reviews stats ---
+        reviews = Review.objects.all()
+        ctx['review_total'] = reviews.count()
+        ctx['review_avg'] = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+
+        # Rating distribution
+        rating_dist = dict(
+            reviews.values_list('rating').annotate(c=Count('id')).values_list('rating', 'c')
+        )
+        ctx['chart_rating_labels'] = json.dumps(['5★', '4★', '3★', '2★', '1★'])
+        ctx['chart_rating_data'] = json.dumps([
+            rating_dist.get(5, 0),
+            rating_dist.get(4, 0),
+            rating_dist.get(3, 0),
+            rating_dist.get(2, 0),
+            rating_dist.get(1, 0),
+        ])
+
+        # Weekly average rating (last 12 weeks)
+        twelve_weeks_ago = today - timedelta(weeks=12)
+        weekly_avg = (
+            reviews.filter(wb_created_at__date__gte=twelve_weeks_ago)
+            .annotate(week=TruncWeek('wb_created_at'))
+            .values('week')
+            .annotate(avg_rating=Avg('rating'), count=Count('id'))
+            .order_by('week')
+        )
+        week_labels = []
+        week_data = []
+        for item in weekly_avg:
+            week_labels.append(item['week'].strftime('%d.%m'))
+            week_data.append(round(float(item['avg_rating']), 2))
+
+        ctx['chart_weekly_labels'] = json.dumps(week_labels)
+        ctx['chart_weekly_data'] = json.dumps(week_data)
+
+        # --- Monthly sales report ---
+        MONTHS_RU = {
+            1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель',
+            5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
+            9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь',
+        }
+
+        monthly_raw = (
+            orders
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(
+                total=Count('id', distinct=True),
+                paid=Count('id', distinct=True, filter=Q(status__in=[
+                    Order.Status.PAID, Order.Status.SHIPPED, Order.Status.DELIVERED,
+                ])),
+                cancelled=Count('id', distinct=True, filter=Q(status__in=[
+                    Order.Status.CANCELLED, Order.Status.EXPIRED,
+                ])),
+                revenue=Sum('total_amount', filter=Q(status__in=[
+                    Order.Status.PAID, Order.Status.SHIPPED, Order.Status.DELIVERED,
+                ])),
+                items_sold=Sum('items__quantity', filter=Q(status__in=[
+                    Order.Status.PAID, Order.Status.SHIPPED, Order.Status.DELIVERED,
+                ])),
+            )
+            .order_by('-month')
+        )
+
+        monthly_report = []
+        chart_monthly_labels = []
+        chart_monthly_revenue = []
+        chart_monthly_orders = []
+
+        for row in monthly_raw:
+            m = row['month']
+            revenue = row['revenue'] or 0
+            paid = row['paid'] or 0
+            avg_check = round(revenue / paid) if paid else 0
+            monthly_report.append({
+                'month': m,
+                'label': f"{MONTHS_RU[m.month]} {m.year}",
+                'total': row['total'],
+                'paid': paid,
+                'cancelled': row['cancelled'] or 0,
+                'pending': (row['total'] or 0) - (paid or 0) - (row['cancelled'] or 0),
+                'revenue': revenue,
+                'avg_check': avg_check,
+                'items_sold': row['items_sold'] or 0,
+            })
+            chart_monthly_labels.append(f"{MONTHS_RU[m.month][:3]} {m.year % 100}")
+            chart_monthly_revenue.append(float(revenue))
+            chart_monthly_orders.append(paid)
+
+        ctx['monthly_report'] = monthly_report
+
+        # Chart data (reversed for chronological left-to-right)
+        ctx['chart_monthly_labels'] = json.dumps(chart_monthly_labels[::-1])
+        ctx['chart_monthly_revenue'] = json.dumps(chart_monthly_revenue[::-1])
+        ctx['chart_monthly_orders'] = json.dumps(chart_monthly_orders[::-1])
 
         return ctx

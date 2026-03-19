@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import ListView, DetailView
 
@@ -70,6 +71,6 @@ class InquiryToggleProcessedView(BackofficeAccessMixin, View):
         )
 
         next_url = request.POST.get('next', '')
-        if next_url:
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=None):
             return redirect(next_url)
         return redirect('backoffice:inquiry_detail', pk=pk)
