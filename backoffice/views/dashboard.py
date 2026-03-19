@@ -9,6 +9,7 @@ from django.views.generic import TemplateView
 from backoffice.mixins import BackofficeAccessMixin
 from inquiries.models import InquirySubmission
 from orders.models import Order
+from regions.models import Region
 from reviews.models import Review
 
 
@@ -157,5 +158,38 @@ class DashboardView(BackofficeAccessMixin, TemplateView):
         ctx['chart_monthly_labels'] = json.dumps(chart_monthly_labels[::-1])
         ctx['chart_monthly_revenue'] = json.dumps(chart_monthly_revenue[::-1])
         ctx['chart_monthly_orders'] = json.dumps(chart_monthly_orders[::-1])
+
+        # --- Sales by region ---
+        paid_statuses = [Order.Status.PAID, Order.Status.SHIPPED, Order.Status.DELIVERED]
+        region_stats = (
+            orders.filter(status__in=paid_statuses, region__isnull=False)
+            .values('region__id', 'region__name')
+            .annotate(
+                orders_count=Count('id'),
+                revenue=Sum('total_amount'),
+                items_sold=Sum('items__quantity'),
+            )
+            .order_by('-revenue')
+        )
+
+        region_report = []
+        chart_region_labels = []
+        chart_region_data = []
+        for row in region_stats:
+            revenue = row['revenue'] or 0
+            count = row['orders_count'] or 0
+            region_report.append({
+                'name': row['region__name'],
+                'orders_count': count,
+                'revenue': revenue,
+                'avg_check': round(revenue / count) if count else 0,
+                'items_sold': row['items_sold'] or 0,
+            })
+            chart_region_labels.append(row['region__name'] or '—')
+            chart_region_data.append(float(revenue))
+
+        ctx['region_report'] = region_report
+        ctx['chart_region_labels'] = json.dumps(chart_region_labels)
+        ctx['chart_region_data'] = json.dumps(chart_region_data)
 
         return ctx
