@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}{% if success %}Заказ оплачен{% else %}Ошибка оплаты{% endif %} — DR.JOYS{% endblock %}
+{% block title %}{% if success %}{% trans "Заказ оплачен" %}{% else %}{% trans "Ошибка оплаты" %}{% endif %} — DR.JOYS{% endblock %}
 
 {% block content %}
 <main>
@@ -14,12 +14,12 @@
                 <polyline points="20 6 9 17 4 12"/>
             </svg>
         </div>
-        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">Заказ<br>оплачен!</h1>
+        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">{% trans "Заказ" %}<br>{% trans "оплачен!" %}</h1>
         <p class="text-sm text-gray-500 max-w-xs mb-1">
-            Заказ #{{ order.number }} на сумму {{ order.total_amount|floatformat:0 }}&nbsp;{{ currency_symbol }} успешно оплачен.
+            {% blocktrans with num=order.number total=order.total_amount|floatformat:0 sym=currency_symbol %}Заказ #{{ num }} на сумму {{ total }}&nbsp;{{ sym }} успешно оплачен.{% endblocktrans %}
         </p>
         <p class="text-sm text-gray-500 max-w-xs mb-8">
-            Мы свяжемся с вами для уточнения доставки.
+            {% trans "Мы свяжемся с вами для уточнения доставки." %}
         </p>
 
         {% else %}
@@ -30,16 +30,16 @@
                 <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
         </div>
-        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">Оплата<br>не прошла</h1>
+        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">{% trans "Оплата" %}<br>{% trans "не прошла" %}</h1>
         <p class="text-sm text-gray-500 max-w-xs mb-8">
-            {% if error_message %}{{ error_message }}{% else %}Попробуйте ещё раз или свяжитесь с нами.{% endif %}
+            {% if error_message %}{{ error_message }}{% else %}{% trans "Попробуйте ещё раз или свяжитесь с нами." %}{% endif %}
         </p>
         {% if order and order.payment_url %}
-        <a href="{{ order.payment_url }}" class="btn-macro black text-center text-xs px-8 mb-3">ПОПРОБОВАТЬ СНОВА</a>
+        <a href="{{ order.payment_url }}" class="btn-macro black text-center text-xs px-8 mb-3">{% trans "ПОПРОБОВАТЬ СНОВА" %}</a>
         {% endif %}
         {% endif %}
 
-        <a href="/" class="btn-macro black text-center text-xs px-8">ВЕРНУТЬСЯ К ПОКУПКАМ</a>
+        <a href="/" class="btn-macro black text-center text-xs px-8">{% trans "ВЕРНУТЬСЯ К ПОКУПКАМ" %}</a>
     </div>
 </main>
 {% endblock %}

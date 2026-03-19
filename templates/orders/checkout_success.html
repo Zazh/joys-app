@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Заказ оформлен — DR.JOYS{% endblock %}
+{% block title %}{% trans "Заказ оформлен" %} — DR.JOYS{% endblock %}
 
 {% block content %}
 <main>
@@ -11,14 +11,14 @@
                 <polyline points="20 6 9 17 4 12"/>
             </svg>
         </div>
-        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">Заказ<br>оформлен!</h1>
+        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">{% trans "Заказ" %}<br>{% trans "оформлен!" %}</h1>
         <p class="text-sm text-gray-500 max-w-xs mb-1">
-            Заказ #{{ order.number }} на сумму {{ order.total_amount|floatformat:0 }}&nbsp;{{ currency_symbol }} успешно создан.
+            {% blocktrans with num=order.number total=order.total_amount|floatformat:0 sym=currency_symbol %}Заказ #{{ num }} на сумму {{ total }}&nbsp;{{ sym }} успешно создан.{% endblocktrans %}
         </p>
         <p class="text-sm text-gray-500 max-w-xs mb-8">
-            Мы свяжемся с вами для уточнения доставки.
+            {% trans "Мы свяжемся с вами для уточнения доставки." %}
         </p>
-        <a href="/" class="btn-macro black text-center text-xs px-8">ВЕРНУТЬСЯ К ПОКУПКАМ</a>
+        <a href="/" class="btn-macro black text-center text-xs px-8">{% trans "ВЕРНУТЬСЯ К ПОКУПКАМ" %}</a>
     </div>
 </main>
 {% endblock %}

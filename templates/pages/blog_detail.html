@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}{{ post.meta_title|default:post.title }} — Блог DR.JOYS{% endblock %}
+{% block title %}{{ post.meta_title|default:post.title }} — {% trans "Блог DR.JOYS" %}{% endblock %}
 
 {% block meta %}
 {% if post.meta_description %}<meta name="description" content="{{ post.meta_description }}">{% endif %}
@@ -51,7 +52,7 @@
                         </li>
                         {% if post.category %}
                         <li class="blog-breadcrumb-item">
-                            категория: <span itemprop="articleSection">{{ post.category.name }}</span>
+                            {% trans "категория:" %} <span itemprop="articleSection">{{ post.category.name }}</span>
                         </li>
                         {% endif %}
                     </ul>
@@ -63,7 +64,7 @@
                                         <path d="M21.2462 10.8991L11.8157 16.7934C11.981 17.3199 12.0355 17.8749 11.9757 18.4235L20.7241 21.7037C21.283 20.9064 22.1135 20.3403 23.0599 20.1115C24.0063 19.8827 25.0036 20.007 25.865 20.461C26.7263 20.915 27.3925 21.6675 27.7386 22.5776C28.0848 23.4876 28.0872 24.4927 27.7453 25.4043C27.4034 26.316 26.7408 27.0717 25.8816 27.5297C25.0224 27.9878 24.0257 28.1167 23.0782 27.8924C22.1307 27.6681 21.2976 27.1059 20.735 26.3112C20.1724 25.5166 19.9189 24.544 20.0221 23.5758L11.2756 20.2956C10.8069 20.9642 10.1449 21.4733 9.37842 21.7546C8.61195 22.0359 7.77775 22.0759 6.98787 21.8693C6.19798 21.6626 5.49024 21.2193 4.95969 20.5987C4.42914 19.9781 4.10119 19.21 4.01989 18.3976C3.93858 17.5852 4.10782 16.7673 4.50487 16.0539C4.90192 15.3405 5.50776 14.7657 6.24103 14.4066C6.9743 14.0475 7.79989 13.9215 8.60691 14.0453C9.41392 14.1691 10.1637 14.5369 10.7556 15.0993L20.1841 9.20498C19.8909 8.27656 19.9463 7.27306 20.3401 6.38259C20.7338 5.49212 21.4387 4.77581 22.3228 4.36794C23.2069 3.96006 24.2094 3.88862 25.1423 4.167C26.0753 4.44538 26.8748 5.05448 27.3908 5.88012C27.9068 6.70575 28.104 7.69124 27.9454 8.65187C27.7868 9.61249 27.2833 10.4823 26.5292 11.0982C25.7752 11.7142 24.8224 12.034 23.8495 11.9977C22.8765 11.9614 21.9502 11.5715 21.2442 10.9011L21.2462 10.8991Z" fill="currentColor"/>
                                     </svg>
                                 </span>
-                                <span>поделиться</span>
+                                <span>{% trans "поделиться" %}</span>
                             </button>
                             <ul class="share-dropdown-menu" id="shareMenu">
                                 <li>
@@ -72,7 +73,7 @@
                                             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                                             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                                         </svg>
-                                        <span class="text-left">Копировать ссылку</span>
+                                        <span class="text-left">{% trans "Копировать ссылку" %}</span>
                                     </button>
                                 </li>
                                 <li>
@@ -182,7 +183,7 @@
             navigator.clipboard.writeText(window.location.href).then(() => {
                 const label = copyBtn.querySelector('span');
                 const original = label.textContent;
-                label.textContent = 'Скопировано!';
+                label.textContent = 'Скопировано!'; // TODO: i18n — wrap in translation
                 setTimeout(() => { label.textContent = original; }, 2000);
             });
             menu.classList.remove('active');

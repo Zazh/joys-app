@@ -1,14 +1,15 @@
+{% load i18n %}
 <!-- BEGIN modal region -->
 <div class="modal-overlay {% if not show_region_modal %}hidden{% endif %}" id="modalRegion">
     <div class="modal-content">
         <!-- Header -->
         <div class="modal-header">
-            <button class="modal-back hidden" type="button" aria-label="Назад" id="regionBackBtn">
+            <button class="modal-back hidden" type="button" aria-label="{% trans "Назад" %}" id="regionBackBtn">
                 <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
                 </svg>
             </button>
-            <button class="modal-close" type="button" aria-label="Закрыть"
+            <button class="modal-close" type="button" aria-label="{% trans "Закрыть" %}"
                     onclick="closeModal(document.getElementById('modalRegion'))">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/>
@@ -19,7 +20,7 @@
 
         <!-- Step 1: Подтверждение региона -->
         <div class="modal-step" data-step="1">
-            <h2 class="modal-title">Ваш регион</h2>
+            <h2 class="modal-title">{% trans "Ваш регион" %}</h2>
             <div class="flex flex-col items-center gap-6 pt-4">
                 <p class="text-center text-lg font-bold">
                     {% if current_region %}{{ current_region.flag_emoji }} {{ current_region.name }}{% endif %}
@@ -30,12 +31,12 @@
                         <input type="hidden" name="region" value="{{ region_code }}">
                         <input type="hidden" name="next" value="{{ request.path }}">
                         <button type="submit" class="btn-macro black w-full text-center text-xs">
-                            ДА, ВСЁ ВЕРНО
+                            {% trans "ДА, ВСЁ ВЕРНО" %}
                         </button>
                     </form>
                     <button type="button" class="btn-macro default w-full text-center text-xs"
                             id="regionShowList">
-                        ВЫБРАТЬ ДРУГОЙ
+                        {% trans "ВЫБРАТЬ ДРУГОЙ" %}
                     </button>
                 </div>
             </div>
@@ -43,7 +44,7 @@
 
         <!-- Step 2: Список регионов -->
         <div class="modal-step hidden" data-step="2">
-            <h2 class="modal-title">Выберите регион</h2>
+            <h2 class="modal-title">{% trans "Выберите регион" %}</h2>
             <div class="flex flex-col gap-2 pt-4">
                 {% for region in all_regions %}
                 <form method="post" action="{% url 'regions:set_region' %}">

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 
-{% block title %}Оформление заказа — DR.JOYS{% endblock %}
+{% block title %}{% trans "Оформление заказа" %} — DR.JOYS{% endblock %}
 
 {% block content %}
 <main>
@@ -9,7 +9,7 @@
         <div class="col-span-full lg:col-span-13 xl:col-span-11 xl:col-start-2">
             <div class="pt-46">
 
-            <h1 class="font-benzin text-2xl uppercase mb-8">Оформление заказа</h1>
+            <h1 class="font-benzin text-2xl uppercase mb-8">{% trans "Оформление заказа" %}</h1>
 
             {% if not is_authenticated %}
             <!-- BEGIN auth required -->
@@ -18,9 +18,9 @@
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                 </svg>
-                <p class="text-sm text-stone-500 mb-6">Для оформления заказа необходимо войти в аккаунт</p>
+                <p class="text-sm text-stone-500 mb-6">{% trans "Для оформления заказа необходимо войти в аккаунт" %}</p>
                 <button class="btn-macro black text-center text-xs px-8" type="button" id="checkoutLoginBtn">
-                    ВОЙТИ
+                    {% trans "ВОЙТИ" %}
                 </button>
             </div>
             <!-- END auth required -->
@@ -34,13 +34,13 @@
             <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
                 <!-- BEGIN delivery form -->
                 <div class="flex-1 lg:max-w-lg">
-                    <h2 class="font-bold text-lg mb-6">Доставка</h2>
+                    <h2 class="font-bold text-lg mb-6">{% trans "Доставка" %}</h2>
 
                     <form method="post" class="flex flex-col gap-4" id="checkoutForm" novalidate>
                         {% csrf_token %}
 
                         <div>
-                            <label class="modal-label" for="id_country">Страна</label>
+                            <label class="modal-label" for="id_country">{% trans "Страна" %}</label>
                             <select class="modal-input" id="id_country" name="country" required>
                                 {% for r in all_regions %}
                                 <option value="{{ r.code }}"{% if form.country.value == r.code %} selected{% endif %}>{{ r.flag_emoji }} {{ r.name }}</option>
@@ -50,25 +50,25 @@
                         </div>
 
                         <div>
-                            <label class="modal-label" for="id_city">Город</label>
+                            <label class="modal-label" for="id_city">{% trans "Город" %}</label>
                             <input class="modal-input" type="text" id="id_city" name="city" value="{{ form.city.value|default:'' }}" required>
                             {% if form.city.errors %}<p class="text-xs text-red-500 mt-1">{{ form.city.errors.0 }}</p>{% endif %}
                         </div>
 
                         <div>
-                            <label class="modal-label" for="id_street">Улица</label>
+                            <label class="modal-label" for="id_street">{% trans "Улица" %}</label>
                             <input class="modal-input" type="text" id="id_street" name="street" value="{{ form.street.value|default:'' }}" required>
                             {% if form.street.errors %}<p class="text-xs text-red-500 mt-1">{{ form.street.errors.0 }}</p>{% endif %}
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="modal-label" for="id_house">Дом</label>
+                                <label class="modal-label" for="id_house">{% trans "Дом" %}</label>
                                 <input class="modal-input" type="text" id="id_house" name="house" value="{{ form.house.value|default:'' }}" required>
                                 {% if form.house.errors %}<p class="text-xs text-red-500 mt-1">{{ form.house.errors.0 }}</p>{% endif %}
                             </div>
                             <div>
-                                <label class="modal-label" for="id_apt">Квартира</label>
+                                <label class="modal-label" for="id_apt">{% trans "Квартира" %}</label>
                                 <input class="modal-input" type="text" id="id_apt" name="apt" value="{{ form.apt.value|default:'' }}">
                             </div>
                         </div>
@@ -76,19 +76,19 @@
                         <hr class="border-stone-100 my-2">
 
                         <div>
-                            <label class="modal-label" for="id_first_name">Имя</label>
+                            <label class="modal-label" for="id_first_name">{% trans "Имя" %}</label>
                             <input class="modal-input" type="text" id="id_first_name" name="first_name" value="{{ form.first_name.value|default:'' }}" required>
                             {% if form.first_name.errors %}<p class="text-xs text-red-500 mt-1">{{ form.first_name.errors.0 }}</p>{% endif %}
                         </div>
 
                         <div>
-                            <label class="modal-label" for="id_last_name">Фамилия</label>
+                            <label class="modal-label" for="id_last_name">{% trans "Фамилия" %}</label>
                             <input class="modal-input" type="text" id="id_last_name" name="last_name" value="{{ form.last_name.value|default:'' }}" required>
                             {% if form.last_name.errors %}<p class="text-xs text-red-500 mt-1">{{ form.last_name.errors.0 }}</p>{% endif %}
                         </div>
 
                         <div>
-                            <label class="modal-label" for="id_phone">Телефон</label>
+                            <label class="modal-label" for="id_phone">{% trans "Телефон" %}</label>
                             <input class="modal-input" type="tel" id="id_phone" name="phone" value="{{ form.phone.value|default:'' }}" placeholder="+7 (700) 123-45-67" required>
                             {% if form.phone.errors %}<p class="text-xs text-red-500 mt-1">{{ form.phone.errors.0 }}</p>{% endif %}
                         </div>
@@ -100,7 +100,7 @@
                         </div>
 
                         <button type="submit" class="btn-macro black w-full text-center text-xs mt-4">
-                            ОФОРМИТЬ ЗАКАЗ
+                            {% trans "ОФОРМИТЬ ЗАКАЗ" %}
                         </button>
                     </form>
                 </div>
@@ -108,7 +108,7 @@
 
                 <!-- BEGIN order summary -->
                 <div class="lg:w-72 shrink-0">
-                    <h2 class="font-bold text-lg mb-6">Ваш заказ</h2>
+                    <h2 class="font-bold text-lg mb-6">{% trans "Ваш заказ" %}</h2>
                     <div class="flex flex-col divide-y divide-stone-100">
                         {% for item in cart_items %}
                         <div class="flex gap-3 py-3">
@@ -127,12 +127,12 @@
                     <div class="border-t border-stone-200 pt-4 mt-2">
                         {% if cart_old_total and cart_old_total > cart_total %}
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs text-stone-400">Без скидки</span>
+                            <span class="text-xs text-stone-400">{% trans "Без скидки" %}</span>
                             <span class="text-xs text-stone-400 line-through">{{ cart_old_total|floatformat:0 }} {{ currency_symbol }}</span>
                         </div>
                         {% endif %}
                         <div class="flex justify-between items-center">
-                            <span class="font-benzin uppercase text-sm">Итого</span>
+                            <span class="font-benzin uppercase text-sm">{% trans "Итого" %}</span>
                             <div class="text-right">
                                 <span class="font-benzin text-lg text-red-500">{{ cart_total|floatformat:0 }} {{ currency_symbol }}</span>
                                 {% if payment_total %}
@@ -154,6 +154,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- TODO: i18n JS strings -->
 <script>
 (function() {
     // Кнопка "Войти" на checkout — открывает auth modal

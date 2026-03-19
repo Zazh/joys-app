@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
@@ -14,7 +15,7 @@ class RegisterForm(forms.Form):
     def clean_email(self):
         email = self.cleaned_data['email'].lower()
         if User.objects.filter(email=email).exists():
-            raise ValidationError('Пользователь с таким email уже существует.')
+            raise ValidationError(_('Пользователь с таким email уже существует.'))
         return email
 
     def clean(self):
@@ -22,7 +23,7 @@ class RegisterForm(forms.Form):
         p1 = cleaned.get('password1')
         p2 = cleaned.get('password2')
         if p1 and p2 and p1 != p2:
-            raise ValidationError({'password2': 'Пароли не совпадают.'})
+            raise ValidationError({'password2': _('Пароли не совпадают.')})
         if p1:
             try:
                 validate_password(p1)

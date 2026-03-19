@@ -1,4 +1,5 @@
-<a href="{% url 'catalog:catalog' %}" class="btn-link {% if not current_category %}active{% endif %} [ text-xs ]">Все</a>
+{% load i18n %}
+<a href="{% url 'catalog:catalog' %}" class="btn-link {% if not current_category %}active{% endif %} [ text-xs ]">{% trans "Все" %}</a>
 {% for category in categories %}
 <a href="{{ category.get_absolute_url }}" class="btn-link {% if current_category == category %}active{% endif %} [ text-xs ]">{{ category.name }}</a>
 {% endfor %}

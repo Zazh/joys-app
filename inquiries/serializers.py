@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from .models import InquiryForm, InquiryField, InquirySubmission, InquiryFieldValue
@@ -40,7 +41,7 @@ class InquirySubmissionSerializer(serializers.Serializer):
 
             # Required
             if field.is_required and not val:
-                errors[field.key] = f'Поле «{field.label}» обязательно.'
+                errors[field.key] = _('Поле «%(label)s» обязательно.') % {'label': field.label}
                 continue
 
             if not val:
@@ -49,24 +50,24 @@ class InquirySubmissionSerializer(serializers.Serializer):
             # Email
             if field.field_type == 'email':
                 if '@' not in val or '.' not in val.split('@')[-1]:
-                    errors[field.key] = 'Некорректный email.'
+                    errors[field.key] = _('Некорректный email.')
 
             # Number
             if field.field_type == 'number':
                 try:
                     num = int(val)
                     if field.min_value is not None and num < field.min_value:
-                        errors[field.key] = f'Минимальное значение: {field.min_value}.'
+                        errors[field.key] = _('Минимальное значение: %(value)s.') % {'value': field.min_value}
                     if field.max_value is not None and num > field.max_value:
-                        errors[field.key] = f'Максимальное значение: {field.max_value}.'
+                        errors[field.key] = _('Максимальное значение: %(value)s.') % {'value': field.max_value}
                 except (ValueError, TypeError):
-                    errors[field.key] = 'Введите число.'
+                    errors[field.key] = _('Введите число.')
 
             # Select / radio
             if field.field_type in ('select', 'radio'):
                 valid_values = [c['value'] for c in field.get_choices()]
                 if valid_values and val not in valid_values:
-                    errors[field.key] = 'Недопустимое значение.'
+                    errors[field.key] = _('Недопустимое значение.')
 
         if errors:
             raise serializers.ValidationError(errors)

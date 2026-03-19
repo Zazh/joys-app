@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Блог DR.JOYS — статьи о здоровье и отношениях{% endblock %}
+{% block title %}{% trans "Блог DR.JOYS — статьи о здоровье и отношениях" %}{% endblock %}
 
 {% block meta %}
-<meta name="description" content="Блог DR.JOYS — статьи об акциях, событиях, здоровье и отношениях. Читайте полезные материалы от команды DR.JOYS.">
+<meta name="description" content="{% trans "Блог DR.JOYS — статьи об акциях, событиях, здоровье и отношениях. Читайте полезные материалы от команды DR.JOYS." %}">
 {% endblock %}
 
 {% block og %}
 <meta property="og:type" content="blog">
-<meta property="og:title" content="Блог DR.JOYS">
-<meta property="og:description" content="Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS.">
+<meta property="og:title" content="{% trans "Блог DR.JOYS" %}">
+<meta property="og:description" content="{% trans "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS." %}">
 <meta property="og:url" content="{{ request.build_absolute_uri }}">
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
 {% endblock %}
@@ -26,7 +27,7 @@
             <div class="blog-container pt-46">
                 <!-- BEGIN заголовок блога -->
                 <div class="pb-12">
-                    <h1 class="display-1 uppercase font-benzin">Блог DR.JOYS</h1>
+                    <h1 class="display-1 uppercase font-benzin">{% trans "Блог DR.JOYS" %}</h1>
                 </div>
                 <!-- END заголовок блога -->
 
@@ -59,7 +60,7 @@
                     </article>
                     {% empty %}
                     <div class="col-span-full py-12 text-center text-gray-500">
-                        <p>Пока нет опубликованных статей.</p>
+                        <p>{% trans "Пока нет опубликованных статей." %}</p>
                     </div>
                     {% endfor %}
 
@@ -75,8 +76,8 @@
     {
         "@context": "https://schema.org",
         "@type": "Blog",
-        "name": "Блог DR.JOYS",
-        "description": "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS.",
+        "name": "{% trans "Блог DR.JOYS" %}",
+        "description": "{% trans "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS." %}",
         "url": "{{ request.build_absolute_uri }}",
         "publisher": {
             "@type": "Organization",

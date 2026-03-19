@@ -1,14 +1,15 @@
+{% load i18n %}
 <!-- BEGIN modal delivery -->
 <div class="modal-overlay hidden" id="modalDelivery">
     <div class="modal-content modal-wide">
         <!-- Header -->
         <div class="modal-header">
-            <button class="modal-back" type="button" aria-label="Назад" onclick="closeModal(document.getElementById('modalDelivery'))">
+            <button class="modal-back" type="button" aria-label="{% trans "Назад" %}" onclick="closeModal(document.getElementById('modalDelivery'))">
                 <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
                 </svg>
             </button>
-            <button class="modal-close" type="button" aria-label="Закрыть" onclick="closeModal(document.getElementById('modalDelivery'))">
+            <button class="modal-close" type="button" aria-label="{% trans "Закрыть" %}" onclick="closeModal(document.getElementById('modalDelivery'))">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -17,12 +18,12 @@
         </div>
 
         <!-- Title -->
-        <h2 class="modal-title">Доставка</h2>
+        <h2 class="modal-title">{% trans "Доставка" %}</h2>
 
         <!-- Form -->
         <form class="flex flex-col gap-3" id="deliveryForm" novalidate>
             <div>
-                <label class="modal-label" for="deliveryCountry">Страна</label>
+                <label class="modal-label" for="deliveryCountry">{% trans "Страна" %}</label>
                 <select class="modal-input" id="deliveryCountry" name="country" required>
                     {% for r in all_regions %}
                     <option value="{{ r.name }}" data-code="{{ r.code }}" data-phone="{{ r.phone_code }}"{% if r.code == region_code %} selected{% endif %}>{{ r.flag_emoji }} {{ r.name }}</option>
@@ -30,40 +31,40 @@
                 </select>
             </div>
             <div>
-                <label class="modal-label" for="deliveryCity">Город</label>
+                <label class="modal-label" for="deliveryCity">{% trans "Город" %}</label>
                 <input class="modal-input" type="text" id="deliveryCity" name="city" required>
             </div>
             <div>
-                <label class="modal-label" for="deliveryStreet">Улица</label>
+                <label class="modal-label" for="deliveryStreet">{% trans "Улица" %}</label>
                 <input class="modal-input" type="text" id="deliveryStreet" name="street" required>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="modal-label" for="deliveryHouse">Дом</label>
+                    <label class="modal-label" for="deliveryHouse">{% trans "Дом" %}</label>
                     <input class="modal-input" type="text" id="deliveryHouse" name="house" required>
                 </div>
                 <div>
-                    <label class="modal-label" for="deliveryApt">Квартира</label>
+                    <label class="modal-label" for="deliveryApt">{% trans "Квартира" %}</label>
                     <input class="modal-input" type="text" id="deliveryApt" name="apt">
                 </div>
             </div>
             <div>
-                <label class="modal-label" for="deliveryFirstName">Имя получателя</label>
+                <label class="modal-label" for="deliveryFirstName">{% trans "Имя получателя" %}</label>
                 <input class="modal-input" type="text" id="deliveryFirstName" name="first_name" required>
             </div>
             <div>
-                <label class="modal-label" for="deliveryLastName">Фамилия получателя</label>
+                <label class="modal-label" for="deliveryLastName">{% trans "Фамилия получателя" %}</label>
                 <input class="modal-input" type="text" id="deliveryLastName" name="last_name" required>
             </div>
             <div>
-                <label class="modal-label" for="deliveryPhone">Телефон</label>
+                <label class="modal-label" for="deliveryPhone">{% trans "Телефон" %}</label>
                 <input class="modal-input" type="tel" id="deliveryPhone" name="phone" placeholder="+7 (700) 123-45-67" required>
             </div>
             <div>
                 <label class="modal-label" for="deliveryEmail">Email</label>
                 <input class="modal-input" type="email" id="deliveryEmail" name="email" required>
             </div>
-            <button type="submit" class="btn-macro black w-full text-center text-xs mt-2">ПРОДОЛЖИТЬ</button>
+            <button type="submit" class="btn-macro black w-full text-center text-xs mt-2">{% trans "ПРОДОЛЖИТЬ" %}</button>
         </form>
     </div>
 </div>

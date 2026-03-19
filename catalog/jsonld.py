@@ -1,5 +1,7 @@
 import json
 
+from django.utils.translation import gettext as _
+
 
 def _get_region_price(size, region):
     """Достаёт цену размера для региона из prefetched _region_prices."""
@@ -167,7 +169,7 @@ def build_catalog_itemlist_jsonld(request, products, current_category=None, regi
     return {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
-        'name': current_category.name if current_category else 'Каталог презервативов DR.JOYS',
+        'name': current_category.name if current_category else _('Каталог презервативов DR.JOYS'),
         'mainEntity': {
             '@type': 'ItemList',
             'itemListElement': items,

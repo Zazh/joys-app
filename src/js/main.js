@@ -1161,9 +1161,9 @@ function initCartModal() {
                         <p class="text-[10px] text-gray-500">${item.size_name}</p>
                         <div class="flex items-center justify-between mt-1">
                             <div class="flex items-center gap-2">
-                                <button class="cart-qty-btn" type="button" data-action="${minusAction}" aria-label="Уменьшить">${minusSvg}</button>
+                                <button class="cart-qty-btn" type="button" data-action="${minusAction}" aria-label="${window.DRJOYS.i18n.decrease}">${minusSvg}</button>
                                 <span class="text-xs font-benzin min-w-5 text-center cart-item-qty">${item.qty}</span>
-                                <button class="cart-qty-btn" type="button" data-action="plus" aria-label="Увеличить">
+                                <button class="cart-qty-btn" type="button" data-action="plus" aria-label="${window.DRJOYS.i18n.increase}">
                                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                 </button>
                             </div>
@@ -1301,9 +1301,9 @@ function initFavoritesModal() {
                             <p class="text-xs font-bold leading-tight">${item.name}</p>
                             ${item.price ? `<p class="text-xs text-red-500 font-benzin mt-1">${parseFloat(item.price).toLocaleString('ru-RU')} ${sym}${item.payment_price ? ` <span class="text-stone-400 font-normal">(${parseFloat(item.payment_price).toLocaleString('ru-RU')} ${window.DRJOYS?.paymentCurrencySymbol || ''})</span>` : ''}</p>` : ''}
                         </div>
-                        ${item.first_size_id ? '<button class="fav-to-cart-btn text-[10px] uppercase font-bold text-gray-500 hover:text-black text-left" type="button">В корзину</button>' : ''}
+                        ${item.first_size_id ? `<button class="fav-to-cart-btn text-[10px] uppercase font-bold text-gray-500 hover:text-black text-left" type="button">${window.DRJOYS.i18n.addToCart}</button>` : ''}
                     </div>
-                    <button class="fav-remove-btn shrink-0 self-start text-gray-500 hover:text-red-500 p-1" type="button" aria-label="Удалить из избранного">
+                    <button class="fav-remove-btn shrink-0 self-start text-gray-500 hover:text-red-500 p-1" type="button" aria-label="${window.DRJOYS.i18n.removeFromFav}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -1357,7 +1357,7 @@ function initFavoritesModal() {
             if (result.ok) {
                 updateBadges(result.cart_count, null);
                 cartBtn.textContent = '✓';
-                setTimeout(() => { cartBtn.textContent = 'В корзину'; }, 800);
+                setTimeout(() => { cartBtn.textContent = window.DRJOYS.i18n.addToCart; }, 800);
             }
         }
     });
@@ -1456,7 +1456,7 @@ function initProfileModal() {
                 listEl.appendChild(btn);
             });
         } catch (err) {
-            if (loadingEl) loadingEl.textContent = 'Ошибка загрузки';
+            if (loadingEl) loadingEl.textContent = window.DRJOYS.i18n.loadError;
             console.error('Orders load error:', err);
         }
     }
@@ -1468,7 +1468,7 @@ function initProfileModal() {
         const amount = order.display_amount || order.total_amount;
         const statusCls = STATUS_CSS[order.status] || 'order-status--processing';
 
-        titleEl.textContent = `Заказ #${order.number}`;
+        titleEl.textContent = `${window.DRJOYS.i18n.orderNum} #${order.number}`;
 
         let itemsHtml = '';
         (order.items || []).forEach(item => {
@@ -1479,7 +1479,7 @@ function initProfileModal() {
                     </div>
                     <div class="flex-1">
                         <p class="text-xs font-bold">${item.product_name}</p>
-                        <p class="text-[10px] text-gray-500">Размер: ${item.size_name} &middot; ${item.quantity} шт.</p>
+                        <p class="text-[10px] text-gray-500">${window.DRJOYS.i18n.sizeLbl}: ${item.size_name} &middot; ${item.quantity} ${window.DRJOYS.i18n.pcsLbl}</p>
                         <p class="text-xs font-bold mt-1">${formatAmount(item.subtotal, symbol)}</p>
                     </div>
                 </div>
@@ -1495,11 +1495,11 @@ function initProfileModal() {
                 ${itemsHtml}
             </div>
             <div>
-                <p class="text-xs font-bold pb-1">Адрес доставки</p>
+                <p class="text-xs font-bold pb-1">${window.DRJOYS.i18n.deliveryAddr}</p>
                 <p class="text-xs text-gray-500">${order.city}, ${order.address}</p>
             </div>
             <div class="flex justify-between items-center pt-2 border-t border-stone-50">
-                <span class="font-benzin uppercase text-sm">Итого</span>
+                <span class="font-benzin uppercase text-sm">${window.DRJOYS.i18n.totalLbl}</span>
                 <span class="font-benzin text-red-500">${formatAmount(amount, symbol)}</span>
             </div>
         `;
@@ -1645,11 +1645,11 @@ function initAuthModal() {
                 if (result.ok) {
                     handleAuthSuccess();
                 } else {
-                    showError(errorEl, result.errors || {__all__: ['Ошибка входа.']});
+                    showError(errorEl, result.errors || {__all__: [window.DRJOYS.i18n.loginError]});
                 }
             } catch (err) {
                 loginBtn.disabled = false;
-                showError(errorEl, {__all__: ['Ошибка сети. Попробуйте ещё раз.']});
+                showError(errorEl, {__all__: [window.DRJOYS.i18n.networkError]});
                 console.error('Login error:', err);
             }
         });
@@ -1684,9 +1684,9 @@ function initAuthModal() {
                     handleAuthSuccess();
                     return;
                 }
-                showError(errorEl, result.errors || {__all__: ['Ошибка регистрации.']});
+                showError(errorEl, result.errors || {__all__: [window.DRJOYS.i18n.registerError]});
             } catch (err) {
-                showError(errorEl, {__all__: ['Ошибка сети. Попробуйте ещё раз.']});
+                showError(errorEl, {__all__: [window.DRJOYS.i18n.networkError]});
                 console.error('Register error:', err);
             }
             registerBtn.disabled = false;
@@ -1820,8 +1820,8 @@ function initDeliveryModal() {
                         const sym = window.DRJOYS?.currencySymbol || '₸';
                         const title = document.getElementById('successTitle');
                         const text = document.getElementById('successText');
-                        if (title) title.innerHTML = 'Заказ<br>оформлен!';
-                        if (text) text.textContent = `Заказ #${result.order_number} на сумму ${parseFloat(result.total).toLocaleString('ru-RU')} ${sym}`;
+                        if (title) title.innerHTML = window.DRJOYS.i18n.orderPlaced;
+                        if (text) text.textContent = `${window.DRJOYS.i18n.orderSummary} #${result.order_number} ${window.DRJOYS.i18n.orderSumPrefix} ${parseFloat(result.total).toLocaleString('ru-RU')} ${sym}`;
                         setTimeout(() => openModal(successModal), 200);
                     }
                 }

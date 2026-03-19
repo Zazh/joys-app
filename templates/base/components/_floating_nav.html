@@ -1,34 +1,35 @@
+{% load i18n %}
 <!-- BEGIN floating nav mobile -->
-<nav class="floating-nav" aria-label="Навигация магазина">
-    <button class="floating-nav__item" data-open-modal="modalCart" type="button" aria-label="Корзина">
+<nav class="floating-nav" aria-label="{% trans "Навигация магазина" %}">
+    <button class="floating-nav__item" data-open-modal="modalCart" type="button" aria-label="{% trans "Корзина" %}">
         <svg class="floating-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
             <line x1="3" y1="6" x2="21" y2="6"/>
             <path d="M16 10a4 4 0 01-8 0"/>
         </svg>
-        <span class="floating-nav__label">Корзина</span>
+        <span class="floating-nav__label">{% trans "Корзина" %}</span>
         <span class="floating-nav__badge{% if not cart_count %} hidden{% endif %}" data-cart-count>{{ cart_count }}</span>
     </button>
-    <button class="floating-nav__item" data-open-modal="modalFavorites" type="button" aria-label="Избранное">
+    <button class="floating-nav__item" data-open-modal="modalFavorites" type="button" aria-label="{% trans "Избранное" %}">
         <svg class="floating-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
         </svg>
-        <span class="floating-nav__label">Избранное</span>
+        <span class="floating-nav__label">{% trans "Избранное" %}</span>
         <span class="floating-nav__badge{% if not fav_count %} hidden{% endif %}" data-fav-count>{{ fav_count }}</span>
     </button>
-    <button class="floating-nav__item" data-open-modal="modalProfile" type="button" aria-label="Профиль">
+    <button class="floating-nav__item" data-open-modal="modalProfile" type="button" aria-label="{% trans "Профиль" %}">
         <svg class="floating-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
         </svg>
-        <span class="floating-nav__label">Профиль</span>
+        <span class="floating-nav__label">{% trans "Профиль" %}</span>
     </button>
 </nav>
 <!-- END floating nav mobile -->
 
 <!-- BEGIN floating nav desktop -->
 <div class="floating-nav-desktop">
-    <button class="floating-nav-desktop__btn" data-open-modal="modalCart" type="button" aria-label="Корзина">
+    <button class="floating-nav-desktop__btn" data-open-modal="modalCart" type="button" aria-label="{% trans "Корзина" %}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
             <line x1="3" y1="6" x2="21" y2="6"/>
@@ -36,13 +37,13 @@
         </svg>
         <span class="floating-nav__badge{% if not cart_count %} hidden{% endif %}" data-cart-count>{{ cart_count }}</span>
     </button>
-    <button class="floating-nav-desktop__btn" data-open-modal="modalFavorites" type="button" aria-label="Избранное">
+    <button class="floating-nav-desktop__btn" data-open-modal="modalFavorites" type="button" aria-label="{% trans "Избранное" %}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
         </svg>
         <span class="floating-nav__badge{% if not fav_count %} hidden{% endif %}" data-fav-count>{{ fav_count }}</span>
     </button>
-    <button class="floating-nav-desktop__btn" data-open-modal="modalProfile" type="button" aria-label="Профиль">
+    <button class="floating-nav-desktop__btn" data-open-modal="modalProfile" type="button" aria-label="{% trans "Профиль" %}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 User = get_user_model()
@@ -13,12 +14,12 @@ class RegisterSerializer(serializers.Serializer):
     def validate_email(self, value):
         email = value.lower()
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Пользователь с таким email уже существует.')
+            raise serializers.ValidationError(_('Пользователь с таким email уже существует.'))
         return email
 
     def validate(self, data):
         if data['password1'] != data['password2']:
-            raise serializers.ValidationError({'password2': 'Пароли не совпадают.'})
+            raise serializers.ValidationError({'password2': _('Пароли не совпадают.')})
         validate_password(data['password1'])
         return data
 

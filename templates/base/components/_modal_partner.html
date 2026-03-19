@@ -1,14 +1,15 @@
+{% load i18n %}
 <!-- BEGIN modal partner -->
 <div class="modal-overlay hidden" id="modalPartner">
     <div class="modal-content">
         <!-- Header -->
         <div class="modal-header">
-            <button class="modal-back" type="button" aria-label="Назад">
+            <button class="modal-back" type="button" aria-label="{% trans "Назад" %}">
                 <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
                 </svg>
             </button>
-            <button class="modal-close" id="modalPartnerClose" type="button" aria-label="Закрыть">
+            <button class="modal-close" id="modalPartnerClose" type="button" aria-label="{% trans "Закрыть" %}">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
@@ -17,80 +18,80 @@
         </div>
 
         <!-- Title -->
-        <h2 class="modal-title">Стать<br>партнером</h2>
+        <h2 class="modal-title">{% trans "Стать" %}<br>{% trans "партнером" %}</h2>
 
         <!-- Form -->
         <form class="flex flex-col gap-4" id="partnerForm" novalidate>
 
             <!-- Имя -->
             <div>
-                <label class="modal-label" for="partnerName">Имя</label>
+                <label class="modal-label" for="partnerName">{% trans "Имя" %}</label>
                 <input class="modal-input" type="text" id="partnerName" name="name" required>
             </div>
 
             <!-- Страна проживания -->
             <div>
-                <label class="modal-label" for="partnerCountry">Страна проживания</label>
+                <label class="modal-label" for="partnerCountry">{% trans "Страна проживания" %}</label>
                 <input class="modal-input" type="text" id="partnerCountry" name="country" required>
             </div>
 
             <!-- Где планируете продавать -->
             <div>
-                <label class="modal-label" for="partnerRegion">Где планируете продавать</label>
+                <label class="modal-label" for="partnerRegion">{% trans "Где планируете продавать" %}</label>
                 <input class="modal-input" type="text" id="partnerRegion" name="region" required>
             </div>
 
             <!-- На сколько заинтересованы -->
             <fieldset>
-                <legend class="modal-label">На сколько заинтересованы в партнерстве?</legend>
+                <legend class="modal-label">{% trans "На сколько заинтересованы в партнерстве?" %}</legend>
                 <div class="flex flex-col gap-2 pt-1">
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="interest" value="ready" checked required>
-                        <span class="modal-radio-text">Готов инвестировать в ближайшее время</span>
+                        <span class="modal-radio-text">{% trans "Готов инвестировать в ближайшее время" %}</span>
                     </label>
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="interest" value="exploring">
-                        <span class="modal-radio-text">Пока просто изучаю информацию</span>
+                        <span class="modal-radio-text">{% trans "Пока просто изучаю информацию" %}</span>
                     </label>
                 </div>
             </fieldset>
 
             <!-- Желаемый формат работы -->
             <fieldset>
-                <legend class="modal-label">Желаемый формат работы</legend>
+                <legend class="modal-label">{% trans "Желаемый формат работы" %}</legend>
                 <div class="flex flex-col gap-2 pt-1">
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="format" value="country_distributor" checked required>
-                        <span class="modal-radio-text">Стать дистрибьютором на всю страну</span>
+                        <span class="modal-radio-text">{% trans "Стать дистрибьютором на всю страну" %}</span>
                     </label>
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="format" value="city_distributor">
-                        <span class="modal-radio-text">Стать дистрибьютором на свой город</span>
+                        <span class="modal-radio-text">{% trans "Стать дистрибьютором на свой город" %}</span>
                     </label>
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="format" value="wholesale">
-                        <span class="modal-radio-text">Стать оптовиком</span>
+                        <span class="modal-radio-text">{% trans "Стать оптовиком" %}</span>
                     </label>
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="format" value="offline">
-                        <span class="modal-radio-text">У меня офлайн точка</span>
+                        <span class="modal-radio-text">{% trans "У меня офлайн точка" %}</span>
                     </label>
                 </div>
             </fieldset>
 
             <!-- Номер телефона -->
             <div>
-                <label class="modal-label" for="partnerPhone">Номер телефона</label>
+                <label class="modal-label" for="partnerPhone">{% trans "Номер телефона" %}</label>
                 <input class="modal-input" type="tel" id="partnerPhone" name="phone" placeholder="+7 (700) 123-45-67" required>
             </div>
 
             <!-- Способ связи -->
             <fieldset>
-                <legend class="modal-label">Способ связи</legend>
+                <legend class="modal-label">{% trans "Способ связи" %}</legend>
                 <div class="flex flex-col gap-2 pt-1">
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="contact" value="whatsapp" checked required>
-                        <span class="modal-radio-text">Написать на WhatsApp</span>
+                        <span class="modal-radio-text">{% trans "Написать на WhatsApp" %}</span>
                     </label>
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="contact" value="telegram">
@@ -98,13 +99,13 @@
                     </label>
                     <label class="modal-radio-label">
                         <input class="modal-radio" type="radio" name="contact" value="call">
-                        <span class="modal-radio-text">Позвонить</span>
+                        <span class="modal-radio-text">{% trans "Позвонить" %}</span>
                     </label>
                 </div>
             </fieldset>
 
             <!-- Submit -->
-            <button type="submit" class="btn-macro small danger w-full text-center">Отправить</button>
+            <button type="submit" class="btn-macro small danger w-full text-center">{% trans "Отправить" %}</button>
         </form>
     </div>
 </div>

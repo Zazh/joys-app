@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Карточка отзыва. Принимает переменную `review` (Review model instance).
 Вариант верстки определяется по review.card_type.
@@ -13,7 +14,7 @@
                         <div class="rating-fill"></div>
                     </div>
                     <div class="comment-card__name">
-                        <span>{{ review.user_name|default:"Аноним" }}</span>
+                        <span>{% if review.user_name %}{{ review.user_name }}{% else %}{% trans "Аноним" %}{% endif %}</span>
                         <span>|</span>
                         <span>{{ review.formatted_date }}</span>
                     </div>
@@ -36,19 +37,19 @@
                 <ul class="comment-card__list">
                     {% if review.pros %}
                     <li>
-                        <span class="comment-card__title">Достоинства</span>
+                        <span class="comment-card__title">{% trans "Достоинства" %}</span>
                         <p>{{ review.pros }}</p>
                     </li>
                     {% endif %}
                     {% if review.cons %}
                     <li>
-                        <span class="comment-card__title">Недостатки</span>
+                        <span class="comment-card__title">{% trans "Недостатки" %}</span>
                         <p>{{ review.cons }}</p>
                     </li>
                     {% endif %}
                     {% if review.text and review.has_list %}
                     <li>
-                        <span class="comment-card__title">Комментарий</span>
+                        <span class="comment-card__title">{% trans "Комментарий" %}</span>
                         <p>{{ review.text }}</p>
                     </li>
                     {% endif %}
@@ -57,7 +58,7 @@
 
                 {% if review.formatted_tags %}
                 <div class="comment-card__meta">
-                    <p class="comment-card__title">Плюсы товара</p>
+                    <p class="comment-card__title">{% trans "Плюсы товара" %}</p>
                     <ul class="comment-card__tags">
                         {% for tag in review.formatted_tags %}
                         <li>{{ tag }}</li>
@@ -75,7 +76,7 @@
         <div class="comment-card__answer bg-slate-50">
             <div class="comment-card__answer-title">
                 <div class="reply-icon"></div>
-                <span>Ответ Dr.Joys</span>
+                <span>{% trans "Ответ Dr.Joys" %}</span>
             </div>
             <div class="comment-card__answer-body">
                 {{ review.answer_text }}

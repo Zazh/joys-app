@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% load i18n %}<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,8 @@
     </style>
 </head>
 <body>
-    <p>Завершаем авторизацию...</p>
+    <p>{% trans "Завершаем авторизацию..." %}</p>
+    <!-- TODO: i18n JS strings -->
     <script>
     (function() {
         var success = {{ sso_success|yesno:"true,false" }};

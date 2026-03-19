@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+{% load i18n %}<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Переход к оплате — DR.JOYS</title>
+    <title>{% trans "Переход к оплате" %} — DR.JOYS</title>
     <style>
         body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafaf9; }
         .loader { text-align: center; }
@@ -15,10 +15,11 @@
 <body>
     <div class="loader">
         <div class="spinner"></div>
-        <p>Переход к оплате...</p>
+        <p>{% trans "Переход к оплате..." %}</p>
     </div>
     {{ payment_object_json|json_script:"halyk-payment-data" }}
     <script src="{{ halyk_js_url }}"></script>
+    <!-- TODO: i18n JS strings -->
     <script>
         try {
             var paymentData = JSON.parse(document.getElementById('halyk-payment-data').textContent);

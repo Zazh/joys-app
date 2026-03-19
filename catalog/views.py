@@ -1,6 +1,7 @@
 from django.db.models import Prefetch
 from django.http import Http404
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.generic import ListView, DetailView
 
 from .models import Category, Product, ProductSize, FAQ, RegionPrice, Stock
@@ -62,18 +63,18 @@ class CatalogListView(ListView):
         ctx['meta_title'] = (
             current_category.meta_title or current_category.name
             if current_category
-            else 'Каталог презервативов DR.JOYS'
+            else _('Каталог презервативов DR.JOYS')
         )
         ctx['meta_description'] = (
             current_category.meta_description
             if current_category
-            else 'Каталог презервативов DR.JOYS — классические, ребристые, ультратонкие'
+            else _('Каталог презервативов DR.JOYS — классические, ребристые, ультратонкие')
         )
 
         # JSON-LD
         breadcrumbs = [
             {'name': 'DR.JOYS', 'url': reverse('home')},
-            {'name': 'Каталог', 'url': reverse('catalog:catalog')},
+            {'name': _('Каталог'), 'url': reverse('catalog:catalog')},
         ]
         if current_category:
             breadcrumbs.append({
@@ -149,7 +150,7 @@ class ProductDetailView(DetailView):
         # Хлебные крошки
         breadcrumbs = [
             {'name': 'DR.JOYS', 'url': reverse('home')},
-            {'name': 'Каталог', 'url': reverse('catalog:catalog')},
+            {'name': _('Каталог'), 'url': reverse('catalog:catalog')},
             {'name': product.category.name, 'url': product.category.get_absolute_url()},
             {'name': product.name, 'url': ''},
         ]
