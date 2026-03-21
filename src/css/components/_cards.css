@@ -62,7 +62,7 @@
 
 /* Blog Card */
 .blog-card {
-    @apply w-full md:aspect-[595/400] aspect-[320/530] max-w-150 relative rounded-3xl overflow-hidden;
+    @apply w-full md:aspect-[595/400] aspect-[4/3] max-w-150 relative rounded-3xl overflow-hidden;
 }
 .blog-card-link, .blog-card-figure, .blog-card-content {
     @apply absolute inset-0;
