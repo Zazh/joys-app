@@ -34,6 +34,11 @@ class HomeView(TemplateView):
                 ctx['tattoo_gallery'] = gallery
         except PromoBlock.DoesNotExist:
             pass
+        ctx['blog_posts'] = (
+            BlogPost.objects
+            .filter(is_published=True)
+            .order_by('-published_at')[:5]
+        )
         return ctx
 
 

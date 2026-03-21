@@ -453,134 +453,43 @@
         </div>
         <div class="blog-carousel">
             <div class="blog-carousel-track">
+                {% for post in blog_posts %}
                 <div class="blog-carousel-slide">
                     <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
-                        <a href="" class="blog-card-link">
+                        <a href="{{ post.get_absolute_url }}" class="blog-card-link">
                             <figure class="blog-card-figure">
+                                {% if post.cover_image %}
                                 <img
                                         class="blog-card-img"
-                                        src="{% static 'dist/images/blog/1.jpg' %}"
-                                        alt="Описание изображения статьи"
+                                        src="{{ post.cover_image.url }}"
+                                        alt="{{ post.title }}"
                                         loading="lazy"
                                         itemprop="image"
                                 >
+                                {% else %}
+                                <img
+                                        class="blog-card-img"
+                                        src="{% static 'dist/images/blog/1.jpg' %}"
+                                        alt="{{ post.title }}"
+                                        loading="lazy"
+                                        itemprop="image"
+                                >
+                                {% endif %}
                             </figure>
                             <div class="blog-card-content">
                                 <div class="blog-card-info">
                                     <div class="blog-card-title">
-                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
+                                        <h3 class="text-sm md:text-xl" itemprop="headline">{{ post.title }}</h3>
                                     </div>
                                     <div class="blog-card-meta">
-                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
+                                        <time datetime="{{ post.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ post.published_at|date:'j E Y' }}</time>
                                     </div>
                                 </div>
                             </div>
                         </a>
                     </article>
                 </div>
-                <div class="blog-carousel-slide">
-                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
-                        <a href="" class="blog-card-link">
-                            <figure class="blog-card-figure">
-                                <img
-                                        class="blog-card-img"
-                                        src="{% static 'dist/images/blog/1.jpg' %}"
-                                        alt="Описание изображения статьи"
-                                        loading="lazy"
-                                        itemprop="image"
-                                >
-                            </figure>
-                            <div class="blog-card-content">
-                                <div class="blog-card-info">
-                                    <div class="blog-card-title">
-                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
-                                    </div>
-                                    <div class="blog-card-meta">
-                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </article>
-                </div>
-
-                <div class="blog-carousel-slide">
-                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
-                        <a href="" class="blog-card-link">
-                            <figure class="blog-card-figure">
-                                <img
-                                        class="blog-card-img"
-                                        src="{% static 'dist/images/blog/1.jpg' %}"
-                                        alt="Описание изображения статьи"
-                                        loading="lazy"
-                                        itemprop="image"
-                                >
-                            </figure>
-                            <div class="blog-card-content">
-                                <div class="blog-card-info">
-                                    <div class="blog-card-title">
-                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
-                                    </div>
-                                    <div class="blog-card-meta">
-                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </article>
-                </div>
-
-                <div class="blog-carousel-slide">
-                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
-                        <a href="" class="blog-card-link">
-                            <figure class="blog-card-figure">
-                                <img
-                                        class="blog-card-img"
-                                        src="{% static 'dist/images/blog/1.jpg' %}"
-                                        alt="Описание изображения статьи"
-                                        loading="lazy"
-                                        itemprop="image"
-                                >
-                            </figure>
-                            <div class="blog-card-content">
-                                <div class="blog-card-info">
-                                    <div class="blog-card-title">
-                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
-                                    </div>
-                                    <div class="blog-card-meta">
-                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </article>
-                </div>
-
-                <div class="blog-carousel-slide">
-                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
-                        <a href="" class="blog-card-link">
-                            <figure class="blog-card-figure">
-                                <img
-                                        class="blog-card-img"
-                                        src="{% static 'dist/images/blog/1.jpg' %}"
-                                        alt="Описание изображения статьи"
-                                        loading="lazy"
-                                        itemprop="image"
-                                >
-                            </figure>
-                            <div class="blog-card-content">
-                                <div class="blog-card-info">
-                                    <div class="blog-card-title">
-                                        <h3 class="text-sm md:text-xl" itemprop="headline">Натянули DR.JOYS на Кок-Тобе</h3>
-                                    </div>
-                                    <div class="blog-card-meta">
-                                        <time datetime="2025-05-01" itemprop="datePublished">1 мая 2025</time>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </article>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
