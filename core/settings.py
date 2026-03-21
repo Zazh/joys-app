@@ -84,6 +84,7 @@ TEMPLATES = [
                 'regions.context_processors.region_context',
                 'orders.context_processors.cart_context',
                 'backoffice.context_processors.backoffice_badges',
+                'pages.context_processors.navigation',
             ],
         },
     },
@@ -231,6 +232,26 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ],
 }
+
+# -----------------------------------------------
+# Django Silk — профилирование запросов
+# Включается через SILK_ENABLED=true в .env
+# -----------------------------------------------
+SILK_ENABLED = os.environ.get('SILK_ENABLED', 'false').lower() == 'true'
+
+if SILK_ENABLED:
+    INSTALLED_APPS.append('silk')
+    # Silk middleware ставим после SessionMiddleware, но до views
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index('django.middleware.common.CommonMiddleware'),
+        'silk.middleware.SilkyMiddleware',
+    )
+    SILKY_PYTHON_PROFILER = True
+    SILKY_PYTHON_PROFILER_BINARY = True
+    SILKY_MAX_RECORDED_REQUESTS = 10_000
+    SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 10
+    SILKY_AUTHENTICATION = True   # только залогиненные
+    SILKY_AUTHORISATION = True    # только is_staff
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'DR.JOYS API',

@@ -1,5 +1,11 @@
 from django.views.generic import DetailView, ListView, TemplateView
 
+from django.db.models import Avg, Count, Q, Value
+from django.db.models.functions import Coalesce, Length
+
+from modals.models import InteractiveModal
+from quiz.models import QuizQuestion, QuizResultText
+from reviews.models import Review
 from .models import PageCategory, Page, BlogPost, HeroSection, FeatureSlide, PromoBlock
 
 
@@ -23,22 +29,79 @@ class HomeView(TemplateView):
             for i, card in enumerate(cards):
                 ctx[f'card{i+1}'] = card
         ctx['feature_slides'] = FeatureSlide.objects.filter(is_active=True)
-        # Галерея тату: 8 позиций, если меньше — повторяем
-        try:
-            tattoo = PromoBlock.objects.prefetch_related('images').get(slug='tattoo', is_active=True)
+        # Промо-блоки: загружаем все 3 одним запросом
+        promos = {
+            p.slug: p
+            for p in PromoBlock.objects
+            .filter(slug__in=['tattoo', 'quiz', 'partners'], is_active=True)
+            .prefetch_related('images')
+        }
+        ctx['quiz_promo'] = promos.get('quiz')
+        ctx['partners_promo'] = promos.get('partners')
+        ctx['tattoo_promo'] = promos.get('tattoo')
+        tattoo = promos.get('tattoo')
+        if tattoo:
             images = list(tattoo.images.all())
             if images:
-                gallery = []
-                for i in range(8):
-                    gallery.append(images[i % len(images)])
-                ctx['tattoo_gallery'] = gallery
-        except PromoBlock.DoesNotExist:
-            pass
+                ctx['tattoo_gallery'] = [images[i % len(images)] for i in range(8)]
         ctx['blog_posts'] = (
             BlogPost.objects
             .filter(is_published=True)
             .order_by('-published_at')[:5]
         )
+        # Модалки: загружаем обе одним запросом с prefetch
+        modals = {
+            m.slug: m
+            for m in InteractiveModal.objects
+            .filter(slug__in=['tattoo', 'partner'], is_active=True)
+            .prefetch_related('steps', 'steps__inquiry_form', 'steps__inquiry_form__fields')
+        }
+        ctx['tattoo_modal'] = modals.get('tattoo')
+        ctx['partner_modal'] = modals.get('partner')
+        # Квиз: вопросы + текст результата
+        ctx['quiz_questions'] = list(
+            QuizQuestion.objects
+            .filter(is_active=True)
+            .prefetch_related('options')
+            .order_by('order')
+        )
+        ctx['result_text'] = QuizResultText.load()
+        # Отзывы: статистика + избранные
+        stats = Review.objects.aggregate(
+            avg_rating=Avg('rating'),
+            total_count=Count('id'),
+            positive_count=Count('id', filter=Q(rating__gte=2)),
+            negative_count=Count('id', filter=Q(rating=1)),
+        )
+        total = stats['total_count'] or 1
+        stats['negative_percent'] = round(stats['negative_count'] / total * 100, 1)
+        stats['avg_rating'] = round(stats['avg_rating'] or 0, 1)
+        ctx['review_stats'] = stats
+        featured = list(
+            Review.objects
+            .with_content()
+            .filter(is_featured=True)
+            .annotate(
+                _content_len=Coalesce(Length('text'), Value(0))
+                + Coalesce(Length('pros'), Value(0))
+                + Coalesce(Length('cons'), Value(0)),
+            )
+            .order_by('-_content_len', '-wb_created_at')
+        )
+        if len(featured) >= 3:
+            def _clen(r):
+                return len(r.text or '') + len(r.pros or '') + len(r.cons or '')
+            if _clen(featured[1]) < 40:
+                for i in range(2, len(featured) - 1):
+                    if _clen(featured[i]) >= 40:
+                        featured[1], featured[i] = featured[i], featured[1]
+                        break
+            if _clen(featured[-1]) < 40:
+                for i in range(len(featured) - 2, 1, -1):
+                    if _clen(featured[i]) >= 40:
+                        featured[-1], featured[i] = featured[i], featured[-1]
+                        break
+        ctx['featured_reviews'] = featured
         return ctx
 
 

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static i18n review_tags menu_tags %}
+{% load static i18n %}
 
 {% block title %}{% trans "DR.JOYS — ультратонкие презервативы, неощутимые на 95%" %}{% endblock %}
 
@@ -210,7 +210,6 @@
 </section>
 
 <!-- Quizzes block -->
-{% get_promo "quiz" as quiz_promo %}
 <section id="quizzes" class="quizzes" data-parallax >
     <div class="quizzes-container ">
         <div class="quizzes-content ">
@@ -268,7 +267,6 @@
                 </span>
             </h2>
         </div>
-        {% get_review_stats as review_stats %}
         <div class="flex justify-center pt-2 pb-8 lg:py-8">
             <div class="md:w-lg m-auto text-center text-lg leading-tight font-medium px-5 md:px-0">
                 <p>{% blocktrans with pct=review_stats.negative_percent %}Всего {{ pct }}% негативных отзывов. Мы за честный фидбек, поэтому не стесняемся, а наоборот — отвечаем с удовольствием :){% endblocktrans %}</p>
@@ -292,7 +290,6 @@
 </section>
 
 <!-- Reviews carousel block -->
-{% get_featured_reviews as featured_reviews %}
 <section id="reviews-carousel" class="reviews-carousel">
     <div class="reviews-carousel-wrapper">
         <!-- Стрелка влево -->
@@ -338,7 +335,6 @@
 </section>
 
 <!-- Go partners block -->
-{% get_promo "partners" as partners_promo %}
 <section id="go-partners" class="go-partners">
     <div class="main-grid">
         <div class="go-partners-container">
@@ -390,7 +386,6 @@
 </section>
 
 <!-- Events block -->
-{% get_promo "tattoo" as tattoo_promo %}
 <section id="events" class="events ">
     <div class="events-container">
         <div class="flex flex-wrap gap-5 md:gap-10 shadow-[0_0_120px_30px_rgba(0,0,0,0.9)] bg-[#00000094] rounded-full">
@@ -496,10 +491,7 @@
 </section>
 
 {% include 'base/components/_modal_quiz.html' %}
-{% load modal_tags %}
-{% get_interactive_modal 'tattoo' as tattoo_modal %}
 {% include 'base/components/_interactive_modal.html' with modal=tattoo_modal %}
-{% get_interactive_modal 'partner' as partner_modal %}
 {% include 'base/components/_interactive_modal.html' with modal=partner_modal %}
 </main>
 

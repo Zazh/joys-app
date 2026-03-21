@@ -1,12 +1,11 @@
-{% load i18n menu_tags %}
+{% load i18n %}
 <footer class="border-t-1 pt-16{% if page_type != 'home' %} mt-20{% endif %}">
   <section class="main-grid gap-12">
     <div class="col-span-full md:col-span-2 lg:col-span-4 xl:col-span-3 lg:col-start-2 xl:col-start-2 px-4 lg:px-0">
       <div class="flex flex-col gap-6">
         <h4 class="font-benzin uppercase text-xs">{% trans "Меню" %}</h4>
         <ul class="footer-menu">
-          {% get_menu as nav_menu %}
-          {% for item in nav_menu %}
+          {% for item in main_menu %}
           <li class="nav-item">
             <a href="{{ item.get_url }}"{% if item.open_in_new_tab %} target="_blank" rel="noopener"{% endif %}>{{ item.title }}</a>
           </li>
@@ -18,7 +17,6 @@
       <div class="flex flex-col gap-6">
         <h4 class="font-benzin uppercase text-xs">{% trans "Правовая информация" %}</h4>
         <ul class="footer-menu">
-          {% get_category_pages "legal" as legal_pages %}
           {% for page in legal_pages %}
           <li class="nav-item">
             <a href="{{ page.get_absolute_url }}">{{ page.title }}</a>

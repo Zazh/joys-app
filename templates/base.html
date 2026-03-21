@@ -116,10 +116,8 @@
   <!-- BEGIN mainNav: выпадающее меню по клику на бургер -->
   <!-- mobile: 90% ширины, desktop/tablet: auto ширина, полная высота -->
   <div class="hidden flex-1 flex-col overflow-hidden w-full max-w-120" id="mainNav">
-    {% load menu_tags %}
     <nav class="main-nav" role="navigation">
         <ul class="main-nav__list" role="menubar">
-            {% get_menu as main_menu %}
             {% for item in main_menu %}
             <li class="main-nav__item{% if item.get_url == request.path %} active{% endif %}" role="menuitem"><a href="{{ item.get_url }}"{% if item.open_in_new_tab %} target="_blank" rel="noopener"{% endif %}>{{ item.title }}</a></li>
             {% endfor %}
