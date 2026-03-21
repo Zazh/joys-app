@@ -1,10 +1,10 @@
 @layer components {
     .modal-overlay {
-        @apply fixed inset-0 z-50 flex justify-center items-start p-2 md:py-[5%]
+        @apply fixed inset-0 z-50 flex justify-center items-start p-2
                bg-black/10 backdrop-blur-xl overflow-y-auto;
     }
     .modal-content {
-        @apply w-full max-w-xs bg-white rounded-2xl p-5 relative;
+        @apply w-full max-w-xs bg-white rounded-2xl p-5 relative my-auto;
     }
     /* Wider variant for shop modals (cart, favorites, profile, delivery, etc.) */
     .modal-content.modal-wide {
@@ -53,7 +53,7 @@
     /* Dark variant */
     .modal-dark {
         @apply bg-black text-white flex flex-col
-               min-h-[calc(100dvh-1rem)] md:min-h-140;
+               min-h-140;
     }
     .modal-dark .modal-back,
     .modal-dark .modal-close {
@@ -110,7 +110,7 @@
 
     /* Full-height modal (shared) */
     .modal-fullscreen {
-        @apply min-h-[calc(100dvh-1rem)] md:min-h-140 flex flex-col;
+        @apply min-h-140 flex flex-col;
     }
 
     /* Quiz */

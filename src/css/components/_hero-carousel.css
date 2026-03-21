@@ -36,10 +36,12 @@
 @media (max-width: 1023px) {
     .hero-carousel-container {
         overflow-x: auto;
+        overflow-y: hidden;
         scroll-snap-type: x mandatory;
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none; /* Firefox */
+        touch-action: pan-x pan-y;
     }
 
     .hero-carousel-container::-webkit-scrollbar {

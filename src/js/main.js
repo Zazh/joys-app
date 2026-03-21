@@ -33,6 +33,11 @@ function goToStep(overlay, stepNum) {
     });
 }
 
+// Глобальный доступ для inline-скриптов в шаблонах
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.goToStep = goToStep;
+
 // --------------------------------------------
 // 0.1 API HELPER
 // --------------------------------------------
