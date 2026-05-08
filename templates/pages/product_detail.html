@@ -35,9 +35,9 @@
             <div class="[ product-slider ] w-full aspect-[1/1] lg:aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="4000">
                 {% for img in main_images %}
                 {% localized_img img 'image' as img_url %}
-                <img src="{{ img_url }}" class="slider-image" alt="{{ img.alt_text|default:product.name }}"{% if not forloop.first %} loading="lazy"{% endif %}>
+                <img src="{{ img_url }}" class="slider-image" draggable="false" alt="{{ img.alt_text|default:product.name }}"{% if not forloop.first %} loading="lazy"{% endif %}>
                 {% empty %}
-                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="{{ product.name }}">
+                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" draggable="false" alt="{{ product.name }}">
                 {% endfor %}
 
                 {% if main_images|length > 1 %}

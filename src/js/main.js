@@ -574,15 +574,32 @@ function initProductSlider() {
 
         if (imagesCount <= 1) return;
 
-        // Создаем индикаторы
+        // Создаем индикаторы (кликабельные)
         indicatorsContainer.innerHTML = '';
         const indicators = [];
         for (let i = 0; i < imagesCount; i++) {
-            const indicator = document.createElement('span');
+            const indicator = document.createElement('button');
+            indicator.type = 'button';
             indicator.classList.add('indicator');
+            indicator.setAttribute('aria-label', `Слайд ${i + 1}`);
             indicatorsContainer.appendChild(indicator);
             indicators.push(indicator);
         }
+
+        // Кнопки prev/next (видны на десктопе, скрыты на мобайле)
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
+        prevBtn.className = 'slider-arrow slider-arrow-prev';
+        prevBtn.setAttribute('aria-label', 'Предыдущий слайд');
+        prevBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+        slider.appendChild(prevBtn);
+
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
+        nextBtn.className = 'slider-arrow slider-arrow-next';
+        nextBtn.setAttribute('aria-label', 'Следующий слайд');
+        nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        slider.appendChild(nextBtn);
 
         // Параметры
         const autoplay = slider.getAttribute('data-autoplay') === 'true';
@@ -665,6 +682,7 @@ function initProductSlider() {
 
         // Toggle play/pause
         function togglePlayPause() {
+            if (!playPauseBtn) return;
             isPlaying = !isPlaying;
 
             if (isPlaying) {
@@ -679,7 +697,7 @@ function initProductSlider() {
                 playIcon.classList.remove('hidden');
                 playPauseBtn.setAttribute('aria-label', 'Play slideshow');
                 stopAutoplay();
-                progressBar.style.strokeDashoffset = 100;
+                if (progressBar) progressBar.style.strokeDashoffset = 100;
             }
         }
 
@@ -712,47 +730,105 @@ function initProductSlider() {
             }
         });
 
-        // МОБИЛЬНЫЙ: Клик на картинку - toggle play/pause
-        slider.addEventListener('click', (e) => {
-            if (e.target.closest('.slider-play-pause')) return;
+        // МОБИЛЬНЫЙ: Клик на картинку - toggle play/pause (только если есть autoplay-контролы)
+        if (playPauseBtn) {
+            slider.addEventListener('click', (e) => {
+                if (e.target.closest('.slider-play-pause')) return;
 
-            if (window.innerWidth < 1024) {
-                togglePlayPause();
-            }
+                if (window.innerWidth < 1024) {
+                    togglePlayPause();
+                }
+            });
+        }
+
+        // Прыжок к конкретному слайду (сбрасываем прогресс-кружок)
+        function goTo(index) {
+            if (index === currentIndex) return;
+            showImage(index);
+            stopAutoplay();
+            if (progressBar) progressBar.style.strokeDashoffset = 100;
+            if (isPlaying) startAutoplay();
+        }
+        function goPrev() {
+            goTo((currentIndex - 1 + imagesCount) % imagesCount);
+        }
+        function goNext() {
+            goTo((currentIndex + 1) % imagesCount);
+        }
+
+        // Клики на стрелки
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goPrev();
+        });
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goNext();
         });
 
-        // Свайпы для мобильных
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        slider.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        slider.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
+        // Клики на индикаторы
+        indicators.forEach((indicator, i) => {
+            indicator.addEventListener('click', (e) => {
+                e.stopPropagation();
+                goTo(i);
+            });
         });
 
-        function handleSwipe() {
-            const swipeThreshold = 50;
+        // Универсальный свайп: touch (мобайл) + mouse drag (десктоп)
+        const swipeThreshold = 50;
+        let dragStartX = null;
+        let dragMoved = false;
 
-            if (touchEndX < touchStartX - swipeThreshold) {
-                const nextIndex = (currentIndex + 1) % imagesCount;
-                showImage(nextIndex);
-                if (isPlaying) {
-                    startAutoplay();
-                }
-            }
-
-            if (touchEndX > touchStartX + swipeThreshold) {
-                const prevIndex = (currentIndex - 1 + imagesCount) % imagesCount;
-                showImage(prevIndex);
-                if (isPlaying) {
-                    startAutoplay();
-                }
+        function applySwipe(diff) {
+            if (diff < -swipeThreshold) {
+                goNext();
+            } else if (diff > swipeThreshold) {
+                goPrev();
             }
         }
+
+        // Touch
+        slider.addEventListener('touchstart', (e) => {
+            dragStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        slider.addEventListener('touchend', (e) => {
+            if (dragStartX === null) return;
+            applySwipe(e.changedTouches[0].screenX - dragStartX);
+            dragStartX = null;
+        });
+
+        // Mouse drag — слушаем mouseup/mousemove на document, чтобы свайп
+        // срабатывал, даже если курсор вышел за пределы слайдера до отпускания
+        const onDocMouseMove = (e) => {
+            if (dragStartX === null) return;
+            if (Math.abs(e.clientX - dragStartX) > 5) {
+                dragMoved = true;
+            }
+        };
+        const onDocMouseUp = (e) => {
+            if (dragStartX === null) return;
+            const startX = dragStartX;
+            dragStartX = null;
+            document.removeEventListener('mousemove', onDocMouseMove);
+            document.removeEventListener('mouseup', onDocMouseUp);
+            if (dragMoved) {
+                applySwipe(e.clientX - startX);
+            }
+            dragMoved = false;
+        };
+
+        slider.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            if (e.target.closest('.slider-play-pause')) return;
+            if (e.target.closest('.slider-arrow')) return;
+            if (e.target.closest('.indicator')) return;
+            dragStartX = e.clientX;
+            dragMoved = false;
+            document.addEventListener('mousemove', onDocMouseMove);
+            document.addEventListener('mouseup', onDocMouseUp);
+            e.preventDefault();
+        });
+        slider.addEventListener('dragstart', (e) => e.preventDefault());
     });
 }
 

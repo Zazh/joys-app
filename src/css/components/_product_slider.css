@@ -1,7 +1,15 @@
 @layer components {
     /* Слайдер */
+    .product-slider {
+        /* Чтобы драг мышью переключал слайд, а не выделял/перетаскивал картинку */
+        @apply select-none cursor-grab active:cursor-grabbing;
+        -webkit-user-drag: none;
+    }
     .slider-image {
         @apply w-full h-full object-cover absolute inset-0 opacity-0 transition-opacity duration-500;
+        -webkit-user-drag: none;
+        user-select: none;
+        pointer-events: none;
     }
     .slider-image.active {
         @apply opacity-100;
@@ -45,10 +53,38 @@
     }
 
     .slider-indicators .indicator {
-        @apply w-1 h-1 rounded-full bg-white/50 transition-all duration-200;
+        @apply w-1 h-1 rounded-full bg-white/50 transition-all duration-200 cursor-pointer relative p-0 border-0;
+    }
+
+    /* Прозрачный хитбокс ~20×20px вокруг точки, чтобы было удобно кликать */
+    .slider-indicators .indicator::before {
+        content: "";
+        position: absolute;
+        inset: -8px;
     }
 
     .slider-indicators .indicator.active {
         @apply bg-white w-4;
+    }
+
+    /* Стрелки prev/next — простая иконка без фона, по центру по высоте */
+    .slider-arrow {
+        @apply absolute top-1/2 -translate-y-1/2 z-10;
+        @apply flex items-center justify-center;
+        @apply w-10 h-10 text-white cursor-pointer;
+        @apply transition-opacity duration-200 opacity-90 hover:opacity-100;
+        filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.6));
+    }
+
+    .slider-arrow svg {
+        @apply w-6 h-6;
+    }
+
+    .slider-arrow-prev {
+        @apply left-2;
+    }
+
+    .slider-arrow-next {
+        @apply right-2;
     }
 }
