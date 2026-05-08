@@ -72,6 +72,7 @@
                         {% with first_size=product.sizes.all|first %}
                         {% if first_size %}
                         {% region_price_data first_size as pd %}
+                        {% if pd.price %}
                         <div class="flex items-center gap-2 mt-1 flex-wrap">
                             {% if pd.has_discount %}
                             <span class="text-xs text-stone-400 line-through">{{ pd.old_price|format_price }} {{ currency_symbol }}</span>
@@ -81,6 +82,9 @@
                             <span class="text-xs text-stone-400">({{ pd.payment_price|format_price }} {{ pd.payment_currency_symbol }})</span>
                             {% endif %}
                         </div>
+                        {% else %}
+                        <div class="text-xs text-stone-400 mt-1">{% trans "Нет в наличии" %}</div>
+                        {% endif %}
                         {% endif %}
                         {% endwith %}
                     </div>

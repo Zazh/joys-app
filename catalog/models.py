@@ -200,6 +200,11 @@ class ProductSize(models.Model):
 
     order = models.PositiveIntegerField('Порядок', default=0)
 
+    coming_soon = models.BooleanField(
+        'Скоро в продаже', default=False,
+        help_text='Размер ещё не доступен. Покупка отключена, цена скрыта.',
+    )
+
     class Meta:
         verbose_name = 'Размер'
         verbose_name_plural = 'Размеры'

@@ -98,7 +98,7 @@
         @apply text-xs text-stone-500;
     }
     .size-dropdown__item--disabled .size-dropdown__item-info {
-        @apply line-through;
+        @apply font-medium no-underline text-stone-400;
     }
     .size-dropdown__footer {
         @apply border-t border-stone-200 px-4 py-3;

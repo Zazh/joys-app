@@ -134,7 +134,22 @@ class ProductDetailView(DetailView):
 
         sizes = list(product.sizes.all())
         ctx['sizes'] = sizes
-        ctx['default_size'] = sizes[0] if sizes else None
+        # default_size: первый «покупаемый» (не «скоро», в наличии, цена > 0),
+        # иначе первый.
+        region = getattr(self.request, 'region', None)
+
+        def _effective_price(size):
+            rps = getattr(size, '_region_prices', None) or []
+            if region:
+                for rp in rps:
+                    if rp.region_id == region.pk:
+                        return rp.price
+            return size.price
+
+        ctx['default_size'] = next(
+            (s for s in sizes if not s.coming_soon and s.in_stock and _effective_price(s)),
+            sizes[0] if sizes else None,
+        )
         cover_image = product.get_cover_image()
         ctx['cover_image'] = cover_image
         main_images = list(product.main_images.all())

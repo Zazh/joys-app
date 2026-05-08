@@ -17,7 +17,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from catalog.models import ProductSize, Stock
+from catalog.models import ProductSize, RegionPrice, Stock
 from .cart import Cart, Favorites
 from emails.service import send_order_created_email
 from .forms import CheckoutForm
@@ -89,8 +89,20 @@ class CartAddView(APIView):
         size_id = serializer.validated_data['size_id']
         qty = serializer.validated_data['qty']
 
-        if not ProductSize.objects.filter(pk=size_id).exists():
+        size = ProductSize.objects.filter(pk=size_id).only('coming_soon', 'price').first()
+        if size is None:
             return Response({'ok': False, 'error': _('Размер не найден')}, status=status.HTTP_404_NOT_FOUND)
+        if size.coming_soon:
+            return Response({'ok': False, 'error': _('Скоро в продаже')}, status=status.HTTP_400_BAD_REQUEST)
+
+        region = getattr(request, 'region', None)
+        effective_price = size.price
+        if region:
+            rp = RegionPrice.objects.filter(size=size, region=region).only('price').first()
+            if rp:
+                effective_price = rp.price
+        if not effective_price:
+            return Response({'ok': False, 'error': _('Нет в наличии')}, status=status.HTTP_400_BAD_REQUEST)
 
         cart = Cart(request)
         cart.add(size_id, qty)

@@ -78,7 +78,8 @@ def build_product_jsonld(request, product, sizes, cover_image, main_images, char
             'price': str(price),
             'priceCurrency': currency_code,
             'availability': (
-                'https://schema.org/InStock' if size.in_stock
+                'https://schema.org/PreOrder' if size.coming_soon
+                else 'https://schema.org/InStock' if size.in_stock and price
                 else 'https://schema.org/OutOfStock'
             ),
             'itemCondition': 'https://schema.org/NewCondition',

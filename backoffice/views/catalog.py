@@ -166,6 +166,7 @@ class ProductEditView(BackofficeAccessMixin, View):
             size.price = request.POST.get(f'size_price_{size_id}') or 0
             size.old_price = request.POST.get(f'size_old_price_{size_id}') or None
             size.order = request.POST.get(f'size_order_{size_id}') or 0
+            size.coming_soon = request.POST.get(f'size_coming_soon_{size_id}') == 'on'
             size.save()
 
             # Региональные цены
@@ -332,6 +333,7 @@ class ProductSizeCreateView(BackofficeAccessMixin, View):
             price=price or 0,
             old_price=request.POST.get('old_price') or None,
             order=request.POST.get('order') or 0,
+            coming_soon=request.POST.get('coming_soon') == 'on',
         )
         messages.success(request, f'Размер «{name}» добавлен.')
         return redirect('backoffice:product_edit', pk=pk)

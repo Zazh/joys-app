@@ -45,16 +45,22 @@ def convert_to_webp(instance, field_name):
         img.save(buf, format='WEBP', quality=95, method=4)
         buf.seek(0)
 
-        old_path = field_file.path
-        new_path = str(Path(old_path).with_suffix('.webp'))
+        from django.conf import settings
+        from django.core.files.storage import default_storage
 
-        # Записываем webp-файл напрямую на диск
+        old_path = field_file.path
+        rel_target = str(Path(field_file.name).with_suffix('.webp'))
+
+        # Если webp с таким же именем уже существует и это не наш собственный
+        # старый файл — берём уникальное имя, иначе перезапись приведёт к тому,
+        # что URL не поменяется и браузер будет отдавать закешированную картинку.
+        rel_path = default_storage.get_available_name(rel_target)
+        new_path = os.path.join(settings.MEDIA_ROOT, rel_path)
+
+        os.makedirs(os.path.dirname(new_path), exist_ok=True)
         with open(new_path, 'wb') as f:
             f.write(buf.read())
 
-        # Обновляем имя в поле (относительный путь от MEDIA_ROOT)
-        from django.conf import settings
-        rel_path = os.path.relpath(new_path, settings.MEDIA_ROOT)
         setattr(instance, field_name, rel_path)
 
         if os.path.exists(old_path) and old_path != new_path:

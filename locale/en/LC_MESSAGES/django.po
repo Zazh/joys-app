@@ -637,6 +637,9 @@ msgstr "Select size"
 msgid "Нет в наличии"
 msgstr "Out of stock"
 
+msgid "Скоро в продаже"
+msgstr "Coming soon"
+
 msgid "Как выбрать размер?"
 msgstr "How to choose a size?"
 
