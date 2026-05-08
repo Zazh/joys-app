@@ -253,7 +253,7 @@ window.addEventListener('resize', () => {
 // 3. ПЕРЕКЛЮЧЕНИЕ КАРТИНОК ТОВАРОВ
 // --------------------------------------------
 function initProductImageSlider() {
-    const productCards = document.querySelectorAll('.product-card_picture, .product_picture');
+    const productCards = document.querySelectorAll('.product-card_picture');
 
     productCards.forEach(card => {
         const images = card.querySelectorAll('.product-image');

@@ -10,16 +10,13 @@
 }
 
 /* Картинки */
-.product-card_picture .product-image,
-.product_picture .product-image {
+.product-card_picture .product-image {
     @apply w-full h-full object-cover absolute inset-0 opacity-0 transition-opacity duration-200;
 }
-.product-card_picture .product-image:only-child,
-.product_picture .product-image:only-child {
+.product-card_picture .product-image:only-child {
     @apply opacity-100;
 }
-.product-card_picture .product-image.active,
-.product_picture .product-image.active {
+.product-card_picture .product-image.active {
     @apply opacity-100;
 }
 
