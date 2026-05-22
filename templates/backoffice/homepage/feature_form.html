@@ -38,6 +38,7 @@
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Текст (RU)</label>
                     <textarea name="text_ru" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ slide.text_ru|default:'' }}</textarea>
+                    <p class="text-[10px] text-stone-400 mt-1">Поддерживает HTML: <code>&lt;a href="..."&gt;ссылка&lt;/a&gt;</code>, <code>&lt;br&gt;</code></p>
                 </div>
             </div>
 
@@ -50,6 +51,7 @@
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Текст (KK)</label>
                     <textarea name="text_kk" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ slide.text_kk|default:'' }}</textarea>
+                    <p class="text-[10px] text-stone-400 mt-1">Поддерживает HTML: <code>&lt;a href="..."&gt;ссылка&lt;/a&gt;</code>, <code>&lt;br&gt;</code></p>
                 </div>
             </div>
 
@@ -62,48 +64,88 @@
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Текст (EN)</label>
                     <textarea name="text_en" rows="3" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">{{ slide.text_en|default:'' }}</textarea>
+                    <p class="text-[10px] text-stone-400 mt-1">Поддерживает HTML: <code>&lt;a href="..."&gt;ссылка&lt;/a&gt;</code>, <code>&lt;br&gt;</code></p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Цвет текста -->
+        <div class="border-t border-stone-100 pt-3">
+            <label class="block text-xs text-stone-500 mb-1">Цвет текста и заголовка</label>
+            <div class="flex gap-3">
+                <label class="flex items-center gap-2 text-xs cursor-pointer">
+                    <input type="radio" name="text_color" value="black"
+                           {% if not slide or slide.text_color == 'black' %}checked{% endif %}
+                           class="border-stone-300 text-stone-900 focus:ring-stone-400">
+                    Чёрный (на светлом фоне)
+                </label>
+                <label class="flex items-center gap-2 text-xs cursor-pointer">
+                    <input type="radio" name="text_color" value="white"
+                           {% if slide.text_color == 'white' %}checked{% endif %}
+                           class="border-stone-300 text-stone-900 focus:ring-stone-400">
+                    Белый (на тёмном фоне)
+                </label>
             </div>
         </div>
 
         <!-- Media -->
-        <div class="border-t border-stone-100 pt-3">
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs text-stone-500 mb-1">Тип контента</label>
-                    <select name="media_type" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
-                        <option value="image" {% if slide.media_type == 'image' %}selected{% endif %}>Картинка</option>
-                        <option value="video" {% if slide.media_type == 'video' %}selected{% endif %}>Видео</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs text-stone-500 mb-1">Порядок</label>
-                    <input type="number" name="order" value="{{ slide.order|default:0 }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+        <div x-data="{ mediaType: '{{ slide.media_type|default:'image' }}' }">
+            <div class="border-t border-stone-100 pt-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Тип контента</label>
+                        <select name="media_type" x-model="mediaType" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                            <option value="image">Картинка</option>
+                            <option value="video">Видео</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Порядок</label>
+                        <input type="number" name="order" value="{{ slide.order|default:0 }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-                <label class="block text-xs text-stone-500 mb-1">Картинка (фон)</label>
-                {% if slide.image %}
-                <img src="{{ slide.image.url }}" alt="" class="w-full h-16 object-cover rounded mb-1">
-                {% endif %}
-                <input type="file" name="image" accept="image/*" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+            <!-- Картинки (показываем только если media_type = image) -->
+            <div x-show="mediaType === 'image'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Картинка (десктоп)</label>
+                    {% if slide.image %}
+                    <img src="{{ slide.image.url }}" alt="" class="w-full h-16 object-cover rounded mb-1">
+                    {% endif %}
+                    <input type="file" name="image" accept="image/*" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Картинка (мобильная, опционально)</label>
+                    {% if slide.image_mobile %}
+                    <img src="{{ slide.image_mobile.url }}" alt="" class="w-full h-16 object-cover rounded mb-1">
+                    <label class="flex items-center gap-1 text-[10px] text-red-500 mb-1">
+                        <input type="checkbox" name="clear_image_mobile" class="rounded border-stone-300">
+                        Удалить мобильную версию
+                    </label>
+                    {% else %}
+                    <p class="text-[10px] text-stone-400 mb-1">Не задана — будет использована десктопная.</p>
+                    {% endif %}
+                    <input type="file" name="image_mobile" accept="image/*" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+                </div>
             </div>
-            <div>
-                <label class="block text-xs text-stone-500 mb-1">Видео (MP4)</label>
-                {% if slide.video %}
-                <p class="text-[10px] text-green-600 mb-1">Загружено</p>
-                {% endif %}
-                <input type="file" name="video" accept="video/mp4" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
-            </div>
-            <div>
-                <label class="block text-xs text-stone-500 mb-1">Обложка видео</label>
-                {% if slide.video_poster %}
-                <img src="{{ slide.video_poster.url }}" alt="" class="w-full h-16 object-cover rounded mb-1">
-                {% endif %}
-                <input type="file" name="video_poster" accept="image/*" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+
+            <!-- Видео (показываем только если media_type = video) -->
+            <div x-show="mediaType === 'video'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Видео (MP4)</label>
+                    {% if slide.video %}
+                    <p class="text-[10px] text-green-600 mb-1">Загружено</p>
+                    {% endif %}
+                    <input type="file" name="video" accept="video/mp4" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Обложка видео</label>
+                    {% if slide.video_poster %}
+                    <img src="{{ slide.video_poster.url }}" alt="" class="w-full h-16 object-cover rounded mb-1">
+                    {% endif %}
+                    <input type="file" name="video_poster" accept="image/*" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+                </div>
             </div>
         </div>
 

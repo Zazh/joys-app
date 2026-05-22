@@ -232,15 +232,31 @@ class FeatureSlide(models.Model):
         IMAGE = 'image', 'Картинка'
         VIDEO = 'video', 'Видео'
 
+    class TextColor(models.TextChoices):
+        BLACK = 'black', 'Чёрный (на светлом фоне)'
+        WHITE = 'white', 'Белый (на тёмном фоне)'
+
     title = models.CharField('Заголовок', max_length=300)
-    text = models.TextField('Текст')
+    text = models.TextField(
+        'Текст',
+        help_text='Поддерживает HTML-теги. Для ссылок используйте &lt;a href="..."&gt;...&lt;/a&gt;',
+    )
+    text_color = models.CharField(
+        'Цвет текста', max_length=10,
+        choices=TextColor.choices, default=TextColor.BLACK,
+        help_text='Цвет заголовка и текста. На светлом фоне — чёрный, на тёмном — белый.',
+    )
     media_type = models.CharField(
         'Тип контента', max_length=5,
         choices=MediaType.choices, default=MediaType.IMAGE,
     )
     image = models.ImageField(
-        'Картинка', upload_to='features/', blank=True,
-        help_text='Фоновое изображение слайда',
+        'Картинка (десктоп)', upload_to='features/', blank=True,
+        help_text='Фоновое изображение слайда. Используется на десктопе и как фолбэк для мобильных.',
+    )
+    image_mobile = models.ImageField(
+        'Картинка (мобильная)', upload_to='features/mobile/', blank=True,
+        help_text='Опционально. Если не указана — используется десктопная.',
     )
     video = models.FileField(
         'Видео', upload_to='features/videos/', blank=True,

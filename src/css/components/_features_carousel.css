@@ -12,8 +12,25 @@
 .features-card-container {
     @apply flex flex-col gap-5 mx-0 px-5 my-8 lg:px-0 lg:mx-[5rem] lg:my-[3.75rem] w-full max-w-105 relative z-10;
 }
+.features-bg-picture {
+    @apply block w-full h-full;
+}
 .features-bg-img {
     @apply w-full h-full object-cover object-right-bottom;
+}
+
+/* Цвет текста и ссылок внутри слайда */
+.features-card--text-black .features-card-container {
+    @apply text-black;
+}
+.features-card--text-black .features-card-content a {
+    @apply text-blue-600 font-bold;
+}
+.features-card--text-white .features-card-container {
+    @apply text-white;
+}
+.features-card--text-white .features-card-content a {
+    @apply text-white font-bold;
 }
 
 .features-carousel {

@@ -166,13 +166,13 @@
     <div class="features-carousel">
         <div class="features-cursor"></div>
         {% for slide in feature_slides %}
-        <div class="features-card">
+        <div class="features-card features-card--text-{{ slide.text_color|default:'black' }}">
             <div class="features-card-container">
                 <div>
                     <h2 class="display-2">{{ slide.title }}</h2>
                 </div>
                 <div class="features-card-content">
-                    {{ slide.text|linebreaksbr }}
+                    {{ slide.text|safe|linebreaksbr }}
                 </div>
             </div>
             <div class="absolute inset-0 z-0">
@@ -181,7 +181,12 @@
                     <source src="{{ slide.video.url }}" type="video/mp4">
                 </video>
                 {% elif slide.image %}
-                <img class="features-bg-img" src="{{ slide.image.url }}" alt="{{ slide.title }}">
+                <picture class="features-bg-picture">
+                    {% if slide.image_mobile %}
+                    <source media="(max-width: 1023px)" srcset="{{ slide.image_mobile.url }}">
+                    {% endif %}
+                    <img class="features-bg-img" src="{{ slide.image.url }}" alt="{{ slide.title }}" loading="lazy">
+                </picture>
                 {% endif %}
             </div>
         </div>

@@ -143,11 +143,16 @@ class FeatureSlideEditView(BackofficeAccessMixin, View):
         slide.text_ru = request.POST.get('text_ru', '').strip()
         slide.text_kk = request.POST.get('text_kk', '').strip()
         slide.text_en = request.POST.get('text_en', '').strip()
+        slide.text_color = request.POST.get('text_color', 'black')
         slide.media_type = request.POST.get('media_type', 'image')
         slide.order = int(request.POST.get('order', 0) or 0)
         slide.is_active = request.POST.get('is_active') == 'on'
         if 'image' in request.FILES:
             slide.image = request.FILES['image']
+        if 'image_mobile' in request.FILES:
+            slide.image_mobile = request.FILES['image_mobile']
+        if request.POST.get('clear_image_mobile') == 'on':
+            slide.image_mobile = ''
         if 'video' in request.FILES:
             slide.video = request.FILES['video']
         if 'video_poster' in request.FILES:

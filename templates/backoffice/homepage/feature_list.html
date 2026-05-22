@@ -19,6 +19,8 @@
                     <th class="px-4 py-2.5 font-medium">Превью</th>
                     <th class="px-4 py-2.5 font-medium">Заголовок</th>
                     <th class="px-4 py-2.5 font-medium">Тип</th>
+                    <th class="px-4 py-2.5 font-medium text-center">Текст</th>
+                    <th class="px-4 py-2.5 font-medium text-center">Mobile</th>
                     <th class="px-4 py-2.5 font-medium text-center">Статус</th>
                     <th class="px-4 py-2.5 font-medium"></th>
                 </tr>
@@ -43,6 +45,20 @@
                         </span>
                     </td>
                     <td class="px-4 py-2.5 text-center">
+                        {% if slide.text_color == 'white' %}
+                        <span class="inline-block w-4 h-4 rounded-full bg-white border border-stone-300" title="Белый текст"></span>
+                        {% else %}
+                        <span class="inline-block w-4 h-4 rounded-full bg-black" title="Чёрный текст"></span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2.5 text-center">
+                        {% if slide.image_mobile %}
+                        <span class="text-green-600 text-[10px]">✓</span>
+                        {% else %}
+                        <span class="text-stone-300 text-[10px]">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2.5 text-center">
                         {% if slide.is_active %}
                         <span class="text-green-600">Вкл</span>
                         {% else %}
@@ -60,7 +76,7 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" class="px-4 py-12 text-center text-stone-400">Слайдов нет</td></tr>
+                <tr><td colspan="8" class="px-4 py-12 text-center text-stone-400">Слайдов нет</td></tr>
                 {% endfor %}
             </tbody>
         </table>

@@ -108,15 +108,15 @@ class HeroSectionAdmin(TabbedTranslationAdmin):
 
 @admin.register(FeatureSlide)
 class FeatureSlideAdmin(TabbedTranslationAdmin):
-    list_display = ('title', 'media_type', 'order', 'is_active')
-    list_filter = ('media_type', 'is_active')
+    list_display = ('title', 'media_type', 'text_color', 'order', 'is_active')
+    list_filter = ('media_type', 'text_color', 'is_active')
     list_editable = ('order', 'is_active')
     fieldsets = (
         (None, {
-            'fields': ('title', 'text', 'order', 'is_active'),
+            'fields': ('title', 'text', 'text_color', 'order', 'is_active'),
         }),
         ('Медиа', {
-            'fields': ('media_type', 'image', 'video', 'video_poster'),
+            'fields': ('media_type', 'image', 'image_mobile', 'video', 'video_poster'),
         }),
     )
 
