@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static sanitize %}
 {% load i18n %}
 
 {% block title %}{{ post.meta_title|default:post.title }} — {% trans "Блог DR.JOYS" %}{% endblock %}
@@ -119,7 +119,7 @@
 
                 <!-- BEGIN content -->
                 <div class="blog-content" itemprop="articleBody">
-                    <div>{{ post.body|safe }}</div>
+                    <div>{{ post.body|sanitize }}</div>
                 </div>
                 <!-- END content -->
 

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static sanitize %}
 
 {% block title %}{{ page.meta_title|default:page.title }} — DR.JOYS{% endblock %}
 
@@ -28,7 +28,7 @@
                     <h1 class="display-2 uppercase font-benzin">{{ page.title }}</h1>
                 </div>
                 <div class="blog-content">
-                    <div>{{ page.body|safe }}</div>
+                    <div>{{ page.body|sanitize }}</div>
                 </div>
             </div>
         </div>

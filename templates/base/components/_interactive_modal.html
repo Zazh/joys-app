@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n sanitize %}
 {# Использование: {% include '_interactive_modal.html' with modal=modal_obj %} #}
 
 {% if modal %}
@@ -35,11 +35,11 @@
                     <img src="{{ step.image.url }}" alt="" loading="lazy">
                 </figure>
                 {% endif %}
-                {% if step.text %}<div class="modal-text">{{ step.text|safe }}</div>{% endif %}
+                {% if step.text %}<div class="modal-text">{{ step.text|sanitize }}</div>{% endif %}
                 <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-next-step="{{ forloop.counter|add:'1' }}">{{ step.button_text }}</button>
 
             {% elif step.step_type == 'form' %}
-                {% if step.text %}<div class="modal-text">{{ step.text|safe }}</div>{% endif %}
+                {% if step.text %}<div class="modal-text">{{ step.text|sanitize }}</div>{% endif %}
                 {% if step.inquiry_form %}
                 <form class="flex flex-col gap-3 interactive-modal-form"
                       data-form-slug="{{ step.inquiry_form.slug }}"
@@ -107,7 +107,7 @@
                 {% endif %}
 
             {% elif step.step_type == 'cta' %}
-                {% if step.text %}<div class="modal-text">{{ step.text|safe }}</div>{% endif %}
+                {% if step.text %}<div class="modal-text">{{ step.text|sanitize }}</div>{% endif %}
                 {% if step.cta_url %}
                 <a href="{{ step.cta_url }}" class="btn-macro small danger w-full text-center mt-auto">{{ step.cta_text }}</a>
                 {% endif %}

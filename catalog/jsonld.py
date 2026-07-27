@@ -231,5 +231,23 @@ def build_website_jsonld(request):
 
 # ─── Сериализация ───
 
+def _escape_for_script_tag(payload):
+    """Экранировать символы, которыми можно выйти из <script>.
+
+    json.dumps не трогает `</script>`, поэтому название товара вида
+    `</script><script>...` вырвалось бы из блока JSON-LD и выполнилось.
+    \\uXXXX остаётся валидным JSON и корректно читается парсерами.
+    """
+    return (
+        payload
+        .replace('<', '\\u003c')
+        .replace('>', '\\u003e')
+        .replace('&', '\\u0026')
+    )
+
+
 def serialize_jsonld(*dicts):
-    return [json.dumps(d, ensure_ascii=False) for d in dicts if d is not None]
+    return [
+        _escape_for_script_tag(json.dumps(d, ensure_ascii=False))
+        for d in dicts if d is not None
+    ]

@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n sanitize %}
 
 <!-- BEGIN modal quiz -->
 <div class="modal-overlay hidden" id="modalQuiz">
@@ -20,7 +20,7 @@
                 </button>
             </div>
             <div class="flex-1 flex flex-col justify-center items-center">
-                <h2 class="quiz-question">{{ question.text|safe }}</h2>
+                <h2 class="quiz-question">{{ question.text|sanitize }}</h2>
                 <div class="quiz-options">
                     {% for option in question.options.all %}
                     <button class="quiz-option" type="button"
@@ -45,7 +45,7 @@
                 </button>
             </div>
             <div class="flex-1 flex flex-col justify-center items-center text-center p-6">
-                <h2 class="quiz-question pb-2">{{ result_text.title|safe }}</h2>
+                <h2 class="quiz-question pb-2">{{ result_text.title|sanitize }}</h2>
                 <div class="quiz-result-img">
                     <img id="quizResultImg" src="" alt="">
                 </div>

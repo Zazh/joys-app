@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static catalog_tags i18n %}
+{% load static catalog_tags i18n sanitize %}
 
 {% block title %}{{ meta_title }}{% endblock %}
 
@@ -86,7 +86,7 @@
 
                     {% if product.description %}
                     <div>
-                        <p class="text-sm md:text-base lg:text-sm">{{ product.description|safe }}</p>
+                        <p class="text-sm md:text-base lg:text-sm">{{ product.description|sanitize }}</p>
                     </div>
                     {% endif %}
 
