@@ -856,7 +856,7 @@ function initProductSlider() {
     });
 }
 
-window.addEventListener('load', initProductSlider);
+onReady(initProductSlider);
 
 
 // --------------------------------------------

@@ -50,10 +50,15 @@
         @apply text-xs leading-tight;
     }
 
+    /* Общая геометрия полноэкранных вариантов (dark + fullscreen) */
+    .modal-dark,
+    .modal-fullscreen {
+        @apply min-h-140 flex flex-col;
+    }
+
     /* Dark variant */
     .modal-dark {
-        @apply bg-black text-white flex flex-col
-               min-h-140;
+        @apply bg-black text-white;
     }
     .modal-dark .modal-back,
     .modal-dark .modal-close {
@@ -106,11 +111,6 @@
     }
     .btn-sso svg {
         @apply shrink-0;
-    }
-
-    /* Full-height modal (shared) */
-    .modal-fullscreen {
-        @apply min-h-140 flex flex-col;
     }
 
     /* Quiz */

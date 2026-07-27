@@ -114,7 +114,7 @@ class Product(models.Model):
         verbose_name_plural = 'Товары'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['slug']),
+            # slug: индекс уже есть от unique=True
             models.Index(fields=['is_active', 'category']),
             models.Index(fields=['-created_at']),
         ]
@@ -255,10 +255,8 @@ class RegionPrice(models.Model):
     class Meta:
         verbose_name = 'Цена региона'
         verbose_name_plural = 'Цены регионов'
+        # unique_together уже создаёт составной индекс (size, region)
         unique_together = ['size', 'region']
-        indexes = [
-            models.Index(fields=['size', 'region']),
-        ]
 
     def __str__(self):
         return f'{self.size} — {self.region.code}: {self.price} {self.region.currency_symbol}'
@@ -295,10 +293,8 @@ class Stock(models.Model):
     class Meta:
         verbose_name = 'Остаток'
         verbose_name_plural = 'Остатки'
+        # unique_together уже создаёт составной индекс (size, region)
         unique_together = ['size', 'region']
-        indexes = [
-            models.Index(fields=['size', 'region']),
-        ]
 
     def __str__(self):
         return f'{self.size} — {self.region.code}: {self.available} шт'

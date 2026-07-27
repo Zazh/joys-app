@@ -11,18 +11,13 @@
             <div class="modal-header">
                 {% if not forloop.first %}
                 <button class="modal-back" type="button" aria-label="{% trans 'Назад' %}" data-prev-step="{{ forloop.counter|add:'-1' }}">
-                    <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9.57823 19L11.2245 17.3884L4.44703 10.6663L22 10.6663L22 8.3337L4.44703 8.33371L11.2245 1.63281L9.57823 2.17189e-06L-2.15366e-06 9.5L9.57823 19Z" fill="currentColor"/>
-                    </svg>
+                    {% include 'base/components/icons/_icon_back.html' %}
                 </button>
                 {% else %}
                 <div></div>
                 {% endif %}
                 <button class="modal-close modal-close-interactive" type="button" aria-label="{% trans 'Закрыть' %}">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
+                    {% include 'base/components/icons/_icon_close.html' %}
                 </button>
             </div>
 

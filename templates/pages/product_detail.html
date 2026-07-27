@@ -35,7 +35,7 @@
             <div class="[ product-slider ] w-full aspect-[1/1] lg:aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="4000">
                 {% for img in main_images %}
                 {% localized_img img 'image' as img_url %}
-                <img src="{{ img_url }}" class="slider-image" draggable="false" alt="{{ img.alt_text|default:product.name }}"{% if not forloop.first %} loading="lazy"{% endif %}>
+                <img src="{{ img_url }}" class="slider-image{% if forloop.first %} active{% endif %}" {% if forloop.first %}fetchpriority="high"{% endif %} draggable="false" alt="{{ img.alt_text|default:product.name }}"{% if not forloop.first %} loading="lazy"{% endif %}>
                 {% empty %}
                 <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" draggable="false" alt="{{ product.name }}">
                 {% endfor %}
@@ -222,7 +222,7 @@
         <div class="col-span-full col-start-0 md:col-span-3 lg:col-span-7 xl:col-start-2 xl:col-span-6 flex flex-col">
             <div class="[ product-slider ] w-full h-full aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="2000">
                 {% for img in package_images %}
-                <img src="{{ img.image.url }}" class="slider-image" alt="{{ img.alt_text|default:'Упаковка' }}" loading="lazy">
+                <img src="{{ img.image.url }}" class="slider-image{% if forloop.first %} active{% endif %}" alt="{{ img.alt_text|default:'Упаковка' }}" loading="lazy">
                 {% empty %}
                 <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="Упаковка" loading="lazy">
                 {% endfor %}
@@ -258,7 +258,7 @@
         <div class="col-span-full lg:col-start-9 md:col-span-3 lg:col-span-7 xl:col-start-9 xl:col-span-6 flex flex-col">
             <div class="[ product-slider ] w-full h-full aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="2000">
                 {% for img in individual_images %}
-                <img src="{{ img.image.url }}" class="slider-image" alt="{{ img.alt_text|default:'Индивидуальная упаковка' }}" loading="lazy">
+                <img src="{{ img.image.url }}" class="slider-image{% if forloop.first %} active{% endif %}" alt="{{ img.alt_text|default:'Индивидуальная упаковка' }}" loading="lazy">
                 {% empty %}
                 <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="Индивидуальная упаковка" loading="lazy">
                 {% endfor %}

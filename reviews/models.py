@@ -25,7 +25,7 @@ class Review(models.Model):
 
     objects = ReviewQuerySet.as_manager()
 
-    wb_id = models.CharField('WB ID', max_length=50, unique=True, db_index=True)
+    wb_id = models.CharField('WB ID', max_length=50, unique=True)
     nm_id = models.PositiveBigIntegerField(
         'nmId (артикул WB)', null=True, blank=True, db_index=True,
     )
