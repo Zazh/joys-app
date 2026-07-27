@@ -22,6 +22,7 @@ from .cart import Cart, Favorites
 from emails.service import send_order_created_email
 from .forms import CheckoutForm
 from .gateways import get_gateway, get_gateway_by_code
+from .gateways.base import CallbackRejected
 from .models import Order, OrderItem
 from .serializers import (
     CartAddSerializer, CartRemoveSerializer, CartUpdateSerializer,
@@ -563,8 +564,12 @@ class CheckoutSuccessView(View):
         except Order.DoesNotExist:
             return redirect('/')
 
-        if request.user.is_authenticated and order.user_id and order.user != request.user:
-            return redirect('/')
+        # Номер заказа предсказуем (YYMMDD-NNNN), поэтому страницу нельзя
+        # показывать по одному только номеру — иначе чужие заказы
+        # перебираются подряд.
+        if order.user_id:
+            if not request.user.is_authenticated or order.user_id != request.user.id:
+                return redirect('/')
 
         return render(request, 'orders/checkout_success.html', {
             'order': order,
@@ -625,7 +630,12 @@ class PaymentCallbackView(View):
         except KeyError:
             return HttpResponse('unknown gateway', status=404)
 
-        order, paid = gateway.process_callback(request)
+        try:
+            order, paid = gateway.process_callback(request)
+        except CallbackRejected as e:
+            # Подпись/сумма не сошлись — статус заказа не трогаем
+            logger.error('Callback rejected (%s): %s', gateway_code, e)
+            return HttpResponse('rejected', status=403)
 
         if order and paid and order.status == Order.Status.PENDING:
             order.confirm_payment()

@@ -1,4 +1,4 @@
-from .base import BaseGateway, PaymentResult, PaymentStatus
+from .base import BaseGateway, CallbackRejected, PaymentResult, PaymentStatus
 
 
 def get_gateway(region):

@@ -9,7 +9,7 @@ from django.utils import timezone
 from accounts.models import User
 from catalog.models import Category, Product, ProductSize, Stock
 from orders.gateways import get_gateway, get_gateway_by_code
-from orders.gateways.base import PaymentResult, PaymentStatus
+from orders.gateways.base import CallbackRejected, PaymentResult, PaymentStatus
 from orders.gateways.halyk import HalykGateway
 from orders.gateways.vtb import VTBGateway
 from orders.models import Order, OrderItem
@@ -232,6 +232,22 @@ class HalykGatewayTest(PaymentTestBase):
         self.assertEqual(result._payment_object['currency'], 'KZT')
 
     @patch.object(HalykGateway, '_get_token')
+    def test_invoice_id_is_not_derived_from_order_number(self, mock_token):
+        """invoiceId должен быть случайным — иначе его подберут в callback."""
+        mock_token.return_value = {'access_token': 'test-token-123', 'expires_in': 7200}
+        gw = HalykGateway()
+
+        order_a = self._create_order(region=self.region_kz)
+        order_b = self._create_order(region=self.region_kz)
+        result_a = gw.create_payment(order_a, 'https://site.com/return/', 'https://site.com/callback/')
+        result_b = gw.create_payment(order_b, 'https://site.com/return/', 'https://site.com/callback/')
+
+        self.assertNotEqual(result_a.payment_id, order_a.number.replace('-', ''))
+        self.assertNotEqual(result_a.payment_id, result_b.payment_id)
+        self.assertEqual(len(result_a.payment_id), 15)
+        self.assertTrue(result_a.payment_id.isdigit())
+
+    @patch.object(HalykGateway, '_get_token')
     def test_create_payment_token_failure(self, mock_token):
         mock_token.return_value = None
         order = self._create_order(region=self.region_kz)
@@ -240,27 +256,28 @@ class HalykGatewayTest(PaymentTestBase):
 
         self.assertFalse(result.success)
 
-    def test_process_callback_json_success(self):
-        """Halyk callback: JSON POST с code=ok, reasonCode=0."""
+    def _halyk_callback_request(self, payload, as_json=True):
+        factory = RequestFactory()
+        if as_json:
+            return factory.post(
+                '/orders/payment/callback/halyk/',
+                data=json.dumps(payload),
+                content_type='application/json',
+            )
+        return factory.post('/orders/payment/callback/halyk/', data=payload)
+
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
+    def test_process_callback_json_success(self, mock_verify):
+        """Halyk callback: JSON POST с code=ok, reasonCode=0 и валидной подписью."""
         order = self._create_order(
-            region=self.region_kz, gateway='halyk',
-            payment_id=order_number_to_invoice(self._create_order.__name__),
+            region=self.region_kz, gateway='halyk', payment_id='123456789012345',
         )
-        # Пересоздаём с правильным payment_id
-        invoice_id = order.number.replace('-', '')
-        order.payment_id = invoice_id
-        order.save(update_fields=['payment_id'])
 
-        factory = RequestFactory()
-        request = factory.post(
-            '/orders/payment/callback/halyk/',
-            data=json.dumps({
-                'invoiceId': invoice_id,
-                'code': 'ok',
-                'reasonCode': 0,
-            }),
-            content_type='application/json',
-        )
+        request = self._halyk_callback_request({
+            'invoiceId': '123456789012345',
+            'code': 'ok',
+            'reasonCode': 0,
+        })
 
         gw = HalykGateway()
         result_order, paid = gw.process_callback(request)
@@ -268,23 +285,18 @@ class HalykGatewayTest(PaymentTestBase):
         self.assertEqual(result_order.pk, order.pk)
         self.assertTrue(paid)
 
-    def test_process_callback_json_failure(self):
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
+    def test_process_callback_json_failure(self, mock_verify):
         """Halyk callback: JSON POST с code=error."""
-        order = self._create_order(region=self.region_kz, gateway='halyk')
-        invoice_id = order.number.replace('-', '')
-        order.payment_id = invoice_id
-        order.save(update_fields=['payment_id'])
-
-        factory = RequestFactory()
-        request = factory.post(
-            '/orders/payment/callback/halyk/',
-            data=json.dumps({
-                'invoiceId': invoice_id,
-                'code': 'error',
-                'reasonCode': '1',
-            }),
-            content_type='application/json',
+        order = self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='123456789012346',
         )
+
+        request = self._halyk_callback_request({
+            'invoiceId': '123456789012346',
+            'code': 'error',
+            'reasonCode': '1',
+        })
 
         gw = HalykGateway()
         result_order, paid = gw.process_callback(request)
@@ -292,22 +304,18 @@ class HalykGatewayTest(PaymentTestBase):
         self.assertEqual(result_order.pk, order.pk)
         self.assertFalse(paid)
 
-    def test_process_callback_form_data(self):
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
+    def test_process_callback_form_data(self, mock_verify):
         """Halyk callback: form POST (не JSON)."""
-        order = self._create_order(region=self.region_kz, gateway='halyk')
-        invoice_id = order.number.replace('-', '')
-        order.payment_id = invoice_id
-        order.save(update_fields=['payment_id'])
-
-        factory = RequestFactory()
-        request = factory.post(
-            '/orders/payment/callback/halyk/',
-            data={
-                'invoiceId': invoice_id,
-                'code': 'ok',
-                'reasonCode': '0',
-            },
+        order = self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='123456789012347',
         )
+
+        request = self._halyk_callback_request({
+            'invoiceId': '123456789012347',
+            'code': 'ok',
+            'reasonCode': '0',
+        }, as_json=False)
 
         gw = HalykGateway()
         result_order, paid = gw.process_callback(request)
@@ -315,37 +323,59 @@ class HalykGatewayTest(PaymentTestBase):
         self.assertEqual(result_order.pk, order.pk)
         self.assertTrue(paid)
 
-    def test_process_callback_missing_invoice(self):
-        factory = RequestFactory()
-        request = factory.post(
-            '/orders/payment/callback/halyk/',
-            data=json.dumps({}),
-            content_type='application/json',
+    def test_process_callback_without_signature_is_rejected(self):
+        """Без ключа подписи любой callback должен отклоняться (fail-closed)."""
+        self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='123456789012348',
         )
 
+        request = self._halyk_callback_request({
+            'invoiceId': '123456789012348',
+            'code': 'ok',
+            'reasonCode': 0,
+        })
+
         gw = HalykGateway()
-        result_order, paid = gw.process_callback(request)
+        with self.assertRaises(CallbackRejected):
+            gw.process_callback(request)
 
-        self.assertIsNone(result_order)
-        self.assertFalse(paid)
-
-    def test_process_callback_order_not_found(self):
-        factory = RequestFactory()
-        request = factory.post(
-            '/orders/payment/callback/halyk/',
-            data=json.dumps({
-                'invoiceId': 'nonexistent',
-                'code': 'ok',
-                'reasonCode': 0,
-            }),
-            content_type='application/json',
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
+    def test_process_callback_amount_mismatch_is_rejected(self, mock_verify):
+        """Оплата на меньшую сумму не должна закрывать заказ."""
+        self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='123456789012349',
         )
 
-        gw = HalykGateway()
-        result_order, paid = gw.process_callback(request)
+        request = self._halyk_callback_request({
+            'invoiceId': '123456789012349',
+            'code': 'ok',
+            'reasonCode': 0,
+            'amount': 1,
+        })
 
-        self.assertIsNone(result_order)
-        self.assertFalse(paid)
+        gw = HalykGateway()
+        with self.assertRaises(CallbackRejected):
+            gw.process_callback(request)
+
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
+    def test_process_callback_missing_invoice(self, mock_verify):
+        request = self._halyk_callback_request({})
+
+        gw = HalykGateway()
+        with self.assertRaises(CallbackRejected):
+            gw.process_callback(request)
+
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
+    def test_process_callback_order_not_found(self, mock_verify):
+        request = self._halyk_callback_request({
+            'invoiceId': 'nonexistent',
+            'code': 'ok',
+            'reasonCode': 0,
+        })
+
+        gw = HalykGateway()
+        with self.assertRaises(CallbackRejected):
+            gw.process_callback(request)
 
     def test_check_status_from_db(self):
         """Halyk check_status читает статус из БД (нет серверного API)."""
@@ -468,17 +498,17 @@ class PaymentCallbackViewTest(PaymentTestBase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
 
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
     @patch('emails.service.send_payment_confirmed_email')
-    def test_halyk_callback_json_confirms_payment(self, mock_email):
-        order = self._create_order(region=self.region_kz, gateway='halyk')
-        invoice_id = order.number.replace('-', '')
-        order.payment_id = invoice_id
-        order.save(update_fields=['payment_id'])
+    def test_halyk_callback_json_confirms_payment(self, mock_email, mock_verify):
+        order = self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='223456789012345',
+        )
 
         response = self.client.post(
             '/orders/payment/callback/halyk/',
             data=json.dumps({
-                'invoiceId': invoice_id,
+                'invoiceId': '223456789012345',
                 'code': 'ok',
                 'reasonCode': 0,
             }),
@@ -490,17 +520,17 @@ class PaymentCallbackViewTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PAID)
         mock_email.assert_called_once()
 
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
     @patch('emails.service.send_payment_confirmed_email')
-    def test_halyk_callback_form_confirms_payment(self, mock_email):
-        order = self._create_order(region=self.region_kz, gateway='halyk')
-        invoice_id = order.number.replace('-', '')
-        order.payment_id = invoice_id
-        order.save(update_fields=['payment_id'])
+    def test_halyk_callback_form_confirms_payment(self, mock_email, mock_verify):
+        order = self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='223456789012346',
+        )
 
         response = self.client.post(
             '/orders/payment/callback/halyk/',
             data={
-                'invoiceId': invoice_id,
+                'invoiceId': '223456789012346',
                 'code': 'ok',
                 'reasonCode': '0',
             },
@@ -510,16 +540,16 @@ class PaymentCallbackViewTest(PaymentTestBase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PAID)
 
-    def test_halyk_callback_error_stays_pending(self):
-        order = self._create_order(region=self.region_kz, gateway='halyk')
-        invoice_id = order.number.replace('-', '')
-        order.payment_id = invoice_id
-        order.save(update_fields=['payment_id'])
+    @patch.object(HalykGateway, '_verify_signature', return_value=True)
+    def test_halyk_callback_error_stays_pending(self, mock_verify):
+        order = self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='223456789012347',
+        )
 
         response = self.client.post(
             '/orders/payment/callback/halyk/',
             data=json.dumps({
-                'invoiceId': invoice_id,
+                'invoiceId': '223456789012347',
                 'code': 'error',
                 'reasonCode': 1,
             }),
@@ -527,6 +557,28 @@ class PaymentCallbackViewTest(PaymentTestBase):
         )
 
         self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+
+    def test_halyk_callback_forged_is_rejected_and_order_stays_pending(self):
+        """Подделанный callback без подписи → 403, заказ не меняется.
+
+        Это ровно тот сценарий, которым можно было получить товар бесплатно.
+        """
+        order = self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='223456789012348',
+        )
+
+        response = self.client.post(
+            '/orders/payment/callback/halyk/',
+            data={
+                'invoiceId': '223456789012348',
+                'code': 'ok',
+                'reasonCode': '0',
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
 

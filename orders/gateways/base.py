@@ -1,6 +1,14 @@
 from dataclasses import dataclass, field
 
 
+class CallbackRejected(Exception):
+    """Callback от шлюза не прошёл проверку подлинности.
+
+    Бросается, если подпись невалидна, сумма не совпала или шлюз
+    не настроен. View обязан ответить 4xx и не менять статус заказа.
+    """
+
+
 @dataclass
 class PaymentResult:
     """Результат создания платежа в шлюзе."""
