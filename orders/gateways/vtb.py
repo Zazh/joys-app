@@ -1,5 +1,8 @@
 import logging
+import os
+import tempfile
 
+import certifi
 import requests
 from django.conf import settings
 
@@ -7,6 +10,26 @@ from orders.models import Order
 from .base import BaseGateway, PaymentResult, PaymentStatus
 
 logger = logging.getLogger(__name__)
+
+# Шлюз ВТБ может перейти на TLS-сертификаты Минцифры (Russian Trusted CA),
+# которых нет в бандле certifi. Доверяем им только в запросах к ВТБ:
+# собираем объединённый бандл certifi + certs/*.crt и передаём его в verify=.
+_CERTS_DIR = os.path.join(os.path.dirname(__file__), 'certs')
+_ca_bundle_path = None
+
+
+def _ca_bundle():
+    global _ca_bundle_path
+    if _ca_bundle_path is None or not os.path.exists(_ca_bundle_path):
+        parts = [open(certifi.where()).read()]
+        for name in sorted(os.listdir(_CERTS_DIR)):
+            if name.endswith(('.crt', '.pem')):
+                parts.append(open(os.path.join(_CERTS_DIR, name)).read())
+        fd, path = tempfile.mkstemp(prefix='vtb_ca_bundle_', suffix='.pem')
+        with os.fdopen(fd, 'w') as f:
+            f.write('\n'.join(parts))
+        _ca_bundle_path = path
+    return _ca_bundle_path
 
 # ISO 4217 numeric codes
 CURRENCY_NUMERIC = {
@@ -34,7 +57,7 @@ class VTBGateway(BaseGateway):
         params['password'] = self.password
         url = f'{self.base_url}/{method}'
         try:
-            resp = requests.post(url, data=params, timeout=30)
+            resp = requests.post(url, data=params, timeout=30, verify=_ca_bundle())
             resp.raise_for_status()
             return resp.json()
         except requests.RequestException as e:
