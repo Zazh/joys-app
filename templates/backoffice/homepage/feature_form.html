@@ -133,11 +133,24 @@
             <!-- Видео (показываем только если media_type = video) -->
             <div x-show="mediaType === 'video'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                 <div>
-                    <label class="block text-xs text-stone-500 mb-1">Видео (MP4)</label>
+                    <label class="block text-xs text-stone-500 mb-1">Видео (десктоп, MP4)</label>
                     {% if slide.video %}
                     <p class="text-[10px] text-green-600 mb-1">Загружено</p>
                     {% endif %}
                     <input type="file" name="video" accept="video/mp4" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Видео (мобильное, опционально)</label>
+                    {% if slide.video_mobile %}
+                    <p class="text-[10px] text-green-600 mb-1">Загружено</p>
+                    <label class="flex items-center gap-1 text-[10px] text-red-500 mb-1">
+                        <input type="checkbox" name="clear_video_mobile" class="rounded border-stone-300">
+                        Удалить мобильную версию
+                    </label>
+                    {% else %}
+                    <p class="text-[10px] text-stone-400 mb-1">Не задано — будет использовано десктопное. У горизонтального видео на узкой карточке обрежутся бока: загрузите вертикальный кроп (9:16).</p>
+                    {% endif %}
+                    <input type="file" name="video_mobile" accept="video/mp4" class="w-full text-xs file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-stone-100 file:text-stone-700 file:text-xs">
                 </div>
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Обложка видео</label>

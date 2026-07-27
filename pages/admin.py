@@ -116,7 +116,7 @@ class FeatureSlideAdmin(TabbedTranslationAdmin):
             'fields': ('title', 'text', 'text_color', 'order', 'is_active'),
         }),
         ('Медиа', {
-            'fields': ('media_type', 'image', 'image_mobile', 'video', 'video_poster'),
+            'fields': ('media_type', 'image', 'image_mobile', 'video', 'video_mobile', 'video_poster'),
         }),
     )
 

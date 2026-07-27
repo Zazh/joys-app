@@ -259,8 +259,14 @@ class FeatureSlide(models.Model):
         help_text='Опционально. Если не указана — используется десктопная.',
     )
     video = models.FileField(
-        'Видео', upload_to='features/videos/', blank=True,
-        help_text='MP4 видео для фона слайда',
+        'Видео (десктоп)', upload_to='features/videos/', blank=True,
+        help_text='MP4 видео для фона слайда. Используется на десктопе и как фолбэк для мобильных.',
+    )
+    video_mobile = models.FileField(
+        'Видео (мобильное)', upload_to='features/videos/mobile/', blank=True,
+        help_text='Опционально. Вертикальный кроп для мобильных. Если не указано — '
+                  'используется десктопное, но у горизонтального видео на узкой карточке '
+                  'будут обрезаны бока.',
     )
     video_poster = models.ImageField(
         'Обложка видео', upload_to='features/posters/', blank=True,

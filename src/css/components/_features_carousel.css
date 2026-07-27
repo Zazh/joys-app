@@ -100,6 +100,18 @@
         @apply px-8;
     }
 
+    /* Карточка выше на 20%: 31.25rem → 37.5rem */
+    .features-card {
+        @apply h-[37.5rem];
+    }
+
+    /* Видео: кадр по центру. У картинок есть мобильная версия (image_mobile),
+       а у видео одна горизонтальная — при object-position: right bottom
+       на узкой карточке был виден только правый край кадра. */
+    video.features-bg-img {
+        @apply object-center;
+    }
+
     .features-carousel > .features-card {
         scroll-snap-align: start;
     }

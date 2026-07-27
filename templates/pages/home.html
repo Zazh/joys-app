@@ -177,7 +177,7 @@
             </div>
             <div class="absolute inset-0 z-0">
                 {% if slide.media_type == 'video' and slide.video %}
-                <video class="features-bg-img" muted loop playsinline preload="none"{% if slide.video_poster %} poster="{{ slide.video_poster.url }}"{% endif %}>
+                <video class="features-bg-img" muted loop playsinline preload="none"{% if slide.video_mobile %} data-video-mobile="{{ slide.video_mobile.url }}"{% endif %}{% if slide.video_poster %} poster="{{ slide.video_poster.url }}"{% endif %}>
                     <source src="{{ slide.video.url }}" type="video/mp4">
                 </video>
                 {% elif slide.image %}
@@ -396,7 +396,7 @@
         <div class="flex flex-wrap gap-5 md:gap-10 shadow-[0_0_120px_30px_rgba(0,0,0,0.9)] bg-[#00000094] rounded-full">
             <div class="w-full lg:pt-8 text-white text-center">
                 <h2 class="text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
-                    {% if tattoo_promo %}{{ tattoo_promo.title|linebreaksbr }}{% else %}<span class="block">Пожизненный</span><span class="block">запас DR.JOYS</span><span class="block">за татуировку</span>{% endif %}
+                    {% if tattoo_promo %}{{ tattoo_promo.title|safe|linebreaksbr }}{% else %}<span class="block">Пожизненный</span><span class="block">запас DR.JOYS</span><span class="block">за татуировку</span>{% endif %}
                 </h2>
                 <p class="text-sm lg:text-xl leading-tight pt-5 lg:pt-10">{% if tattoo_promo %}{{ tattoo_promo.text }}{% else %}DR.JOYS для смелых. Наша миссия - ломать стереотипы и выйти за пределы стандартов и рамок, навязанных обществом.{% endif %}</p>
             </div>
@@ -650,6 +650,34 @@
         let isVisible = false;
         let autoplayInterval;
         let isDragging = false;
+
+        // Мобильная версия видео.
+        // <video> не поддерживает <source media="...">, в отличие от <picture> —
+        // браузеры этот атрибут игнорируют, поэтому источник выбираем здесь.
+        // Загрузки в два файла нет: у видео preload="none", реальная загрузка
+        // начинается только когда слайд становится активным и вызывается play().
+        const mobileMq = window.matchMedia('(max-width: 1023px)');
+
+        const applyVideoSource = () => {
+            cards.forEach(card => {
+                const video = card.querySelector('video');
+                const mobileSrc = video?.dataset.videoMobile;
+                if (!video || !mobileSrc) return;
+
+                const source = video.querySelector('source');
+                if (!source.dataset.srcDesktop) {
+                    source.dataset.srcDesktop = source.getAttribute('src');
+                }
+                const wanted = mobileMq.matches ? mobileSrc : source.dataset.srcDesktop;
+                if (source.getAttribute('src') === wanted) return;
+
+                source.setAttribute('src', wanted);
+                video.load();
+            });
+        };
+
+        applyVideoSource();
+        mobileMq.addEventListener('change', applyVideoSource);
 
         // Scroll to card
         const scrollToCard = (index) => {

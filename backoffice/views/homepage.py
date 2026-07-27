@@ -155,6 +155,10 @@ class FeatureSlideEditView(BackofficeAccessMixin, View):
             slide.image_mobile = ''
         if 'video' in request.FILES:
             slide.video = request.FILES['video']
+        if 'video_mobile' in request.FILES:
+            slide.video_mobile = request.FILES['video_mobile']
+        if request.POST.get('clear_video_mobile') == 'on':
+            slide.video_mobile = ''
         if 'video_poster' in request.FILES:
             slide.video_poster = request.FILES['video_poster']
 
