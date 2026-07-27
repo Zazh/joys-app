@@ -6,6 +6,9 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
+from reviews.management.commands.rotate_featured_reviews import (
+    NEGATIVE_LIMIT, POSITIVE_LIMIT,
+)
 from reviews.models import Review
 
 
@@ -156,14 +159,14 @@ class RotateFeaturedReviewsTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         now = timezone.now()
-        # 40 положительных с текстом (rating 5)
-        for i in range(40):
+        # Кандидатов заведомо больше лимита, иначе тест проверял бы
+        # не отбор, а нехватку данных
+        for i in range(POSITIVE_LIMIT + 10):
             Review.objects.create(
                 wb_id=f'pos-{i}', rating=5, wb_created_at=now,
                 text=f'Положительный отзыв номер {i}, хороший товар',
             )
-        # 25 отрицательных с текстом (rating 2)
-        for i in range(25):
+        for i in range(NEGATIVE_LIMIT + 5):
             Review.objects.create(
                 wb_id=f'neg-{i}', rating=2, wb_created_at=now,
                 text=f'Отрицательный отзыв номер {i}, плохой товар',
@@ -179,16 +182,19 @@ class RotateFeaturedReviewsTest(TestCase):
         call_command('rotate_featured_reviews', seed=seed, stdout=out)
         return out.getvalue()
 
-    def test_creates_30_positive_20_negative(self):
+    def test_creates_positive_and_negative_by_limits(self):
         self._rotate()
         pos = Review.objects.filter(is_featured=True, rating__gte=4).count()
         neg = Review.objects.filter(is_featured=True, rating__lt=4).count()
-        self.assertEqual(pos, 30)
-        self.assertEqual(neg, 20)
+        self.assertEqual(pos, POSITIVE_LIMIT)
+        self.assertEqual(neg, NEGATIVE_LIMIT)
 
-    def test_total_featured_50(self):
+    def test_total_featured_matches_limits(self):
         self._rotate()
-        self.assertEqual(Review.objects.filter(is_featured=True).count(), 50)
+        self.assertEqual(
+            Review.objects.filter(is_featured=True).count(),
+            POSITIVE_LIMIT + NEGATIVE_LIMIT,
+        )
 
     def test_same_seed_same_result(self):
         self._rotate(seed='day-1')
@@ -217,8 +223,9 @@ class RotateFeaturedReviewsTest(TestCase):
         self.assertNotEqual(ids_1, ids_2)
 
     def test_pinned_always_included(self):
-        # Закрепляем 5 положительных вручную
-        pinned = Review.objects.filter(rating=5)[:5]
+        # Закрепляем 5 положительных вручную. Берём только с текстом:
+        # пустые в ротацию не попадают и тест бы падал через раз
+        pinned = Review.objects.with_content().filter(rating=5)[:5]
         pinned_ids = set(pinned.values_list('id', flat=True))
         Review.objects.filter(id__in=pinned_ids).update(
             is_pinned=True, is_featured=True,
@@ -232,16 +239,16 @@ class RotateFeaturedReviewsTest(TestCase):
         # Все pinned должны быть в featured
         self.assertTrue(pinned_ids.issubset(featured_ids))
 
-        # Положительных всё ещё 30 (5 pinned + 25 random)
+        # Закреплённые занимают места в лимите, а не добавляются сверх него
         pos = Review.objects.filter(is_featured=True, rating__gte=4).count()
-        self.assertEqual(pos, 30)
+        self.assertEqual(pos, POSITIVE_LIMIT)
 
         # Cleanup
         Review.objects.filter(id__in=pinned_ids).update(is_pinned=False)
 
     def test_pinned_negative_reduces_random(self):
         # Закрепляем 8 отрицательных
-        pinned = Review.objects.filter(rating=2)[:8]
+        pinned = Review.objects.with_content().filter(rating=2)[:8]
         pinned_ids = set(pinned.values_list('id', flat=True))
         Review.objects.filter(id__in=pinned_ids).update(
             is_pinned=True, is_featured=True,
@@ -250,7 +257,7 @@ class RotateFeaturedReviewsTest(TestCase):
         self._rotate()
 
         neg = Review.objects.filter(is_featured=True, rating__lt=4).count()
-        self.assertEqual(neg, 20)  # 8 pinned + 12 random = 20
+        self.assertEqual(neg, NEGATIVE_LIMIT)  # 8 pinned + остальные случайные
 
         # Cleanup
         Review.objects.filter(id__in=pinned_ids).update(is_pinned=False)
