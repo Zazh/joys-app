@@ -51,7 +51,8 @@
                     <div class="product-card_picture" data-images-count="{{ product.main_images.all|length }}">
                         {% for img in product.main_images.all %}
                         {% if img.thumbnail %}{% localized_img img 'thumbnail' as card_img_url %}{% else %}{% localized_img img 'image' as card_img_url %}{% endif %}
-                        <img src="{{ card_img_url }}" class="product-image" alt="{{ img.alt_text|default:product.name }}" loading="lazy">
+                        {# Грузим сразу только обложку; остальные — по первому hover/touch (JS) #}
+                        <img {% if forloop.first %}src="{{ card_img_url }}"{% else %}data-src="{{ card_img_url }}"{% endif %} class="product-image" alt="{{ img.alt_text|default:product.name }}" loading="lazy">
                         {% empty %}
                         <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="{{ product.name }}" loading="lazy">
                         {% endfor %}
@@ -96,6 +97,18 @@
             </div>
             {% endfor %}
         </div>
+
+        {% if is_paginated %}
+        <div class="col-span-full lg:col-span-14 flex justify-center items-center gap-6 pb-12">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn-cat font-benzin">{% trans "Назад" %}</a>
+            {% endif %}
+            <span class="text-sm text-stone-400">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="btn-cat font-benzin">{% trans "Вперёд" %}</a>
+            {% endif %}
+        </div>
+        {% endif %}
 
         <div class="col-span-full lg:col-span-9 lg:col-start-2 px-4 lg:px-0">
             {% if faqs %}

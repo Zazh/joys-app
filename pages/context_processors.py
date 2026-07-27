@@ -1,8 +1,11 @@
+from django.core.cache import cache
+
 from pages.models import MenuItem, PageCategory
 
+NAV_CACHE_KEY = 'navigation_data'
 
-def navigation(request):
-    """Меню + legal pages — один раз для header и footer."""
+
+def _build_navigation():
     main_menu = list(
         MenuItem.objects
         .filter(is_active=True)
@@ -22,3 +25,8 @@ def navigation(request):
         'main_menu': main_menu,
         'legal_pages': legal_pages,
     }
+
+
+def navigation(request):
+    """Меню + legal pages — кеш 10 минут, сброс по сигналам в pages.apps."""
+    return cache.get_or_set(NAV_CACHE_KEY, _build_navigation, 600)

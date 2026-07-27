@@ -33,48 +33,54 @@ logger = logging.getLogger(__name__)
 
 # ─── Корзина ───
 
+def serialize_cart(cart):
+    """Полный payload корзины: один проход get_items, без повторных запросов."""
+    items = cart.get_items()
+    cart_total = Decimal('0')
+    cart_old_total = Decimal('0')
+    cart_count = 0
+    serialized = []
+    for item in items:
+        cart_total += item['subtotal']
+        old_p = item['old_price'] or item['price']
+        cart_old_total += old_p * item['qty']
+        cart_count += item['qty']
+        s = {
+            'size_id': item['size_id'],
+            'qty': item['qty'],
+            'name': item['name'],
+            'size_name': item['size_name'],
+            'sku': item['sku'],
+            'price': str(item['price']),
+            'old_price': str(item['old_price']) if item['old_price'] else None,
+            'subtotal': str(item['subtotal']),
+            'image_url': item['image_url'],
+            'product_url': item['product_url'],
+        }
+        if 'payment_price' in item:
+            s['payment_price'] = str(item['payment_price'])
+            s['payment_subtotal'] = str(item['payment_subtotal'])
+        serialized.append(s)
+
+    resp = {
+        'ok': True,
+        'items': serialized,
+        'cart_total': str(cart_total),
+        'cart_old_total': str(cart_old_total),
+        'cart_count': cart_count,
+    }
+    payment_total = cart.get_payment_total(cart_total)
+    if payment_total != cart_total:
+        resp['payment_total'] = str(payment_total)
+    return resp
+
+
 class CartView(APIView):
     """GET — содержимое корзины."""
 
     @extend_schema(summary='Получить корзину')
     def get(self, request):
-        cart = Cart(request)
-        items = cart.get_items()
-        cart_total = Decimal('0')
-        cart_old_total = Decimal('0')
-        serialized = []
-        for item in items:
-            cart_total += item['subtotal']
-            old_p = item['old_price'] or item['price']
-            cart_old_total += old_p * item['qty']
-            s = {
-                'size_id': item['size_id'],
-                'qty': item['qty'],
-                'name': item['name'],
-                'size_name': item['size_name'],
-                'sku': item['sku'],
-                'price': str(item['price']),
-                'old_price': str(item['old_price']) if item['old_price'] else None,
-                'subtotal': str(item['subtotal']),
-                'image_url': item['image_url'],
-                'product_url': item['product_url'],
-            }
-            if 'payment_price' in item:
-                s['payment_price'] = str(item['payment_price'])
-                s['payment_subtotal'] = str(item['payment_subtotal'])
-            serialized.append(s)
-
-        resp = {
-            'ok': True,
-            'items': serialized,
-            'cart_total': str(cart_total),
-            'cart_old_total': str(cart_old_total),
-            'cart_count': len(cart),
-        }
-        payment_total = cart.get_payment_total()
-        if payment_total != cart_total:
-            resp['payment_total'] = str(payment_total)
-        return Response(resp)
+        return Response(serialize_cart(Cart(request)))
 
 
 class CartAddView(APIView):
@@ -126,7 +132,8 @@ class CartRemoveView(APIView):
         cart = Cart(request)
         cart.remove(serializer.validated_data['size_id'])
 
-        return Response({'ok': True, 'cart_count': len(cart)})
+        # Полный payload — фронт перерисовывает корзину без второго GET
+        return Response(serialize_cart(cart))
 
 
 class CartUpdateView(APIView):
@@ -144,15 +151,8 @@ class CartUpdateView(APIView):
         cart = Cart(request)
         cart.update(size_id, qty)
 
-        items = cart.get_items()
-        cart_total = sum(i['subtotal'] for i in items)
-
-        return Response({
-            'ok': True,
-            'cart_count': len(cart),
-            'item': cart.get_item(size_id),
-            'cart_total': str(cart_total),
-        })
+        # Полный payload — фронт перерисовывает корзину без второго GET
+        return Response(serialize_cart(cart))
 
 
 # ─── Избранное ───
@@ -293,7 +293,7 @@ class CheckoutView(View):
             'is_authenticated': request.user.is_authenticated,
         }
         if request.region and request.region.needs_conversion:
-            ctx['payment_total'] = cart.get_payment_total()
+            ctx['payment_total'] = cart.get_payment_total(cart_total)
         return render(request, 'orders/checkout.html', ctx)
 
     def post(self, request):

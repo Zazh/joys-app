@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.middleware.PerformanceMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'redirects.middleware.RedirectMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -85,6 +86,7 @@ TEMPLATES = [
                 'orders.context_processors.cart_context',
                 'backoffice.context_processors.backoffice_badges',
                 'pages.context_processors.navigation',
+                'core.context_processors.analytics',
             ],
         },
     },
@@ -100,16 +102,33 @@ DATABASES = {
         'PASSWORD': os.environ['DB_PASSWORD'],
         'HOST': os.environ['DB_HOST'],
         'PORT': os.environ['DB_PORT'],
+        # Переиспользуем соединения между запросами вместо TCP+auth на каждый
+        'CONN_MAX_AGE': 60,
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 
-# Cache — используется для rate limiting
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'drjoys-cache',
+# Cache: Redis если задан REDIS_URL, иначе LocMem (только dev/fallback —
+# LocMem не шарится между gunicorn-воркерами)
+REDIS_URL = os.environ.get('REDIS_URL', '')
+
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'drjoys-cache',
+        }
+    }
+
+# Сессии: кеш поверх БД — SELECT django_session только при промахе кеша
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -177,6 +196,9 @@ ADMIN_URL = os.environ['ADMIN_URL']
 
 # Wildberries API
 WB_API_TOKEN = os.environ.get('WB_API_TOKEN', '')
+
+# Google Analytics 4 — счётчик подключается в base.html только если ID задан
+GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '')
 
 # -----------------------------------------------
 # django-allauth (SSO: Google, Yandex)

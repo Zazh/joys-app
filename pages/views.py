@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.views.generic import DetailView, ListView, TemplateView
 
 from django.db.models import Avg, Count, Q, Value
@@ -66,7 +67,18 @@ class HomeView(TemplateView):
             .order_by('order')
         )
         ctx['result_text'] = QuizResultText.load()
-        # Отзывы: статистика + избранные
+        # Отзывы: кеш на сутки — данные меняются только ежедневной
+        # командой rotate_featured_reviews, она же сбрасывает кеш
+        ctx['review_stats'] = cache.get_or_set(
+            'home_review_stats', self._build_review_stats, 60 * 60 * 24,
+        )
+        ctx['featured_reviews'] = cache.get_or_set(
+            'home_featured_reviews', self._build_featured_reviews, 60 * 60 * 24,
+        )
+        return ctx
+
+    @staticmethod
+    def _build_review_stats():
         stats = Review.objects.aggregate(
             avg_rating=Avg('rating'),
             total_count=Count('id'),
@@ -76,17 +88,20 @@ class HomeView(TemplateView):
         total = stats['total_count'] or 1
         stats['negative_percent'] = round(stats['negative_count'] / total * 100, 1)
         stats['avg_rating'] = round(stats['avg_rating'] or 0, 1)
-        ctx['review_stats'] = stats
+        return stats
+
+    @staticmethod
+    def _build_featured_reviews():
         featured = list(
             Review.objects
             .with_content()
-            .filter(is_featured=True)
+            .filter(is_featured=True, is_excluded=False)
             .annotate(
                 _content_len=Coalesce(Length('text'), Value(0))
                 + Coalesce(Length('pros'), Value(0))
                 + Coalesce(Length('cons'), Value(0)),
             )
-            .order_by('-_content_len', '-wb_created_at')
+            .order_by('-_content_len', '-wb_created_at')[:12]
         )
         if len(featured) >= 3:
             def _clen(r):
@@ -101,8 +116,7 @@ class HomeView(TemplateView):
                     if _clen(featured[i]) >= 40:
                         featured[-1], featured[i] = featured[i], featured[-1]
                         break
-        ctx['featured_reviews'] = featured
-        return ctx
+        return featured
 
 
 class PageCategoryDetailView(DetailView):

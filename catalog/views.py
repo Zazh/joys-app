@@ -12,6 +12,7 @@ class CatalogListView(ListView):
     model = Product
     template_name = 'pages/catalog.html'
     context_object_name = 'products'
+    paginate_by = 24
 
     def get_queryset(self):
         region = getattr(self.request, 'region', None)
@@ -39,16 +40,18 @@ class CatalogListView(ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        categories = Category.objects.filter(is_active=True)
-        category_count = categories.count()
-        single_category = categories.first() if category_count == 1 else None
+        # Один запрос вместо count/first/get по одной и той же таблице
+        categories = list(Category.objects.filter(is_active=True))
+        category_count = len(categories)
+        single_category = categories[0] if category_count == 1 else None
 
         category_slug = self.kwargs.get('category_slug')
         current_category = None
         if category_slug:
-            try:
-                current_category = categories.get(slug=category_slug)
-            except Category.DoesNotExist:
+            current_category = next(
+                (c for c in categories if c.slug == category_slug), None,
+            )
+            if current_category is None:
                 raise Http404
         elif single_category:
             current_category = single_category

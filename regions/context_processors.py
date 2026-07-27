@@ -1,4 +1,10 @@
+from django.core.cache import cache
+
 from .models import Region
+
+
+def _load_regions():
+    return list(Region.objects.filter(is_active=True))
 
 
 def region_context(request):
@@ -12,5 +18,5 @@ def region_context(request):
         'payment_currency_symbol': region.payment_currency_symbol if region and region.needs_conversion else '',
         'needs_conversion': region.needs_conversion if region else False,
         'show_region_modal': getattr(request, 'show_region_modal', False),
-        'all_regions': Region.objects.filter(is_active=True),
+        'all_regions': cache.get_or_set('all_regions', _load_regions, 600),
     }

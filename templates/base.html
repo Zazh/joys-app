@@ -45,7 +45,65 @@
     <script type="application/ld+json">{{ jsonld_str|safe }}</script>
     {% endfor %}
 
+    <!-- Шрифты первого экрана: preload, чтобы текст появился сразу -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{% static 'dist/fonts/SF-Pro-Display-Regular.woff2' %}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{% static 'dist/fonts/Benzin-Bold.woff2' %}">
+
     <link rel="stylesheet" href="{% static 'dist/css/styles.css' %}">
+
+    {% if GA_MEASUREMENT_ID %}
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ GA_MEASUREMENT_ID }}"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ GA_MEASUREMENT_ID }}');
+
+    // RUM: Web Vitals + время бэкенда (заголовок Server-Timing) → события GA4.
+    // Метрики уходят одним пакетом при уходе со страницы.
+    (function () {
+        var vitals = {};
+        try {
+            var nav = performance.getEntriesByType('navigation')[0];
+            if (nav) {
+                vitals.ttfb = Math.round(nav.responseStart);
+                (nav.serverTiming || []).forEach(function (st) {
+                    if (st.name === 'app') vitals.backend = Math.round(st.duration);
+                    if (st.name === 'db') vitals.db = Math.round(st.duration);
+                });
+            }
+            new PerformanceObserver(function (l) {
+                var e = l.getEntries();
+                if (e.length) vitals.lcp = Math.round(e[e.length - 1].startTime);
+            }).observe({type: 'largest-contentful-paint', buffered: true});
+            var cls = 0;
+            new PerformanceObserver(function (l) {
+                l.getEntries().forEach(function (e) { if (!e.hadRecentInput) cls += e.value; });
+                vitals.cls = Math.round(cls * 1000); // 123 = CLS 0.123
+            }).observe({type: 'layout-shift', buffered: true});
+            var inp = 0;
+            new PerformanceObserver(function (l) {
+                l.getEntries().forEach(function (e) { if (e.duration > inp) inp = e.duration; });
+                vitals.inp = Math.round(inp);
+            }).observe({type: 'event', buffered: true, durationThreshold: 40});
+        } catch (e) {}
+
+        var sent = false;
+        function sendVitals() {
+            if (sent) return;
+            sent = true;
+            Object.keys(vitals).forEach(function (name) {
+                gtag('event', 'perf_' + name, {value: vitals[name], non_interaction: true});
+            });
+        }
+        addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') sendVitals();
+        });
+        addEventListener('pagehide', sendVitals);
+    })();
+    </script>
+    {% endif %}
 </head>
 <body>
 <!-- BEGIN nav_wrapper: фиксированная обёртка шапки + меню, z-50 -->

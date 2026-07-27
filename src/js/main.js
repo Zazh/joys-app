@@ -2,6 +2,16 @@
 // MAIN.JS - Общие скрипты для всего сайта
 // ============================================
 
+// Инициализация после построения DOM — не ждём загрузки картинок и шрифтов
+// (window 'load' оставлен только там, где меряются размеры картинок)
+function onReady(fn) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fn);
+    } else {
+        fn();
+    }
+}
+
 // --------------------------------------------
 // 0. УНИВЕРСАЛЬНЫЕ УТИЛИТЫ МОДАЛОК
 // --------------------------------------------
@@ -149,7 +159,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Инициализация масок телефона при загрузке
-window.addEventListener('load', initPhoneMasks);
+onReady(initPhoneMasks);
 
 // --------------------------------------------
 // 1. БУРГЕР-МЕНЮ
@@ -204,7 +214,7 @@ function initMobileMenu() {
     window._closeMenu = closeMenu;
 }
 
-window.addEventListener('load', initMobileMenu);
+onReady(initMobileMenu);
 
 // --------------------------------------------
 // 2. ДИНАМИЧЕСКИЙ GAP ДЛЯ СЕТКИ КАРТОЧЕК
@@ -262,6 +272,19 @@ function initProductImageSlider() {
         if (imagesCount === 0) return;
         if (imagesCount === 1) { images[0].classList.add('active'); return; }
 
+        // Не-первые фото отрендерены с data-src — грузим при первом наведении/касании
+        let hydrated = false;
+        function hydrateImages() {
+            if (hydrated) return;
+            hydrated = true;
+            images.forEach(img => {
+                if (img.dataset.src && !img.getAttribute('src')) {
+                    img.src = img.dataset.src;
+                }
+            });
+        }
+        card.addEventListener('mouseenter', hydrateImages, { once: true });
+
         // Создаем индикаторы автоматически
         const indicatorsContainer = card.querySelector('.product-indicators');
         indicatorsContainer.innerHTML = ''; // Очищаем на всякий случай
@@ -317,6 +340,7 @@ function initProductImageSlider() {
         // МОБИЛЬНЫЕ: Свайпы влево/вправо
         // ==========================================
         card.addEventListener('touchstart', (e) => {
+            hydrateImages();
             touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
 
@@ -341,7 +365,7 @@ function initProductImageSlider() {
     });
 }
 
-window.addEventListener('load', initProductImageSlider);
+onReady(initProductImageSlider);
 
 // --------------------------------------------
 // 4. АНИМАЦИЯ БИЕНИЯ СЕРДЦА С КУЛЬМИНАЦИЕЙ
@@ -441,7 +465,7 @@ function initHeartbeat() {
     });
 }
 
-window.addEventListener('load', initHeartbeat);
+onReady(initHeartbeat);
 
 // --------------------------------------------
 // 5. FAQ АККОРДЕОН
@@ -497,7 +521,7 @@ function initFAQ() {
     });
 }
 
-window.addEventListener('load', initFAQ);
+onReady(initFAQ);
 
 // --------------------------------------------
 // 6. ДОБАВИТЬ В КОРЗИНУ - ВЫПАДАЮЩИЙ СПИСОК
@@ -552,7 +576,7 @@ function initAddToCart() {
     });
 }
 
-window.addEventListener('load', initAddToCart);
+onReady(initAddToCart);
 
 // --------------------------------------------
 // 8. СЛАЙДЕР ПРОДУКТА С АВТОПРОКРУТКОЙ
@@ -931,7 +955,7 @@ function initDragCarousel() {
     });
 }
 
-window.addEventListener('load', initDragCarousel);
+onReady(initDragCarousel);
 
 // ============================================
 // SHOP — МОДАЛКИ МАГАЗИНА
@@ -950,7 +974,7 @@ function initFloatingNav() {
     });
 }
 
-window.addEventListener('load', initFloatingNav);
+onReady(initFloatingNav);
 
 // --------------------------------------------
 // 11. PRODUCT BUY — размеры + добавление в корзину (API)
@@ -1114,7 +1138,7 @@ function initProductBuy() {
     }
 }
 
-window.addEventListener('load', initProductBuy);
+onReady(initProductBuy);
 
 // --------------------------------------------
 // 12. ORDER QUANTITY — счётчик + цена (API-aware)
@@ -1187,7 +1211,7 @@ function updateOrderTotal() {
     totalEl.textContent = total.toLocaleString('ru-RU') + ' ' + sym;
 }
 
-window.addEventListener('load', initOrderQuantity);
+onReady(initOrderQuantity);
 
 // --------------------------------------------
 // 13. CART MODAL — загрузка из API, update, remove
@@ -1313,9 +1337,16 @@ function initCartModal() {
         const qtyEl = item.querySelector('.cart-item-qty');
         let qty = parseInt(qtyEl.textContent) || 1;
 
+        // Бэкенд возвращает полную корзину — рендерим из ответа, без второго GET
+        function applyCart(result) {
+            if (!result || !result.ok) return;
+            cartData = result;
+            renderCart();
+            updateBadges(result.cart_count, null);
+        }
+
         if (btn.dataset.action === 'remove') {
-            await apiPost('/orders/cart/remove/', { size_id: sizeId });
-            loadCart();
+            applyCart(await apiPost('/orders/cart/remove/', { size_id: sizeId }));
             return;
         }
         if (btn.dataset.action === 'minus' && qty > 1) {
@@ -1323,11 +1354,8 @@ function initCartModal() {
         } else if (btn.dataset.action === 'plus' && qty < 99) {
             qty += 1;
         }
-        const result = await apiPost('/orders/cart/update/', { size_id: sizeId, qty });
-        if (result.ok) {
-            updateBadges(result.cart_count, null);
-            loadCart();
-        }
+        qtyEl.textContent = qty; // оптимистично, ответ сервера поправит
+        applyCart(await apiPost('/orders/cart/update/', { size_id: sizeId, qty }));
     });
 
     // Checkout → auth check → delivery
@@ -1347,7 +1375,7 @@ function initCartModal() {
     }
 }
 
-window.addEventListener('load', initCartModal);
+onReady(initCartModal);
 
 // --------------------------------------------
 // 14. FAVORITES MODAL — загрузка из API, удаление
@@ -1444,7 +1472,7 @@ function initFavoritesModal() {
     });
 }
 
-window.addEventListener('load', initFavoritesModal);
+onReady(initFavoritesModal);
 
 // --------------------------------------------
 // 15. PROFILE MODAL — навигация по шагам
@@ -1629,7 +1657,7 @@ function initProfileModal() {
     });
 }
 
-window.addEventListener('load', initProfileModal);
+onReady(initProfileModal);
 
 // --------------------------------------------
 // 16. AUTH MODAL — Email Login / Register / SSO
@@ -1829,7 +1857,7 @@ function initAuthModal() {
     });
 }
 
-window.addEventListener('load', initAuthModal);
+onReady(initAuthModal);
 
 // --------------------------------------------
 // 16.5. OPEN DELIVERY WITH PROFILE PRE-FILL
@@ -1934,7 +1962,7 @@ function initDeliveryModal() {
     });
 }
 
-window.addEventListener('load', initDeliveryModal);
+onReady(initDeliveryModal);
 
 // --------------------------------------------
 // 18. DROPDOWN ВЫБОРА РЕГИОНА
@@ -2006,6 +2034,6 @@ function initLangDropdown() {
     });
 }
 
-window.addEventListener('load', initRegionDropdown);
-window.addEventListener('load', initLangDropdown);
+onReady(initRegionDropdown);
+onReady(initLangDropdown);
 

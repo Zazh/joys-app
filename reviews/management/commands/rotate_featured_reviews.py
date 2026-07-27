@@ -109,6 +109,8 @@ class Command(BaseCommand):
 
         # --- Итого ---
         if not dry_run:
+            from django.core.cache import cache
+            cache.delete_many(['home_review_stats', 'home_featured_reviews'])
             total = Review.objects.filter(is_featured=True).count()
             pos = Review.objects.filter(is_featured=True, rating__gte=4).count()
             neg = Review.objects.filter(is_featured=True, rating__lte=2).count()

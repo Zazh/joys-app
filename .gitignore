@@ -47,3 +47,7 @@ Thumbs.db
 
 package.json
 tailwind.config.js
+
+# Backup оригиналов (не для деплоя)
+src/fonts-src/
+src/images-unused/

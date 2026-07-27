@@ -16,11 +16,9 @@ class Cart:
         self.user = request.user if request.user.is_authenticated else None
 
         if not self.user:
-            cart = self.session.get(CART_SESSION_KEY)
-            if cart is None:
-                cart = {}
-                self.session[CART_SESSION_KEY] = cart
-            self._session_cart = cart
+            # Не пишем в сессию при чтении — иначе каждый аноним (и бот)
+            # получает INSERT в django_session на первом же просмотре
+            self._session_cart = self.session.get(CART_SESSION_KEY) or {}
 
     # ─── Мутации ───
 
@@ -76,6 +74,7 @@ class Cart:
             self._save_session()
 
     def _save_session(self):
+        self.session[CART_SESSION_KEY] = self._session_cart
         self.session.modified = True
 
     # ─── Чтение ───
@@ -114,6 +113,7 @@ class Cart:
             ProductSize.objects
             .filter(pk__in=size_ids)
             .select_related('product', 'product__category')
+            .prefetch_related('product__main_images')
         )
         sizes_map = {s.pk: s for s in sizes}
 
@@ -184,12 +184,17 @@ class Cart:
             total += p * i['qty']
         return total
 
-    def get_payment_total(self):
-        """Итого в валюте оплаты (KZT если конвертация)."""
+    def get_payment_total(self, total=None):
+        """Итого в валюте оплаты (KZT если конвертация).
+
+        total — уже посчитанная сумма, чтобы не перечитывать позиции из БД.
+        """
+        if total is None:
+            total = self.get_total()
         if self.region and self.region.needs_conversion:
             from regions.models import convert_to_kzt
-            return convert_to_kzt(self.get_total(), self.region.currency_code)
-        return self.get_total()
+            return convert_to_kzt(total, self.region.currency_code)
+        return total
 
     def get_item(self, size_id):
         """Одна позиция для ответа add/update."""
@@ -236,11 +241,8 @@ class Favorites:
         self.user = request.user if request.user.is_authenticated else None
 
         if not self.user:
-            favs = self.session.get(FAVORITES_SESSION_KEY)
-            if favs is None:
-                favs = []
-                self.session[FAVORITES_SESSION_KEY] = favs
-            self._session_favs = favs
+            # Как и в Cart — не создаём сессию при чтении
+            self._session_favs = self.session.get(FAVORITES_SESSION_KEY) or []
 
     def add(self, product_id):
         pid = int(product_id)
@@ -283,6 +285,7 @@ class Favorites:
                 return True
 
     def _save_session(self):
+        self.session[FAVORITES_SESSION_KEY] = self._session_favs
         self.session.modified = True
 
     def _get_product_ids(self):
@@ -321,26 +324,41 @@ class Favorites:
         if not product_ids:
             return []
 
-        products = (
+        products = list(
             Product.objects
             .filter(pk__in=product_ids, is_active=True)
             .select_related('category')
             .prefetch_related('sizes', 'main_images')
         )
 
+        # Первый размер берём из prefetch-кеша (.first() сделал бы запрос),
+        # региональные цены — одним запросом на все товары
+        first_sizes = {}
+        for product in products:
+            sizes = list(product.sizes.all())
+            first_sizes[product.pk] = sizes[0] if sizes else None
+
+        prices_map = {}
+        if self.region:
+            size_ids = [s.pk for s in first_sizes.values() if s]
+            if size_ids:
+                prices_map = {
+                    rp.size_id: rp
+                    for rp in RegionPrice.objects.filter(
+                        size_id__in=size_ids, region=self.region,
+                    )
+                }
+
         items = []
         for product in products:
-            first_size = product.sizes.first()
+            first_size = first_sizes[product.pk]
             price = None
             old_price = None
 
-            if first_size and self.region:
-                rp = RegionPrice.objects.filter(
-                    size=first_size, region=self.region,
-                ).first()
-                if rp:
-                    price = rp.price
-                    old_price = rp.old_price
+            rp = prices_map.get(first_size.pk) if first_size else None
+            if rp:
+                price = rp.price
+                old_price = rp.old_price
             if first_size and price is None:
                 price = first_size.price
                 old_price = first_size.old_price

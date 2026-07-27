@@ -2,19 +2,22 @@ from django.templatetags.static import static
 
 
 def placeholder_image(request):
-    """Добавляет placeholder_image_url во все шаблоны."""
-    from .models import SiteSettings
+    """Добавляет placeholder_image_url во все шаблоны (кеш 1 час)."""
+    from django.core.cache import cache
 
-    url = static('dist/images/placeholder.svg')
+    def _resolve():
+        from .models import SiteSettings
 
-    try:
-        settings = SiteSettings.load()
-        if settings.placeholder_image:
-            url = settings.placeholder_image.url
-    except Exception:
-        pass
+        url = static('dist/images/placeholder.svg')
+        try:
+            settings = SiteSettings.load()
+            if settings.placeholder_image:
+                url = settings.placeholder_image.url
+        except Exception:
+            pass
+        return url
 
-    return {'placeholder_image_url': url}
+    return {'placeholder_image_url': cache.get_or_set('placeholder_image_url', _resolve, 3600)}
 
 
 def global_jsonld(request):
