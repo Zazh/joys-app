@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.ratelimit import get_client_ip, hit
 from .models import InquiryForm, InquirySubmission, InquiryFieldValue
 from .serializers import InquiryFormSerializer, InquirySubmissionSerializer
 
@@ -50,6 +51,15 @@ class InquirySubmitView(APIView):
         except InquiryForm.DoesNotExist:
             return Response({'error': _('Форма не найдена.')}, status=status.HTTP_404_NOT_FOUND)
 
+        # Форма публичная — без лимита бэкофис забивается спамом
+        limited, remaining = hit(request, scope='inquiry', max_attempts=5, window=3600)
+        if limited:
+            minutes = remaining // 60 + 1
+            return Response(
+                {'ok': False, 'error': _('Слишком много заявок. Попробуйте через %(min)s мин.') % {'min': minutes}},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
         serializer = InquirySubmissionSerializer(data=request.data, inquiry_form=form)
         if not serializer.is_valid():
             return Response(
@@ -57,10 +67,9 @@ class InquirySubmitView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Сохраняем
-        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
-        if ',' in ip:
-            ip = ip.split(',')[0].strip()
+        # IP берём из доверенного элемента XFF — клиентскую часть заголовка
+        # подделать ничего не стоит, а поле в БД строго типизировано
+        ip = get_client_ip(request)
 
         submission = InquirySubmission.objects.create(
             form=form,

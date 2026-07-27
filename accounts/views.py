@@ -14,10 +14,22 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.ratelimit import clear_attempts, hit, is_rate_limited, record_failed_attempt
 from orders.cart import merge_session_to_db
 from emails.service import send_welcome_email, send_password_reset, send_email_verification
 from .models import User
 from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
+
+
+def _too_many(remaining):
+    """Единый ответ 429 для всех форм авторизации."""
+    minutes = remaining // 60 + 1
+    return Response(
+        {'ok': False, 'errors': {'__all__': [
+            _('Слишком много попыток. Попробуйте через %(min)s мин.') % {'min': minutes}
+        ]}},
+        status=status.HTTP_429_TOO_MANY_REQUESTS,
+    )
 
 
 class RegisterView(APIView):
@@ -34,6 +46,12 @@ class RegisterView(APIView):
                 {'ok': False, 'errors': {'__all__': [_('Вы уже авторизованы.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Каждая регистрация шлёт два письма — без лимита это готовый
+        # инструмент для спама и слива квоты SendPulse
+        limited, remaining = hit(request, scope='register', max_attempts=3, window=3600)
+        if limited:
+            return _too_many(remaining)
 
         serializer = RegisterSerializer(data=request.data)
         if not serializer.is_valid():
@@ -84,17 +102,36 @@ class LoginView(APIView):
         if not serializer.is_valid():
             return Response({'ok': False, 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+        email = serializer.validated_data['email']
+
+        # Два счётчика: по IP (перебор паролей с одной машины) и по email
+        # (распределённый перебор одного аккаунта).
+        limited, remaining = is_rate_limited(request, scope='login', max_attempts=10, window=300)
+        if limited:
+            return _too_many(remaining)
+        limited, remaining = is_rate_limited(
+            request, scope='login-email', max_attempts=10, window=900, ident=email,
+        )
+        if limited:
+            return _too_many(remaining)
+
         user = authenticate(
             request,
-            email=serializer.validated_data['email'],
+            email=email,
             password=serializer.validated_data['password'],
         )
         if user is None:
+            record_failed_attempt(request, scope='login', max_attempts=10, window=300)
+            record_failed_attempt(
+                request, scope='login-email', max_attempts=10, window=900, ident=email,
+            )
             return Response(
                 {'ok': False, 'errors': {'__all__': [_('Неверный email или пароль.')]}},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
+        clear_attempts(request, scope='login')
+        clear_attempts(request, scope='login-email', ident=email)
         login(request, user)
         merge_session_to_db(request)
         return Response({
@@ -160,6 +197,16 @@ class PasswordResetRequestView(APIView):
                 {'ok': False, 'errors': {'email': [_('Укажите email.')]}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Лимит по IP и по адресу — иначе форма превращается в почтовую бомбу
+        limited, remaining = hit(request, scope='pwreset', max_attempts=3, window=3600)
+        if limited:
+            return _too_many(remaining)
+        limited, remaining = hit(
+            request, scope='pwreset-email', max_attempts=3, window=3600, ident=email,
+        )
+        if limited:
+            return _too_many(remaining)
 
         # Всегда отвечаем 200 чтобы не раскрывать наличие аккаунта
         try:
