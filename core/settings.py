@@ -15,6 +15,18 @@ CSRF_TRUSTED_ORIGINS = [
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Прод отдаётся только по HTTPS (redirect 80→443 в nginx), поэтому куки
+# помечаем Secure и включаем HSTS. В DEBUG не трогаем — иначе локальный
+# http://localhost:8009 перестанет логинить.
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 год
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
 INSTALLED_APPS = [
     'modeltranslation',
     'django.contrib.admin',
@@ -34,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     # Project apps
+    'core',  # общие теги/утилиты (templatetags/sanitize.py)
     'regions',
     'catalog',
     'orders',
@@ -51,6 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'core.middleware.PerformanceMiddleware',
+    'core.middleware.ContentSecurityPolicyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'redirects.middleware.RedirectMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -189,6 +203,10 @@ HALYK_PAYMENT_URL = os.environ.get('HALYK_PAYMENT_URL', 'https://test-epay.epaym
 HALYK_CLIENT_ID = os.environ.get('HALYK_CLIENT_ID', '')
 HALYK_CLIENT_SECRET = os.environ.get('HALYK_CLIENT_SECRET', '')
 HALYK_TERMINAL_ID = os.environ.get('HALYK_TERMINAL_ID', '')
+# PEM-ключ для проверки подписи postLink. Выдаётся банком вместе с боевым
+# терминалом. Пока пусто — callback от Halyk отклоняется (иначе оплату
+# можно подтвердить обычным POST-запросом со стороны).
+HALYK_CALLBACK_PUBLIC_KEY = os.environ.get('HALYK_CALLBACK_PUBLIC_KEY', '').replace('\\n', '\n')
 
 # Base URL для платёжных callback-ов (в dev — пустая, в prod — https://dr-joys.com)
 PAYMENT_BASE_URL = os.environ.get('PAYMENT_BASE_URL', '')
@@ -206,6 +224,11 @@ WB_API_TOKEN = os.environ.get('WB_API_TOKEN', '')
 # Google Analytics 4 — счётчик подключается в base.html только если ID задан
 GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '')
 
+# CSP: пока только собираем нарушения в консоль браузера. После проверки,
+# что ничего не ломается, поставить CSP_REPORT_ONLY=false — политика
+# начнёт реально блокировать посторонние скрипты.
+CSP_REPORT_ONLY = os.environ.get('CSP_REPORT_ONLY', 'true').lower() == 'true'
+
 # -----------------------------------------------
 # django-allauth (SSO: Google, Yandex)
 # -----------------------------------------------
@@ -213,9 +236,9 @@ SITE_ID = 1
 
 # Allauth account settings — мы используем свои views для email login/register
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_LOGIN_METHODS = {'email'}
+# Заменяет устаревшие ACCOUNT_EMAIL_REQUIRED / ACCOUNT_USERNAME_REQUIRED
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
 # SSO: авто-мёрж аккаунтов по email
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True

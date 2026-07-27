@@ -1,6 +1,8 @@
 import logging
 import time
+from urllib.parse import urlparse
 
+from django.conf import settings
 from django.db import connection
 
 logger = logging.getLogger('core.performance')
@@ -46,4 +48,72 @@ class PerformanceMiddleware:
                 request.method, request.get_full_path(), response.status_code,
                 total_ms, sql['count'], db_ms,
             )
+        return response
+
+
+def _halyk_origin():
+    """Origin платёжного виджета — он подгружает свой JS и открывает iframe."""
+    url = getattr(settings, 'HALYK_PAYMENT_URL', '') or ''
+    parsed = urlparse(url)
+    if parsed.scheme and parsed.netloc:
+        return f'{parsed.scheme}://{parsed.netloc}'
+    return ''
+
+
+class ContentSecurityPolicyMiddleware:
+    """Content-Security-Policy — второй рубеж на случай XSS.
+
+    По умолчанию работает в режиме Report-Only: браузер не блокирует
+    ресурсы, а только пишет нарушения в консоль. Когда список источников
+    отстоится, переключить CSP_REPORT_ONLY=False в .env, и политика
+    начнёт действовать.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.report_only = getattr(settings, 'CSP_REPORT_ONLY', True)
+        self.policy = self._build_policy()
+
+    def _build_policy(self):
+        halyk = _halyk_origin()
+        scripts = [
+            "'self'", "'unsafe-inline'", "'unsafe-eval'",
+            'https://cdnjs.cloudflare.com',
+            'https://cdn.jsdelivr.net',
+            'https://www.googletagmanager.com',
+        ]
+        frames = [
+            "'self'",
+            'https://www.youtube.com',
+            'https://player.vimeo.com',
+        ]
+        connects = ["'self'", 'https://www.google-analytics.com']
+        if halyk:
+            scripts.append(halyk)
+            frames.append(halyk)
+            connects.append(halyk)
+
+        directives = [
+            "default-src 'self'",
+            'script-src ' + ' '.join(scripts),
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+            "font-src 'self' data: https://fonts.gstatic.com",
+            "img-src 'self' data: blob: https:",
+            'frame-src ' + ' '.join(frames),
+            'connect-src ' + ' '.join(connects),
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'none'",
+        ]
+        return '; '.join(directives)
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        header = (
+            'Content-Security-Policy-Report-Only'
+            if self.report_only
+            else 'Content-Security-Policy'
+        )
+        response.headers.setdefault(header, self.policy)
         return response

@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
 from django.http import HttpResponse
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from core.decorators import staff_only_404
 from pages.views import HomeView
 
 
@@ -50,8 +51,14 @@ urlpatterns = [
     # API
     path('api/inquiries/', include('inquiries.urls')),
     path('api/modals/', include('modals.urls')),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    # API — внутренняя, схема и Swagger только для персонала:
+    # публичная схема раздаёт карту всех эндпоинтов и параметров
+    path('api/schema/', staff_only_404(SpectacularAPIView.as_view()), name='schema'),
+    path(
+        'api/docs/',
+        staff_only_404(SpectacularSwaggerView.as_view(url_name='schema')),
+        name='swagger-ui',
+    ),
     path('qrcodes/', include('qrcodes.urls')),
     path('backoffice/', include('backoffice.urls')),
 ]
