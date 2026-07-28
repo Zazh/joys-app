@@ -6,11 +6,18 @@
     flex-shrink: 0;
     width: 80vw;
 }
+/* Заголовок: переносы по слогам + балансировка строк, чтобы длинные
+   заголовки не оставляли одинокое слово на последней строке.
+   Язык для словаря переносов берётся из <html lang> */
+.features-card-title {
+    @apply hyphens-auto text-balance break-words;
+}
+
 /* Размер задаём на контейнере: текст из бэкофиса приходит и голыми
    текстовыми узлами с <br>, и абзацами — селектор на > p ловил не всё.
    Мобайл: 12px / 1.2, десктоп: 14px / 1.25. */
 .features-card-content {
-    @apply text-xs/[1.2] lg:text-sm/tight;
+    @apply text-xs/[1.2] lg:text-sm/tight hyphens-auto text-pretty break-words;
 }
 .features-card-content > p {
     @apply pb-4;

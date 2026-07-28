@@ -11,7 +11,7 @@
     strike {
         text-decoration-line: line-through;
         text-decoration-color: var(--strike-color, var(--color-red-500));
-        text-decoration-thickness: 0.09em;
+        text-decoration-thickness: 0.18em;
         /* полоса не разрывается на выносных элементах букв */
         text-decoration-skip-ink: none;
     }
@@ -21,7 +21,7 @@
     .strike--black   { --strike-color: var(--color-gray-800); }
     .strike--current { --strike-color: currentColor; }
 
-    /* Толщина полосы */
-    .strike--thin { text-decoration-thickness: 0.05em; }
-    .strike--bold { text-decoration-thickness: 0.14em; }
+    /* Толщина полосы (по умолчанию 0.18em) */
+    .strike--thin { text-decoration-thickness: 0.09em; }
+    .strike--bold { text-decoration-thickness: 0.26em; }
 }
