@@ -14,7 +14,8 @@ register = template.Library()
 ALLOWED_TAGS = {
     'p', 'br', 'hr', 'div', 'span',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'strong', 'b', 'em', 'i', 'u', 's', 'sub', 'sup', 'mark', 'small',
+    'strong', 'b', 'em', 'i', 'u', 's', 'del', 'strike', 'ins',
+    'sub', 'sup', 'mark', 'small',
     'ul', 'ol', 'li', 'dl', 'dt', 'dd',
     'a', 'img', 'figure', 'figcaption',
     'blockquote', 'pre', 'code',
