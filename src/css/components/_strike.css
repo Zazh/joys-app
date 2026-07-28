@@ -1,0 +1,27 @@
+/* Зачёркнутый текст.
+   Полоса красная, а не в цвет текста — так зачёркивание читается как акцент.
+   Работает и на тегах из бэкофиса (<del>, <s>, <strike>), и на классе .strike
+   для ручной вёрстки. Цвет полосы задаётся переменной --strike-color:
+   её можно переопределить на самом элементе или на любом родителе. */
+
+@layer components {
+    .strike,
+    del,
+    s,
+    strike {
+        text-decoration-line: line-through;
+        text-decoration-color: var(--strike-color, var(--color-red-500));
+        text-decoration-thickness: 0.09em;
+        /* полоса не разрывается на выносных элементах букв */
+        text-decoration-skip-ink: none;
+    }
+
+    /* Цвет полосы */
+    .strike--white   { --strike-color: #ffffff; }
+    .strike--black   { --strike-color: var(--color-gray-800); }
+    .strike--current { --strike-color: currentColor; }
+
+    /* Толщина полосы */
+    .strike--thin { text-decoration-thickness: 0.05em; }
+    .strike--bold { text-decoration-thickness: 0.14em; }
+}
