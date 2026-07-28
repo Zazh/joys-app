@@ -1,0 +1,13 @@
+{% load static %}
+{% comment %}
+Картинка «4,7» в заголовке блока отзывов. С lg сама плашка абсолютная и
+висит справа от строки, поэтому ширину строки не занимает.
+shift_class — необязательный сдвиг: у языков с длинной последней строкой
+плашка иначе наезжает на текст.
+{% endcomment %}
+<span class="reviews-label {{ shift_class }} w-[160px] md:w-[130px] lg:w-[242px] shrink-0 relative lg:absolute">
+    <span class="reviews-label__img relative block md:absolute md:-bottom-9 lg:-bottom-22 lg:-right-65 w-full z-10" data-depth="-0.65">
+        <img src="{% static 'dist/images/reviews/label_ranked.svg' %}" alt="4,7" loading="lazy" decoding="async" class="object-contain w-full h-full object-top-left">
+    </span>
+    <span class="reviews-shadow-alt w-[70%] ml-[20%] h-4 absolute top-10 md:-top-1.5 lg:-right-57 lg:top-1 z-0" data-depth="0.5"></span>
+</span>

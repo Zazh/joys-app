@@ -1,0 +1,12 @@
+{% load static %}
+{% comment %}
+Картинка «20 000» в заголовке блока отзывов. Вынесена отдельно, потому что
+раскладка заголовка у каждого языка своя, а сама плашка везде одинаковая.
+На мобайле картинка в потоке, с md — абсолютная, поэтому не раздвигает строку.
+{% endcomment %}
+<span class="reviews-label w-[260px] md:w-[240px] lg:w-[440px] shrink-0 relative">
+    <span class="reviews-label__img relative block md:absolute md:-bottom-6.5 lg:-bottom-12 w-full z-10" data-depth="0.5">
+        <img src="{% static 'dist/images/reviews/label_counter.png' %}" alt="20 000" loading="lazy" decoding="async" class="object-contain w-full h-full object-top-left">
+    </span>
+    <span class="reviews-counter-shadow w-[80%] ml-[10%] h-1 absolute top-5 md:-top-2 lg:-top-2 z-0" data-depth="-0.5"></span>
+</span>

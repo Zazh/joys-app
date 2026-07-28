@@ -245,29 +245,46 @@
     <div class="w-full max-w-screen-lg mx-auto">
         <div class="lg:pb-10">
             <h2 class="display-1">
+                {% comment %}
+                Заголовок обтекает две картинки — «20 000» и «4,7», — поэтому
+                собирается из кусков, а не переводится одной фразой.
+                Русский и английский совпадают по структуре, их куски лежат в .po.
+                Казахский вынесен отдельной веткой: «Маркетплейстерлерде» вдвое
+                длиннее русского «Более», поэтому рвётся мягкими переносами и
+                ограничено по ширине — иначе не встаёт в строку с плашкой «20 000».
+                {% endcomment %}
+                {% if LANGUAGE_CODE == 'kk' %}
                 <span class="flex flex-wrap items-center justify-center md:gap-2">
-                    <span class="w-full md:w-auto -mb-3 md:mb-0 text-center">Более</span>
-                    <span class="w-[260px] md:w-[240px] lg:w-[440px] shrink-0 relative">
-                        <span class="relative block md:absolute md:-bottom-6.5 lg:-bottom-12 w-full z-10" data-depth="0.5">
-                            <img src="{% static 'dist/images/reviews/label_counter.png' %}" alt="" loading="lazy" decoding="async" class="object-contain w-full h-full object-top-left">
-                        </span>
-                        <span class="reviews-counter-shadow w-[80%] ml-[10%] h-1 absolute top-5 md:-top-2 lg:-top-2 z-0" data-depth="-0.5"></span>
-                    </span>
-                    <span class="w-full md:w-auto text-center">заказов</span>
+                    <span class="w-full md:w-auto -mb-3 md:mb-0 text-center">Біз</span>
+                    {% include 'base/components/_reviews_label_counter.html' %}
+                    <span class="w-full md:w-auto text-center">-нан</span>
+                </span>
+                <span class="flex justify-center">
+                    <span class="w-full md:max-w-[52rem] text-center text-balance">астам маркетплейс-тапсырысын орындадық</span>
+                </span>
+                {% comment %}
+                «орташа бағасы» вдвое длиннее русского «оценкой», поэтому плашка
+                «4,7» на своём штатном месте наезжала бы на текст — сдвигаем её вправо.
+                {% endcomment %}
+                <span class="flex flex-wrap items-center justify-center md:gap-2">
+                    <span class="text-center block w-full md:w-auto">орташа бағасы</span>
+                    {% include 'base/components/_reviews_label_rating.html' with shift_class="lg:translate-x-32" %}
+                </span>
+                {% else %}
+                <span class="flex flex-wrap items-center justify-center md:gap-2">
+                    <span class="w-full md:w-auto -mb-3 md:mb-0 text-center hyphens-auto">{% trans "Более" context "reviews" %}</span>
+                    {% include 'base/components/_reviews_label_counter.html' %}
+                    <span class="w-full md:w-auto text-center hyphens-auto">{% trans "заказов" context "reviews" %}</span>
                 </span>
                 <span class="flex justify-center flex-wrap md:gap-2">
-                    <span class="hyphens-auto w-full md:w-auto text-center">на маркет&shy;плейсах</span>
-                    <span class="hyphens-auto w-full md:w-auto text-center">со средней</span>
+                    <span class="hyphens-auto w-full md:w-auto text-center">{% trans "на маркетплейсах" context "reviews" %}</span>
+                    <span class="hyphens-auto w-full md:w-auto text-center">{% trans "со средней" context "reviews" %}</span>
                 </span>
                 <span class="flex flex-wrap items-center justify-center md:gap-2">
-                    <span class="hyphens-auto text-center block w-full md:w-auto">оценкой</span>
-                    <span class="w-[160px] md:w-[130px] lg:w-[242px] shrink-0 relative lg:absolute">
-                        <span class="relative block md:absolute md:-bottom-9 lg:-bottom-22 lg:-right-65 w-full z-10" data-depth="-0.65">
-                            <img src="{% static 'dist/images/reviews/label_ranked.svg' %}" alt="" loading="lazy" decoding="async" class="object-contain w-full h-full object-top-left">
-                        </span>
-                        <span class="reviews-shadow-alt w-[70%] ml-[20%] h-4 absolute top-10 md:-top-1.5 lg:-right-57 lg:top-1 z-0" data-depth="0.5"></span>
-                    </span>
+                    <span class="hyphens-auto text-center block w-full md:w-auto">{% trans "оценкой" context "reviews" %}</span>
+                    {% include 'base/components/_reviews_label_rating.html' %}
                 </span>
+                {% endif %}
             </h2>
         </div>
         <div class="flex justify-center pt-2 pb-8 lg:py-8">
