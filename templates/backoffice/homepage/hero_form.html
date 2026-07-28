@@ -17,6 +17,8 @@
             </label>
         </div>
 
+        {% include 'backoffice/components/_notice.html' with title="Кнопка «Купить» больше не выводится на сайте" text="С 28.07.2026 в hero-секции показывается одна кнопка — «Каталог». Поля кнопки «Купить» и её ссылка остались здесь и в базе: данные не удалены, их можно править и они сохранятся, но на главной странице они не отображаются. Чтобы вернуть вторую кнопку, нужна правка шаблона — обратитесь к разработчику." %}
+
         <!-- Language tabs -->
         <div x-data="{ lang: 'ru' }">
             <div class="flex gap-1 mb-3">
@@ -41,7 +43,7 @@
                         <input type="text" name="button_catalog_text_ru" value="{{ hero.button_catalog_text_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (RU)</label>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (RU)<span class="ml-1 px-1.5 py-0.5 rounded bg-stone-200 text-stone-500 text-[10px] align-middle">не выводится</span></label>
                         <input type="text" name="button_buy_text_ru" value="{{ hero.button_buy_text_ru|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
                     </div>
                 </div>
@@ -63,7 +65,7 @@
                         <input type="text" name="button_catalog_text_kk" value="{{ hero.button_catalog_text_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (KK)</label>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (KK)<span class="ml-1 px-1.5 py-0.5 rounded bg-stone-200 text-stone-500 text-[10px] align-middle">не выводится</span></label>
                         <input type="text" name="button_buy_text_kk" value="{{ hero.button_buy_text_kk|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
                     </div>
                 </div>
@@ -85,7 +87,7 @@
                         <input type="text" name="button_catalog_text_en" value="{{ hero.button_catalog_text_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (EN)</label>
+                        <label class="block text-xs text-stone-500 mb-1">Кнопка «Купить» (EN)<span class="ml-1 px-1.5 py-0.5 rounded bg-stone-200 text-stone-500 text-[10px] align-middle">не выводится</span></label>
                         <input type="text" name="button_buy_text_en" value="{{ hero.button_buy_text_en|default:'' }}" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm">
                     </div>
                 </div>
@@ -93,7 +95,7 @@
         </div>
 
         <div>
-            <label class="block text-xs text-stone-500 mb-1">Ссылка кнопки «Купить»</label>
+            <label class="block text-xs text-stone-500 mb-1">Ссылка кнопки «Купить»<span class="ml-1 px-1.5 py-0.5 rounded bg-stone-200 text-stone-500 text-[10px] align-middle">не выводится</span></label>
             <input type="text" name="button_buy_url" value="{{ hero.button_buy_url|default:'' }}"
                    class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm" placeholder="https://...">
         </div>

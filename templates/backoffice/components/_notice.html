@@ -1,0 +1,18 @@
+{% comment %}
+Плашка-примечание для админов.
+
+    {% include 'backoffice/components/_notice.html' with title="Заголовок" text="Пояснение" %}
+
+Параметры:
+    title — короткая суть (обязательный)
+    text  — развёрнутое пояснение (необязательный)
+{% endcomment %}
+<div class="flex gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+    <svg class="w-4 h-4 shrink-0 mt-px text-amber-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 9a1 1 0 012 0v4a1 1 0 11-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+    </svg>
+    <div class="text-xs text-amber-900 leading-relaxed">
+        <p class="font-medium">{{ title }}</p>
+        {% if text %}<p class="text-amber-800 mt-0.5">{{ text }}</p>{% endif %}
+    </div>
+</div>
