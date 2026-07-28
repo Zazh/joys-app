@@ -221,8 +221,8 @@
             <div class="w-full">
                 <h2 class="text-white hyphens-auto
                             text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
-                    {% if quiz_promo %}{{ quiz_promo.title|linebreaksbr }}{% else %}Не можешь <br>Определи&shy;ться?{% endif %}</h2>
-                <p class="font-medium text-white text-sm md:text-lg leading-tight mt-5">{% if quiz_promo %}{{ quiz_promo.text }}{% else %}Пройди короткий тест и узнай, какой DR.JOYS подходит именно тебе{% endif %}</p>
+                    {% if quiz_promo %}{{ quiz_promo.title|sanitize|linebreaksbr }}{% else %}Не можешь <br>Определи&shy;ться?{% endif %}</h2>
+                <p class="font-medium text-white text-sm md:text-lg leading-tight mt-5">{% if quiz_promo %}{{ quiz_promo.text|sanitize|linebreaksbr }}{% else %}Пройди короткий тест и узнай, какой DR.JOYS подходит именно тебе{% endif %}</p>
             </div>
             <div class="w-full mt-auto text-center md:text-left">
                 <button type="button" class="btn-macro white-opacity" id="openQuizModal">{% if quiz_promo %}{{ quiz_promo.button_text }}{% else %}{% trans "Пройти опрос" %}{% endif %}</button>
@@ -352,11 +352,11 @@
                 </span>
                 <div>
                     <h2 class="display-1 md:hyphens-none">
-                        {% if partners_promo %}{{ partners_promo.title|linebreaksbr }}{% else %}Хотите <span class="block md:inline">зарабаты&shy;вать вместе</span> <span class="block md:inline">с DR.JOYS?</span>{% endif %}
+                        {% if partners_promo %}{{ partners_promo.title|sanitize|linebreaksbr }}{% else %}Хотите <span class="block md:inline">зарабаты&shy;вать вместе</span> <span class="block md:inline">с DR.JOYS?</span>{% endif %}
                     </h2>
                 </div>
                 <div>
-                    <p class="leading-tight text-sm lg:text-base">{% if partners_promo %}{{ partners_promo.text }}{% else %}Каждый день мы получаем много заявок на оптовую реализацию продукции из разных стран.{% endif %}</p>
+                    <p class="leading-tight text-sm lg:text-base">{% if partners_promo %}{{ partners_promo.text|sanitize|linebreaksbr }}{% else %}Каждый день мы получаем много заявок на оптовую реализацию продукции из разных стран.{% endif %}</p>
                 </div>
                 <div class="py-2 hidden md:block">
                     <ul class="flex flex-wrap gap-2">
@@ -398,7 +398,7 @@
                 <h2 class="text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
                     {% if tattoo_promo %}{{ tattoo_promo.title|sanitize|linebreaksbr }}{% else %}<span class="block">Пожизненный</span><span class="block">запас DR.JOYS</span><span class="block">за татуировку</span>{% endif %}
                 </h2>
-                <p class="text-sm lg:text-xl leading-tight pt-5 lg:pt-10">{% if tattoo_promo %}{{ tattoo_promo.text }}{% else %}DR.JOYS для смелых. Наша миссия - ломать стереотипы и выйти за пределы стандартов и рамок, навязанных обществом.{% endif %}</p>
+                <p class="text-sm lg:text-xl leading-tight pt-5 lg:pt-10">{% if tattoo_promo %}{{ tattoo_promo.text|sanitize|linebreaksbr }}{% else %}DR.JOYS для смелых. Наша миссия - ломать стереотипы и выйти за пределы стандартов и рамок, навязанных обществом.{% endif %}</p>
             </div>
             <div class="w-full text-center absolute lg:static bottom-16">
                 <button type="button" class="btn-macro danger hover:bg-white hover:text-red-500" data-open-modal="tattoo">{% if tattoo_promo %}{{ tattoo_promo.button_text }}{% else %}Прочитать условие{% endif %}</button>
