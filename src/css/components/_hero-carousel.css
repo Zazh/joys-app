@@ -1,3 +1,19 @@
+/* Заголовок hero.
+   На мобайле размер считает JS (initHeroTitleFit): подбирает такой font-size,
+   чтобы самая длинная строка занимала ровно 85% ширины экрана, остальные
+   строки наследуют его и получаются короче. Пока JS не отработал —
+   запасные 1.5rem, как было. С md размер снова фиксированный (2.5rem). */
+@media (max-width: 767px) {
+    .hero-title {
+        font-size: var(--hero-title-size, 1.5rem);
+    }
+}
+
+/* Строка не должна переноситься: иначе её ширину не измерить */
+.hero-title-line {
+    @apply whitespace-nowrap;
+}
+
 /* Hero carousel */
 .hero-carousel-card {
     @apply w-full aspect-[25/32] relative;
