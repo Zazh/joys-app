@@ -7,7 +7,8 @@
     width: 80vw;
 }
 .features-card-content > p {
-    @apply pb-4 leading-tight lg:text-sm text-xs;
+    /* мобайл: 12px / 1.2, десктоп — прежние 14px / 1.25 */
+    @apply pb-4 text-xs/[1.2] lg:text-sm/tight;
 }
 .features-card-container {
     @apply flex flex-col gap-5 mx-0 px-5 my-8 lg:px-0 lg:mx-[5rem] lg:my-[3.75rem] w-full max-w-105 relative z-10;
