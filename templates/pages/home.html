@@ -14,17 +14,17 @@
 <section id="home-hero">
     <div class="mb-6">
         {% if hero %}
-        <h1 class="text-center pb-5 flex flex-col
+        <h1 class="hero-title text-center pb-5 flex flex-col
                    text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
-            {{ hero.title|linebreaksbr }}
+            {% for line in hero.title.splitlines %}<span class="hero-title-line">{{ line }}</span>{% endfor %}
         </h1>
         <h2 class="flex flex-wrap justify-center text-sm lg:text-xl font-medium leading-tight text-center">
             {{ hero.subtitle|linebreaksbr }}
         </h2>
         {% else %}
-        <h1 class="text-center pb-5 flex flex-col
+        <h1 class="hero-title text-center pb-5 flex flex-col
                    text-2xl md:text-[2.5rem] leading-tight font-benzin uppercase">
-            <span>Ультратонкие</span> <span>презервативы </span><span>DR.JOYS</span>
+            <span class="hero-title-line">Ультратонкие</span><span class="hero-title-line">презервативы</span><span class="hero-title-line">DR.JOYS</span>
         </h1>
         <h2 class="flex flex-wrap justify-center text-sm lg:text-xl font-medium leading-tight">
             <span class="flex justify-center gap-1 w-full">Неощутимые на 95% <span class="lg:text-sm text-xs mb-auto">(0,02 мм)</span></span>
@@ -152,11 +152,9 @@
 
     <div class="flex justify-center items-center gap-2 pb-10">
         {% if hero %}
-        <a href="{{ hero.get_catalog_url }}" class="btn-macro default">{{ hero.button_catalog_text }}</a>
-        <a href="{{ hero.button_buy_url|default:'#' }}" class="btn-macro danger">{{ hero.button_buy_text }}</a>
+        <a href="{{ hero.get_catalog_url }}" class="btn-macro danger">{{ hero.button_catalog_text }}</a>
         {% else %}
-        <button class="btn-macro default">В каталог</button>
-        <button class="btn-macro danger">Купить</button>
+        <button class="btn-macro danger">В каталог</button>
         {% endif %}
     </div>
 </section>
@@ -361,9 +359,6 @@
                 <div class="py-2 hidden md:block">
                     <ul class="flex flex-wrap gap-2">
                         <li>
-                            <button type="button" class="btn-macro default">Подробнее</button>
-                        </li>
-                        <li>
                             <button type="button" class="btn-macro danger open-partner-modal">{% if partners_promo %}{{ partners_promo.button_text }}{% else %}Оставить заявку{% endif %}</button>
                         </li>
                     </ul>
@@ -378,9 +373,6 @@
             {% endif %}
             <div class="absolute inset-0 flex items-end md:hidden">
                 <ul class="flex flex-wrap gap-2 p-5">
-                    <li>
-                        <button type="button" class="btn-macro default">Подробнее</button>
-                    </li>
                     <li>
                         <button type="button" class="btn-macro danger open-partner-modal">{% if partners_promo %}{{ partners_promo.button_text }}{% else %}Оставить заявку{% endif %}</button>
                     </li>
