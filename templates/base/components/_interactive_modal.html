@@ -1,4 +1,4 @@
-{% load i18n sanitize %}
+{% load i18n sanitize inquiries_extras %}
 {# Использование: {% include '_interactive_modal.html' with modal=modal_obj %} #}
 
 {% if modal %}
@@ -102,6 +102,9 @@
                         <p class="modal-error hidden text-xs mt-1" data-error-for="{{ field.key }}"></p>
                     </div>
                     {% endfor %}
+                    {% inquiry_antispam %}
+                    {# Ошибка не по конкретному полю: лимит заявок, антиспам, сеть #}
+                    <p class="modal-error hidden text-xs" data-error-for="__all__"></p>
                     <button type="submit" class="btn-macro small danger w-full text-center">{{ step.inquiry_form.submit_text }}</button>
                 </form>
                 {% endif %}

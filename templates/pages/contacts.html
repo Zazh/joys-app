@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static i18n %}
+{% load static i18n inquiries_extras %}
 
 {% block title %}{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}{% endblock %}
 
@@ -113,8 +113,88 @@
     <section class="main-grid">
         <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
 
-            <!-- BEGIN contacts-form — заглушка, наполняется в Сессии 4 (форма обращения) -->
-            <div id="form" class="scroll-mt-24"></div>
+            <!-- BEGIN contacts-form -->
+            {# Поля, лейблы и тексты успеха живут в бэкофисе (InquiryForm slug=contact), #}
+            {# создаются командой populate_contact_form — шаблон их только рисует #}
+            {% if inquiry_form %}
+            <section id="form" class="scroll-mt-24 pb-16">
+                <h2 class="display-3 font-benzin uppercase pb-6">{{ inquiry_form.title }}</h2>
+                {% if inquiry_form.description %}
+                <p class="text-gray-600 max-w-xl pb-6">{{ inquiry_form.description }}</p>
+                {% endif %}
+
+                <form id="contactForm" class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                      data-form-slug="{{ inquiry_form.slug }}" novalidate
+                      data-error-consent="{% trans 'Подтвердите согласие на обработку данных.' %}"
+                      data-error-network="{% trans 'Не удалось отправить. Проверьте связь и попробуйте ещё раз.' %}">
+                    {% for field in inquiry_form.fields.all %}
+                    {# Длинные поля (сообщение, тема) — во всю ширину, короткие — по два в ряд #}
+                    <div class="form-field{% if field.field_type == 'textarea' or field.field_type == 'select' %} md:col-span-2{% endif %}">
+                        <label class="form-label" for="contactField-{{ field.key }}">
+                            {{ field.label }}{% if field.is_required %}<span aria-hidden="true"> *</span>{% endif %}
+                        </label>
+
+                        {% if field.field_type == 'textarea' %}
+                        <textarea class="form-input" id="contactField-{{ field.key }}" name="{{ field.key }}" rows="5"
+                                  placeholder="{{ field.placeholder }}"
+                                  aria-describedby="contactError-{{ field.key }}"
+                                  {% if field.is_required %}required{% endif %}></textarea>
+
+                        {% elif field.field_type == 'select' %}
+                        <select class="form-input" id="contactField-{{ field.key }}" name="{{ field.key }}"
+                                aria-describedby="contactError-{{ field.key }}"
+                                {% if field.is_required %}required{% endif %}>
+                            <option value="">{{ field.placeholder|default:field.label }}</option>
+                            {% for choice in field.get_choices %}
+                            <option value="{{ choice.value }}">{{ choice.label }}</option>
+                            {% endfor %}
+                        </select>
+
+                        {% else %}
+                        {# type=tel ловит initPhoneMasks() из main.js — маска включается сама #}
+                        <input class="form-input" id="contactField-{{ field.key }}" name="{{ field.key }}"
+                               type="{% if field.field_type == 'email' %}email{% elif field.field_type == 'phone' %}tel{% else %}text{% endif %}"
+                               placeholder="{{ field.placeholder }}"
+                               aria-describedby="contactError-{{ field.key }}"
+                               {% if field.is_required %}required{% endif %}>
+                        {% endif %}
+
+                        <p class="form-error hidden" id="contactError-{{ field.key }}" data-error-for="{{ field.key }}"></p>
+                    </div>
+                    {% endfor %}
+
+                    {% url 'pages:page_detail' slug='politika-konfidencialnosti' as privacy_url %}
+                    <div class="md:col-span-2">
+                        <label class="form-consent" for="contactConsent">
+                            <input class="form-consent__box" type="checkbox" id="contactConsent" required
+                                   aria-describedby="contactError-consent">
+                            <span>{% blocktrans %}Согласен на обработку персональных данных и принимаю <a class="form-link" href="{{ privacy_url }}" target="_blank" rel="noopener noreferrer">политику конфиденциальности</a>{% endblocktrans %}</span>
+                        </label>
+                        <p class="form-error hidden" id="contactError-consent" data-error-for="consent"></p>
+                    </div>
+
+                    {% inquiry_antispam %}
+
+                    <div class="md:col-span-2 flex flex-col gap-3">
+                        <p class="form-error hidden" data-error-for="__all__"></p>
+                        <button class="btn-macro black w-full md:w-auto md:self-start md:px-12" type="submit">
+                            {{ inquiry_form.submit_text }}
+                        </button>
+                    </div>
+                </form>
+
+                {# Успех вместо формы: галочка + тексты из InquiryForm (приходят в ответе) #}
+                <div id="contactFormSuccess" class="form-success hidden" role="status" tabindex="-1">
+                    <span class="form-success__icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </span>
+                    <p class="form-success__title" id="contactSuccessTitle"></p>
+                    <p class="form-success__text" id="contactSuccessText"></p>
+                </div>
+            </section>
+            {% endif %}
             <!-- END contacts-form -->
 
 

@@ -1435,6 +1435,13 @@
                                 errorEl.classList.remove('hidden');
                             }
                         }
+                    } else if (result.error) {
+                        // Ошибка всей формы: лимит заявок, антиспам
+                        const errorEl = form.querySelector('[data-error-for="__all__"]');
+                        if (errorEl) {
+                            errorEl.textContent = result.error;
+                            errorEl.classList.remove('hidden');
+                        }
                     }
                 } catch (err) {
                     console.error('Form submit error:', err);

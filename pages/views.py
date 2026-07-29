@@ -4,6 +4,7 @@ from django.views.generic import DetailView, ListView, TemplateView
 from django.db.models import Avg, Count, Q, Value
 from django.db.models.functions import Coalesce, Length
 
+from inquiries.models import InquiryForm
 from modals.models import InteractiveModal
 from quiz.models import QuizQuestion, QuizResultText
 from reviews.models import Review
@@ -140,11 +141,29 @@ class PageDetailView(DetailView):
         'contacts': 'pages/contacts.html',
     }
 
+    # Форма обращения на странице: slug страницы → slug InquiryForm
+    INQUIRY_FORMS = {
+        'contacts': 'contact',
+    }
+
     def get_queryset(self):
         return Page.objects.filter(is_published=True).select_related('category')
 
     def get_template_names(self):
         return [self.CUSTOM_TEMPLATES.get(self.object.slug, self.template_name)]
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        form_slug = self.INQUIRY_FORMS.get(self.object.slug)
+        if form_slug:
+            # Поля и лейблы редактируются в бэкофисе, шаблон только рисует
+            ctx['inquiry_form'] = (
+                InquiryForm.objects
+                .prefetch_related('fields')
+                .filter(slug=form_slug, is_active=True)
+                .first()
+            )
+        return ctx
 
 
 class BlogListView(ListView):

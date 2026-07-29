@@ -777,3 +777,19 @@ msgstr "Get directions in Yandex Maps"
 
 msgid "Построить маршрут в Google Maps"
 msgstr "Get directions in Google Maps"
+
+# Форма обращения (pages/contacts.html, inquiries)
+msgid "Согласен на обработку персональных данных и принимаю <a class=\"form-link\" href=\"%(privacy_url)s\" target=\"_blank\" rel=\"noopener noreferrer\">политику конфиденциальности</a>"
+msgstr "I agree to the processing of my personal data and accept the <a class=\"form-link\" href=\"%(privacy_url)s\" target=\"_blank\" rel=\"noopener noreferrer\">privacy policy</a>"
+
+msgid "Подтвердите согласие на обработку данных."
+msgstr "Please confirm your consent to data processing."
+
+msgid "Не удалось отправить. Проверьте связь и попробуйте ещё раз."
+msgstr "Could not send. Check your connection and try again."
+
+msgid "Форма отправлена слишком быстро. Попробуйте ещё раз."
+msgstr "The form was submitted too quickly. Please try again."
+
+msgid "Не заполняйте это поле"
+msgstr "Do not fill in this field"

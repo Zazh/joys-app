@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.ratelimit import get_client_ip, hit
+from . import antispam
 from .models import InquiryForm, InquirySubmission, InquiryFieldValue
 from .serializers import InquiryFormSerializer, InquirySubmissionSerializer
 
@@ -58,6 +59,22 @@ class InquirySubmitView(APIView):
             return Response(
                 {'ok': False, 'error': _('Слишком много заявок. Попробуйте через %(min)s мин.') % {'min': minutes}},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        # Антиспам до валидации: бот не должен по ответу узнать, что не так с данными
+        antispam_fields = antispam.collect_fields(request)
+        if antispam.is_honeypot_filled(antispam_fields):
+            # Отвечаем как на нормальную заявку, но ничего не сохраняем
+            return Response({
+                'ok': True,
+                'success_title': form.success_title,
+                'success_text': form.success_text,
+            })
+        if antispam.is_too_fast(antispam_fields):
+            # Не молча: живой человек мог успеть за 3 секунды — повтор пройдёт
+            return Response(
+                {'ok': False, 'error': _('Форма отправлена слишком быстро. Попробуйте ещё раз.')},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = InquirySubmissionSerializer(data=request.data, inquiry_form=form)

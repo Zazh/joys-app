@@ -20,4 +20,35 @@
     .form-error {
         @apply text-red-500 text-xs pt-2 pl-4;
     }
+
+    /* Согласие на обработку данных: чекбокс и текст со ссылкой на политику */
+    .form-consent {
+        @apply flex items-start gap-3 cursor-pointer text-xs text-gray-600 leading-snug;
+    }
+    .form-consent__box {
+        @apply w-5 h-5 shrink-0 mt-px accent-red-500 cursor-pointer focus-brand;
+    }
+    .form-link {
+        @apply underline underline-offset-2 hover:text-red-500 focus-brand;
+    }
+
+    /* Успех вместо формы (§3.5): галочка как в модалке успеха */
+    .form-success {
+        @apply flex flex-col items-center gap-3 bg-stone-50 rounded-2xl py-10 px-6 text-center;
+    }
+    .form-success__icon {
+        @apply w-16 h-16 rounded-full bg-green-600 flex items-center justify-center;
+    }
+    .form-success__title {
+        @apply font-benzin text-xl uppercase leading-tight;
+    }
+    .form-success__text {
+        @apply text-sm text-gray-600 max-w-md;
+    }
+
+    /* Приманка для ботов: уводим за экран, но не display:none —
+       часть ботов такие поля пропускает (см. inquiries/antispam.py) */
+    .form-honeypot {
+        @apply absolute -left-[9999px] w-px h-px overflow-hidden;
+    }
 }

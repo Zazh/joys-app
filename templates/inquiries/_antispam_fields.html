@@ -1,0 +1,10 @@
+{% load i18n %}
+{# Антиспам-поля формы заявки: приманка + подписанная метка времени рендера #}
+{# Проверяются в InquirySubmitView, см. inquiries/antispam.py #}
+{# Приманка уведена за экран стилем, а не display:none — часть ботов такие поля пропускает. #}
+{# Если стили не загрузились, человек увидит подпись и поле не заполнит #}
+<div class="form-honeypot" aria-hidden="true">
+    <label for="{{ honeypot_field }}">{% trans "Не заполняйте это поле" %}</label>
+    <input type="text" id="{{ honeypot_field }}" name="{{ honeypot_field }}" value="" tabindex="-1" autocomplete="off">
+</div>
+<input type="hidden" name="{{ timestamp_field }}" value="{{ timestamp_token }}">
