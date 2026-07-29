@@ -64,9 +64,6 @@
     .map-popup__address {
         @apply block text-gray-600;
     }
-    .map-popup__hours {
-        @apply pt-1 text-gray-600;
-    }
     .map-popup .route-links {
         @apply pt-4;
     }

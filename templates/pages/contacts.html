@@ -85,7 +85,7 @@
                  data-title="{% trans 'ТОО «DR JOYS»' %}"
                  data-address="{% trans 'г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5' %}">
                 <div class="map-fallback">
-                    <p class="font-bold">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}</p>
+                    <address class="not-italic font-bold">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}, {% trans "Пн–Пт 10:00–19:00" %}</address>
                     {% include 'base/components/_route_links.html' with list_class="justify-center" %}
                 </div>
             </div>
@@ -95,9 +95,8 @@
             <template id="officeMapPopup">
                 <div class="map-popup">
                     <strong class="map-popup__name">{% trans "ТОО «DR JOYS»" %}</strong>
-                    <address class="map-popup__address not-italic">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}</address>
                     {# TODO: уточнить график у заказчика — пока заглушка (docs/contacts_page_redesign.md §3.4) #}
-                    <p class="map-popup__hours">{% trans "Пн–Пт 10:00–19:00" %}</p>
+                    <address class="map-popup__address not-italic">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}, {% trans "Пн–Пт 10:00–19:00" %}</address>
                     {% include 'base/components/_route_links.html' %}
                 </div>
             </template>
