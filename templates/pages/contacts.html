@@ -36,7 +36,38 @@
             <!-- BEGIN contacts-channels -->
             <section id="contacts" class="scroll-mt-24 pb-16">
                 <h2 class="display-2 pb-6">{% trans "Каналы связи" %}</h2>
-                {% include 'base/components/_contact_links.html' %}
+
+                {# Две колонки, а не четыре: в узкой карточке адрес почты рвался на две строки #}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a class="contact-card" href="tel:+77766103836">
+                        {% include 'base/components/icons/_icon_phone.html' with icon_class="contact-card__icon" %}
+                        <span class="contact-card__label">{% trans "Телефон" %}</span>
+                        <span class="contact-card__value">+7 776 610 38 36</span>
+                    </a>
+
+                    <a class="contact-card" href="https://wa.me/77766103836" target="_blank" rel="noopener noreferrer">
+                        {% include 'base/components/icons/_icon_whatsapp.html' with icon_class="contact-card__icon" %}
+                        <span class="contact-card__label">WhatsApp</span>
+                        <span class="contact-card__value">+7 776 610 38 36</span>
+                    </a>
+
+                    <a class="contact-card" href="https://t.me/drjoysoriginal" target="_blank" rel="noopener noreferrer">
+                        {% include 'base/components/icons/_icon_telegram.html' with icon_class="contact-card__icon" %}
+                        <span class="contact-card__label">Telegram</span>
+                        <span class="contact-card__value">@drjoysoriginal</span>
+                    </a>
+
+                    <a class="contact-card" href="mailto:drjoysoriginal@gmail.com">
+                        {% include 'base/components/icons/_icon_email.html' with icon_class="contact-card__icon" %}
+                        <span class="contact-card__label">Email</span>
+                        <span class="contact-card__value">drjoysoriginal@gmail.com</span>
+                    </a>
+                </div>
+
+                <div class="pt-10">
+                    <h3 class="font-benzin uppercase text-xs pb-4">{% trans "Мы в соцсетях" %}</h3>
+                    {% include 'base/components/_contact_links.html' with group="social" %}
+                </div>
             </section>
             <!-- END contacts-channels -->
 

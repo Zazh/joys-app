@@ -1,4 +1,21 @@
 @layer components {
+    /* Карточка канала связи: вся карточка — ссылка (tel:/mailto:/wa.me/t.me) */
+    .contact-card {
+        @apply flex flex-col gap-3 bg-stone-50 rounded-2xl p-6 transition-colors
+               hover:text-red-500 focus-brand;
+    }
+    .contact-card__icon {
+        @apply w-8 h-8 shrink-0;
+    }
+    /* Канон лейблов — gray-500, но на фоне stone-50 это 3.7:1 (ниже AA для мелкого
+       текста), поэтому здесь на тон темнее: gray-600 даёт 7.6:1 */
+    .contact-card__label {
+        @apply text-xs uppercase tracking-wide text-gray-600 font-bold;
+    }
+    .contact-card__value {
+        @apply font-bold break-words;
+    }
+
     /* Ряд каналов связи: одна разметка на футер и страницу контактов
        (см. base/components/_contact_links.html) */
     .contact-links {

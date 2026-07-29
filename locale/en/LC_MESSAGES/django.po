@@ -730,6 +730,9 @@ msgstr "Follow us on TikTok"
 msgid "Мы на YouTube"
 msgstr "Subscribe on YouTube"
 
+msgid "Мы в соцсетях"
+msgstr "Follow us"
+
 # Юрлицо в футере
 msgid "ТОО «DR JOYS»"
 msgstr "DR JOYS LLP"

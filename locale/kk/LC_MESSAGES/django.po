@@ -701,6 +701,9 @@ msgstr "TikTok-тағы парақшамыз"
 msgid "Мы на YouTube"
 msgstr "YouTube-тағы арнамыз"
 
+msgid "Мы в соцсетях"
+msgstr "Біз әлеуметтік желілерде"
+
 # Юрлицо в футере
 msgid "ТОО «DR JOYS»"
 msgstr "«DR JOYS» ЖШС"
