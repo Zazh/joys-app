@@ -1,0 +1,24 @@
+@layer components {
+    /* Формы на страницах (не в модалках): канон .modal-label/.modal-input,
+       но крупнее — на странице поля не зажаты шириной модалки */
+    .form-field {
+        @apply flex flex-col;
+    }
+    .form-label {
+        @apply text-xs uppercase tracking-wide text-gray-600 font-bold pb-2;
+    }
+    .form-input {
+        @apply w-full bg-stone-50 rounded-2xl p-4 text-sm outline-none transition-colors
+               placeholder:text-gray-500
+               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500;
+    }
+    textarea.form-input {
+        @apply min-h-32 resize-y;
+    }
+    .form-input[aria-invalid="true"] {
+        @apply outline-2 outline-red-500;
+    }
+    .form-error {
+        @apply text-red-500 text-xs pt-2 pl-4;
+    }
+}

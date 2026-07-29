@@ -710,3 +710,55 @@ msgid ""
 msgstr ""
 "Get in touch the way that suits you — we'll answer questions about orders, "
 "delivery and wholesale."
+
+# Реквизиты на странице контактов
+msgid "Реквизиты"
+msgstr "Company details"
+
+msgid "Наименование"
+msgstr "Legal name"
+
+msgid "ТОО «DR JOYS»"
+msgstr "DR JOYS LLP"
+
+msgid "БИН"
+msgstr "BIN"
+
+msgid "Скопировать БИН"
+msgstr "Copy BIN"
+
+msgid "Юридический адрес"
+msgstr "Registered address"
+
+msgid "Республика Казахстан, г. Астана, р-н Байконыр, ул. А. Бараев, д. 13, н.п. 5"
+msgstr "Republic of Kazakhstan, Astana, Baikonyr district, A. Barayev St. 13, unit 5"
+
+msgid "Банк"
+msgstr "Bank"
+
+msgid "АО «Kaspi Bank»"
+msgstr "Kaspi Bank JSC"
+
+msgid "БИК"
+msgstr "BIC"
+
+msgid "Скопировать БИК"
+msgstr "Copy BIC"
+
+msgid "КБе"
+msgstr "KBe"
+
+msgid "Номер счёта"
+msgstr "Account number"
+
+msgid "Скопировать номер счёта"
+msgstr "Copy account number"
+
+msgid "Скопировать все реквизиты"
+msgstr "Copy all details"
+
+msgid "Скопировано"
+msgstr "Copied"
+
+msgid "Не удалось скопировать — выделите текст вручную"
+msgstr "Couldn't copy — please select the text manually"

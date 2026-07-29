@@ -98,11 +98,83 @@
             <div id="form" class="scroll-mt-24"></div>
             <!-- END contacts-form -->
 
-            <!-- BEGIN contacts-requisites — заглушка, наполняется в Сессии 2 (реквизиты + копирование) -->
-            <div id="requisites" class="scroll-mt-24"></div>
+            <!-- BEGIN contacts-requisites -->
+            <section id="requisites" class="scroll-mt-24 pb-16">
+                <h2 class="display-2 pb-6">{% trans "Реквизиты" %}</h2>
+
+                <div class="requisites">
+                    <dl class="requisites__list" data-requisites>
+                        <div class="requisites__row">
+                            <dt class="requisites__label">{% trans "Наименование" %}</dt>
+                            <dd class="requisites__value"><span data-copy-value>{% trans "ТОО «DR JOYS»" %}</span></dd>
+                        </div>
+
+                        <div class="requisites__row">
+                            <dt class="requisites__label">{% trans "БИН" %}</dt>
+                            <dd class="requisites__value">
+                                <span class="requisites__num" data-copy-value>220140017355</span>
+                                <button type="button" class="copy-btn" data-copy
+                                        aria-label="{% trans 'Скопировать БИН' %}" title="{% trans 'Скопировать БИН' %}">
+                                    {% include 'base/components/icons/_icon_copy.html' %}
+                                </button>
+                            </dd>
+                        </div>
+
+                        <div class="requisites__row requisites__row--wide">
+                            <dt class="requisites__label">{% trans "Юридический адрес" %}</dt>
+                            <dd class="requisites__value"><span data-copy-value>{% trans "Республика Казахстан, г. Астана, р-н Байконыр, ул. А. Бараев, д. 13, н.п. 5" %}</span></dd>
+                        </div>
+
+                        <div class="requisites__row">
+                            <dt class="requisites__label">{% trans "Банк" %}</dt>
+                            <dd class="requisites__value"><span data-copy-value>{% trans "АО «Kaspi Bank»" %}</span></dd>
+                        </div>
+
+                        <div class="requisites__row">
+                            <dt class="requisites__label">{% trans "БИК" %}</dt>
+                            <dd class="requisites__value">
+                                <span data-copy-value>CASPKZKA</span>
+                                <button type="button" class="copy-btn" data-copy
+                                        aria-label="{% trans 'Скопировать БИК' %}" title="{% trans 'Скопировать БИК' %}">
+                                    {% include 'base/components/icons/_icon_copy.html' %}
+                                </button>
+                            </dd>
+                        </div>
+
+                        <div class="requisites__row">
+                            <dt class="requisites__label">{% trans "КБе" %}</dt>
+                            <dd class="requisites__value"><span class="requisites__num" data-copy-value>17</span></dd>
+                        </div>
+
+                        <div class="requisites__row">
+                            <dt class="requisites__label">{% trans "Номер счёта" %}</dt>
+                            <dd class="requisites__value">
+                                <span class="requisites__num requisites__num--long" data-copy-value>KZ45722S000012312406</span>
+                                <button type="button" class="copy-btn" data-copy
+                                        aria-label="{% trans 'Скопировать номер счёта' %}" title="{% trans 'Скопировать номер счёта' %}">
+                                    {% include 'base/components/icons/_icon_copy.html' %}
+                                </button>
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <button type="button" class="btn-macro default small mt-6" data-copy-all>
+                        {% trans "Скопировать все реквизиты" %}
+                    </button>
+                </div>
+
+                <!-- Тост: живой регион всегда в DOM, текст подставляется при копировании -->
+                <div class="copy-toast" data-copy-toast role="status" aria-live="polite"
+                     data-message-success="{% trans 'Скопировано' %}"
+                     data-message-error="{% trans 'Не удалось скопировать — выделите текст вручную' %}"></div>
+            </section>
             <!-- END contacts-requisites -->
 
         </div>
     </section>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'dist/js/contacts.js' %}" defer></script>
 {% endblock %}
