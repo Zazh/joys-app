@@ -75,6 +75,10 @@
     .leaflet-control-attribution {
         @apply text-[10px] text-gray-600;
     }
+    /* Атрибуцию прижимаем к нижнему краю карты */
+    .leaflet-bottom.leaflet-right {
+        @apply -mb-4;
+    }
     .leaflet-bar a {
         @apply text-gray-800 hover:text-red-500;
     }
