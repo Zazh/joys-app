@@ -39,6 +39,9 @@
 
     .btn-macro {
         @apply font-benzin text-xs lg:text-base p-5 lg:p-7 cursor-pointer rounded-full leading-tight focus-brand;
+        /* Пока форма отправляется, кнопка заблокирована — видно, что это не «ничего не произошло».
+           pointer-events-none гасит и hover-цвет, иначе кнопка выглядит живой */
+        @apply disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none;
     }
     .btn-macro.small {
         @apply font-benzin text-xs p-5 ;

@@ -507,6 +507,8 @@
 {% include 'base/components/_modal_quiz.html' %}
 {% include 'base/components/_interactive_modal.html' with modal=tattoo_modal %}
 {% include 'base/components/_interactive_modal.html' with modal=partner_modal %}
+{# Подтверждение отправки заявки: без него модалка просто закрывалась и человек не понимал, ушла ли заявка #}
+{% include 'base/components/_modal_success.html' with success_button=_("Закрыть") %}
 </main>
 {% endblock %}
 
@@ -1295,15 +1297,8 @@
 
             async function submitQuiz() {
                 try {
-                    const resp = await fetch('{% url "quiz:quiz_result" %}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': window.DRJOYS.csrfToken,
-                        },
-                        body: JSON.stringify(quizAnswers),
-                    });
-                    const data = await resp.json();
+                    // window.apiPost из main.js: те же заголовки, что у остальных POST'ов сайта
+                    const data = await window.apiPost('{% url "quiz:quiz_result" %}', quizAnswers);
                     if (data.ok && data.products && data.products.length) {
                         quizProducts = data.products;
                         quizProductIndex = 0;
@@ -1386,68 +1381,7 @@
             });
         });
 
-        // --- Interactive modal forms (inquiries API) ---
-        document.querySelectorAll('.interactive-modal-form').forEach(form => {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formSlug = form.dataset.formSlug;
-                const modalSlug = form.dataset.modalSlug;
-
-                // Collect data
-                const formData = {};
-                new FormData(form).forEach((val, key) => { formData[key] = val; });
-
-                // Clear errors
-                form.querySelectorAll('.modal-error').forEach(el => el.classList.add('hidden'));
-
-                try {
-                    const resp = await fetch(`/api/inquiries/${formSlug}/submit/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': window.DRJOYS?.csrfToken || '',
-                        },
-                        body: JSON.stringify({ data: formData }),
-                    });
-                    const result = await resp.json();
-
-                    if (result.ok) {
-                        // Close modal and show success
-                        const overlay = document.getElementById(`modal-${modalSlug}`);
-                        if (overlay) closeModal(overlay);
-                        form.reset();
-
-                        const successOverlay = document.getElementById('modalSuccess');
-                        if (successOverlay) {
-                            const titleEl = document.getElementById('successTitle');
-                            const textEl = document.getElementById('successText');
-                            if (titleEl) titleEl.textContent = result.success_title || '';
-                            if (textEl) textEl.textContent = result.success_text || '';
-                            openModal(successOverlay);
-                        }
-                    } else if (result.errors) {
-                        // Show field errors
-                        const fieldErrors = result.errors.data || result.errors;
-                        for (const [key, msg] of Object.entries(fieldErrors)) {
-                            const errorEl = form.querySelector(`[data-error-for="${key}"]`);
-                            if (errorEl) {
-                                errorEl.textContent = typeof msg === 'string' ? msg : msg[0];
-                                errorEl.classList.remove('hidden');
-                            }
-                        }
-                    } else if (result.error) {
-                        // Ошибка всей формы: лимит заявок, антиспам
-                        const errorEl = form.querySelector('[data-error-for="__all__"]');
-                        if (errorEl) {
-                            errorEl.textContent = result.error;
-                            errorEl.classList.remove('hidden');
-                        }
-                    }
-                } catch (err) {
-                    console.error('Form submit error:', err);
-                }
-            });
-        });
+        {# Отправка форм заявок живёт в main.js (initInteractiveModalForms) — общая с формой на странице контактов #}
 
         // --- Partner modal (dynamic InteractiveModal) ---
         const partnerOverlay = document.getElementById('modal-partner');

@@ -54,11 +54,21 @@ def is_rate_limited(request, scope='login', max_attempts=5, window=300, ident=No
     return False, 0
 
 
-def record_failed_attempt(request, scope='login', max_attempts=5, window=300, ident=None):
-    """Записать неудачную попытку."""
+def record_attempt(request, scope='login', window=300, ident=None):
+    """Засчитать обращение в счётчик лимита.
+
+    Пара к `is_rate_limited`, когда «проверить» и «засчитать» разнесены во
+    времени: у формы заявки квоту списывает только принятая заявка, а не
+    каждый POST (иначе пять опечаток оставят человека без формы на час).
+    """
     key = _key(scope, request, ident)
     attempts = cache.get(key, 0)
     cache.set(key, attempts + 1, window)
+
+
+def record_failed_attempt(request, scope='login', max_attempts=5, window=300, ident=None):
+    """Записать неудачную попытку (логины, вход в бэкофис)."""
+    record_attempt(request, scope, window, ident)
 
 
 def clear_attempts(request, scope='login', ident=None):

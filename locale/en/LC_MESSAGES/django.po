@@ -65,6 +65,10 @@ msgid "Некорректный email."
 msgstr "Invalid email."
 
 #, python-format
+msgid "Слишком длинно: максимум %(max)s символов."
+msgstr "Too long: %(max)s characters max."
+
+#, python-format
 msgid "Минимальное значение: %(value)s."
 msgstr "Minimum value: %(value)s."
 
@@ -80,6 +84,13 @@ msgstr "Invalid value."
 
 msgid "Форма не найдена."
 msgstr "Form not found."
+
+#, python-format
+msgid "Слишком много заявок. Попробуйте через %(min)s мин."
+msgstr "Too many messages. Try again in %(min)s min."
+
+msgid "Страница устарела. Обновите её и отправьте ещё раз."
+msgstr "This page is out of date. Refresh it and send again."
 
 msgid "Страна"
 msgstr "Country"

@@ -4,7 +4,8 @@ import json
 from unittest.mock import patch
 
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.middleware.csrf import get_token
+from django.test import Client, RequestFactory, TestCase, override_settings
 
 from .antispam import HONEYPOT_FIELD, TIMESTAMP_FIELD, make_timestamp_token
 from .models import InquiryForm, InquiryField, InquirySubmission
@@ -47,9 +48,9 @@ class InquirySubmitTests(TestCase):
         self.notify = patcher.start()
         self.addCleanup(patcher.stop)
 
-    def submit(self, **data):
+    def submit(self, client=None, **data):
         payload = {'name': 'Айдар', 'message': 'Вопрос по доставке', **data}
-        return self.client.post(
+        return (client or self.client).post(
             '/api/inquiries/contact/submit/',
             data=json.dumps({'data': payload}),
             content_type='application/json',
@@ -114,6 +115,13 @@ class InquirySubmitTests(TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn('topic', resp.json()['errors']['data'])
 
+    def test_too_long_value_rejected(self):
+        resp = self.submit(message='а' * 5001, **{TIMESTAMP_FIELD: old_token()})
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('message', resp.json()['errors']['data'])
+        self.assertFalse(InquirySubmission.objects.exists())
+
     def test_rate_limit_after_five_submissions(self):
         for _ in range(5):
             self.assertEqual(self.submit(**{TIMESTAMP_FIELD: old_token()}).status_code, 201)
@@ -121,3 +129,46 @@ class InquirySubmitTests(TestCase):
         resp = self.submit(**{TIMESTAMP_FIELD: old_token()})
         self.assertEqual(resp.status_code, 429)
         self.assertEqual(InquirySubmission.objects.count(), 5)
+
+    def test_invalid_submissions_do_not_eat_the_limit(self):
+        # Пять опечаток подряд не должны оставлять человека без формы на час
+        for _ in range(5):
+            self.assertEqual(self.submit(name='', **{TIMESTAMP_FIELD: old_token()}).status_code, 400)
+
+        self.assertEqual(self.submit(**{TIMESTAMP_FIELD: old_token()}).status_code, 201)
+
+    def test_honeypot_eats_the_limit(self):
+        # Иначе приманка была бы бесплатным обходом лимита для бота
+        for _ in range(5):
+            self.assertEqual(
+                self.submit(**{HONEYPOT_FIELD: 'spam', TIMESTAMP_FIELD: old_token()}).status_code, 200,
+            )
+
+        self.assertEqual(self.submit(**{TIMESTAMP_FIELD: old_token()}).status_code, 429)
+
+    def test_csrf_token_required(self):
+        # DRF помечает вьюху csrf_exempt — проверка живёт во вьюхе, тест её страхует
+        resp = self.submit(Client(enforce_csrf_checks=True), **{TIMESTAMP_FIELD: old_token()})
+
+        self.assertEqual(resp.status_code, 403)
+        self.assertFalse(InquirySubmission.objects.exists())
+
+    def test_submission_with_csrf_token_accepted(self):
+        # Как на сайте: куку ставит рендер страницы, её значение уходит заголовком
+        rendered = RequestFactory().get('/')
+        token = get_token(rendered)
+        client = Client(enforce_csrf_checks=True, HTTP_X_CSRFTOKEN=token)
+        client.cookies['csrftoken'] = rendered.META['CSRF_COOKIE']
+
+        resp = self.submit(client, **{TIMESTAMP_FIELD: old_token()})
+
+        self.assertEqual(resp.status_code, 201)
+        self.assertTrue(InquirySubmission.objects.exists())
+
+    @patch('inquiries.views.REQUEST_MAX', 2)
+    def test_flood_of_invalid_bodies_is_capped(self):
+        # Квоту заявок невалидные тела не тратят, поэтому сверху широкий лимит
+        for _ in range(2):
+            self.assertEqual(self.submit(name='').status_code, 400)
+
+        self.assertEqual(self.submit(name='').status_code, 429)

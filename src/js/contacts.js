@@ -3,6 +3,7 @@
 // Отдельная точка входа: Leaflet не попадает в main.js и не грузится на других страницах
 // ============================================
 import L from 'leaflet';
+import { initInquiryForm } from './lib/inquiry-form.js';
 
 // CARTO Positron — монохромные серые тайлы, {r} — ретина-версия из коробки.
 // Атрибуция OSM + CARTO обязательна (условие бесплатного использования) —
@@ -129,18 +130,11 @@ function initOfficeMap() {
 // ФОРМА ОБРАЩЕНИЯ — отправка на inquiries API без перезагрузки страницы
 // ============================================
 
-function getCSRFToken() {
-    // Кука свежее токена из шаблона, если сессия сменилась на открытой странице
-    const match = document.cookie.match(/csrftoken=([^;]+)/);
-    return match ? match[1] : (window.DRJOYS?.csrfToken || '');
-}
-
 function initContactForm() {
     const form = document.getElementById('contactForm');
     if (!form) return;
 
     const consent = document.getElementById('contactConsent');
-    const submitBtn = form.querySelector('button[type="submit"]');
     const successBox = document.getElementById('contactFormSuccess');
 
     // Ссылка на политику лежит внутри <label>: без этого клик по ней
@@ -149,83 +143,19 @@ function initContactForm() {
         link.addEventListener('click', e => e.stopPropagation());
     });
 
-    function clearErrors() {
-        form.querySelectorAll('.form-error').forEach(el => {
-            el.textContent = '';
-            el.classList.add('hidden');
-        });
-        form.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
-    }
-
-    // Показывает ошибку под полем и возвращает само поле — чтобы поставить фокус
-    function showError(key, message) {
-        const errorEl = form.querySelector(`[data-error-for="${key}"]`);
-        if (errorEl) {
-            errorEl.textContent = message;
-            errorEl.classList.remove('hidden');
-        }
-        const input = key === 'consent' ? consent : form.querySelector(`[name="${key}"]`);
-        if (input) input.setAttribute('aria-invalid', 'true');
-        return input;
-    }
-
-    function showSuccess(result) {
-        document.getElementById('contactSuccessTitle').textContent = result.success_title || '';
-        document.getElementById('contactSuccessText').textContent = result.success_text || '';
-        form.classList.add('hidden');
-        successBox.classList.remove('hidden');
-        successBox.focus();
-    }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        clearErrors();
-
-        if (consent && !consent.checked) {
-            showError('consent', form.dataset.errorConsent).focus();
-            return;
-        }
-
-        const payload = {};
-        new FormData(form).forEach((value, key) => { payload[key] = value; });
-
-        // Двойной клик не должен слать вторую заявку
-        submitBtn.disabled = true;
-        try {
-            const resp = await fetch(`/api/inquiries/${form.dataset.formSlug}/submit/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken(),
-                },
-                body: JSON.stringify({ data: payload }),
-            });
-            const result = await resp.json().catch(() => ({}));
-
-            if (result.ok) {
-                showSuccess(result);
-                return;
-            }
-
-            if (result.errors) {
-                // Ошибки полей приходят как {data: {key: text}} или {key: text}
-                const fieldErrors = result.errors.data || result.errors;
-                let firstInvalid = null;
-                for (const [key, message] of Object.entries(fieldErrors)) {
-                    const input = showError(key, Array.isArray(message) ? message[0] : message);
-                    firstInvalid = firstInvalid || input;
-                }
-                if (firstInvalid) firstInvalid.focus();
-            } else {
-                // Лимит заявок, антиспам, ошибка формы целиком
-                showError('__all__', result.error || form.dataset.errorNetwork);
-            }
-        } catch (err) {
-            console.error('Contact form submit error:', err);
-            showError('__all__', form.dataset.errorNetwork);
-        } finally {
-            submitBtn.disabled = false;
-        }
+    initInquiryForm(form, {
+        // Согласие проверяем на клиенте: в заявке оно не сохраняется
+        validate: () => (consent && !consent.checked
+            ? { key: 'consent', message: form.dataset.errorConsent }
+            : null),
+        // Успех вместо формы: показываем блок, потом пишем текст и уводим фокус
+        onSuccess: (result) => {
+            form.classList.add('hidden');
+            successBox.classList.remove('hidden');
+            document.getElementById('contactSuccessTitle').textContent = result.success_title || '';
+            document.getElementById('contactSuccessText').textContent = result.success_text || '';
+            successBox.focus();
+        },
     });
 }
 

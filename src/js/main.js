@@ -1,6 +1,8 @@
 // ============================================
 // MAIN.JS - Общие скрипты для всего сайта
 // ============================================
+import { apiPost } from './lib/api.js';
+import { initInquiryForm } from './lib/inquiry-form.js';
 
 // Инициализация после построения DOM — не ждём загрузки картинок и шрифтов
 // (window 'load' оставлен только там, где меряются размеры картинок)
@@ -47,27 +49,7 @@ function goToStep(overlay, stepNum) {
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.goToStep = goToStep;
-
-// --------------------------------------------
-// 0.1 API HELPER
-// --------------------------------------------
-function getCSRFToken() {
-    // Prefer cookie (always fresh after session change) over template-rendered token
-    const match = document.cookie.match(/csrftoken=([^;]+)/);
-    return match ? match[1] : (window.DRJOYS?.csrfToken || '');
-}
-
-async function apiPost(url, data) {
-    const resp = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken(),
-        },
-        body: JSON.stringify(data),
-    });
-    return resp.json();
-}
+window.apiPost = apiPost;
 
 // Обновить бейджи корзины и избранного в навигации
 function updateBadges(cartCount, favCount) {
@@ -1963,6 +1945,34 @@ function initDeliveryModal() {
 }
 
 onReady(initDeliveryModal);
+
+// --------------------------------------------
+// 17.1 ФОРМЫ ЗАЯВОК В МОДАЛКАХ (партнёрская, тату)
+// Разметку даёт _interactive_modal.html, отправку — общий initInquiryForm
+// --------------------------------------------
+function initInteractiveModalForms() {
+    document.querySelectorAll('.interactive-modal-form').forEach(form => {
+        initInquiryForm(form, {
+            onSuccess: (result) => {
+                closeModal(document.getElementById(`modal-${form.dataset.modalSlug}`));
+                form.reset();
+
+                const successOverlay = document.getElementById('modalSuccess');
+                if (!successOverlay) return;
+                const titleEl = document.getElementById('successTitle');
+                const textEl = document.getElementById('successText');
+                if (titleEl) titleEl.textContent = result.success_title || '';
+                if (textEl) textEl.textContent = result.success_text || '';
+                openModal(successOverlay);
+                // Модалка сама фокус не забирает — уводим на заголовок,
+                // иначе скринридер об успехе не скажет
+                if (titleEl) titleEl.focus();
+            },
+        });
+    });
+}
+
+onReady(initInteractiveModalForms);
 
 // --------------------------------------------
 // 18. DROPDOWN ВЫБОРА РЕГИОНА

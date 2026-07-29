@@ -43,37 +43,22 @@
                 {% if step.inquiry_form %}
                 <form class="flex flex-col gap-3 interactive-modal-form"
                       data-form-slug="{{ step.inquiry_form.slug }}"
-                      data-modal-slug="{{ modal.slug }}" novalidate>
+                      data-modal-slug="{{ modal.slug }}" novalidate
+                      data-error-network="{% trans 'Не удалось отправить. Проверьте связь и попробуйте ещё раз.' %}">
                     {% for field in step.inquiry_form.fields.all %}
+                    {# Видимого лейбла в модалке нет (только placeholder), имя поля скринридеру даёт aria-label #}
+                    {% with error_id='modalError-'|add:modal.slug|add:'-'|add:field.key %}
                     <div>
-                        {% if field.field_type == 'text' %}
-                        <input class="modal-input" type="text" name="{{ field.key }}"
-                               placeholder="{{ field.placeholder|default:field.label }}"
-                               {% if field.is_required %}required{% endif %}>
-
-                        {% elif field.field_type == 'email' %}
-                        <input class="modal-input" type="email" name="{{ field.key }}"
-                               placeholder="{{ field.placeholder|default:field.label }}"
-                               {% if field.is_required %}required{% endif %}>
-
-                        {% elif field.field_type == 'phone' %}
-                        <input class="modal-input" type="tel" name="{{ field.key }}"
-                               placeholder="{{ field.placeholder|default:field.label }}"
-                               {% if field.is_required %}required{% endif %}>
-
-                        {% elif field.field_type == 'number' %}
-                        <input class="modal-input" type="text" inputmode="numeric" pattern="[0-9]*"
-                               name="{{ field.key }}"
-                               placeholder="{{ field.placeholder|default:field.label }}"
-                               {% if field.is_required %}required{% endif %}>
-
-                        {% elif field.field_type == 'textarea' %}
+                        {% if field.field_type == 'textarea' %}
                         <textarea class="modal-input" name="{{ field.key }}" rows="3"
                                   placeholder="{{ field.placeholder|default:field.label }}"
+                                  aria-label="{{ field.label }}" aria-describedby="{{ error_id }}"
                                   {% if field.is_required %}required{% endif %}></textarea>
 
                         {% elif field.field_type == 'select' %}
-                        <select class="modal-input" name="{{ field.key }}" {% if field.is_required %}required{% endif %}>
+                        <select class="modal-input" name="{{ field.key }}"
+                                aria-label="{{ field.label }}" aria-describedby="{{ error_id }}"
+                                {% if field.is_required %}required{% endif %}>
                             <option value="">{{ field.placeholder|default:field.label }}</option>
                             {% for choice in field.get_choices %}
                             <option value="{{ choice.value }}">{{ choice.label }}</option>
@@ -81,7 +66,7 @@
                         </select>
 
                         {% elif field.field_type == 'radio' %}
-                        <fieldset class="flex flex-col gap-2">
+                        <fieldset class="flex flex-col gap-2" aria-describedby="{{ error_id }}">
                             <legend class="modal-label text-sm mb-1">{{ field.label }}</legend>
                             {% for choice in field.get_choices %}
                             <label class="modal-radio-label flex items-center gap-2 cursor-pointer">
@@ -94,17 +79,28 @@
 
                         {% elif field.field_type == 'checkbox' %}
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="{{ field.key }}" value="true" class="modal-checkbox">
+                            <input type="checkbox" name="{{ field.key }}" value="true" class="modal-checkbox"
+                                   aria-describedby="{{ error_id }}">
                             <span class="text-sm">{{ field.label }}</span>
                         </label>
+
+                        {% else %}
+                        {# text, email, phone, number — одна разметка, разный type (как в pages/contacts.html) #}
+                        <input class="modal-input" name="{{ field.key }}"
+                               type="{% if field.field_type == 'email' %}email{% elif field.field_type == 'phone' %}tel{% else %}text{% endif %}"
+                               {% if field.field_type == 'number' %}inputmode="numeric" pattern="[0-9]*"{% endif %}
+                               placeholder="{{ field.placeholder|default:field.label }}"
+                               aria-label="{{ field.label }}" aria-describedby="{{ error_id }}"
+                               {% if field.is_required %}required{% endif %}>
                         {% endif %}
 
-                        <p class="modal-error hidden text-xs mt-1" data-error-for="{{ field.key }}"></p>
+                        <p class="modal-error hidden text-xs mt-1" id="{{ error_id }}" data-error-for="{{ field.key }}"></p>
                     </div>
+                    {% endwith %}
                     {% endfor %}
                     {% inquiry_antispam %}
-                    {# Ошибка не по конкретному полю: лимит заявок, антиспам, сеть #}
-                    <p class="modal-error hidden text-xs" data-error-for="__all__"></p>
+                    {# Ошибка не по конкретному полю (лимит заявок, антиспам, сеть) — фокус на неё не ставим, поэтому role="alert" #}
+                    <p class="modal-error hidden text-xs" data-error-for="__all__" role="alert"></p>
                     <button type="submit" class="btn-macro small danger w-full text-center">{{ step.inquiry_form.submit_text }}</button>
                 </form>
                 {% endif %}

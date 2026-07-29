@@ -10,18 +10,21 @@
             </button>
         </div>
 
+        {# Заголовок, текст и подпись кнопки заполняет JS/включающий шаблон: #}
+        {# модалка общая для оформления заказа и для заявок с формы #}
         <!-- Content -->
-        <div class="flex flex-col items-center gap-4 py-8">
+        <div class="flex flex-col items-center gap-4 py-8" role="status">
             <div class="w-16 h-16 rounded-full bg-green-600 flex items-center justify-center">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
             </div>
-            <h2 class="font-benzin text-xl uppercase text-center leading-tight" id="successTitle">{% trans "Заказ" %}<br>{% trans "оформлен!" %}</h2>
+            {# tabindex — чтобы после открытия увести на заголовок фокус: модалка его сама не забирает #}
+            <h2 class="font-benzin text-xl uppercase text-center leading-tight" id="successTitle" tabindex="-1">{% trans "Заказ" %}<br>{% trans "оформлен!" %}</h2>
             <p class="text-sm text-gray-500 text-center" id="successText">{% trans "Мы свяжемся с вами для подтверждения" %}</p>
         </div>
 
-        <button class="btn-macro black w-full text-center text-xs" type="button" onclick="closeModal(document.getElementById('modalSuccess'))">{% trans "ВЕРНУТЬСЯ К ПОКУПКАМ" %}</button>
+        <button class="btn-macro black w-full text-center text-xs" type="button" onclick="closeModal(document.getElementById('modalSuccess'))">{{ success_button|default:_("ВЕРНУТЬСЯ К ПОКУПКАМ") }}</button>
     </div>
 </div>
 <!-- END modal success -->
