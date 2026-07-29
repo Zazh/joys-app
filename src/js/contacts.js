@@ -5,11 +5,10 @@
 import L from 'leaflet';
 
 // CARTO Positron — монохромные серые тайлы, {r} — ретина-версия из коробки.
-// Атрибуция OSM + CARTO обязательна (условие бесплатного использования).
+// Атрибуция OSM + CARTO обязательна (условие бесплатного использования) —
+// выведена статичной строкой под картой в шаблоне (.map-attribution), а не
+// контролом Leaflet: rounded-2xl + overflow-hidden на контейнере иначе режут её.
 const TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-const TILE_ATTRIBUTION =
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
-    '&copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 // Брендовый пин — знак из логотипа: щит #E42521 + белое сердце внутри.
 // Пути взяты как есть из src/images/svgs/logo_small.svg (без ® рядом),
@@ -73,10 +72,12 @@ function createMap(container) {
         // На мобильном перетаскивание карты не должно красть скролл страницы —
         // маршрут там всё равно строят кнопками 2ГИС/Яндекс/Google
         dragging: !L.Browser.mobile,
+        // Атрибуция — статичная строка под картой в шаблоне (.map-attribution),
+        // не контрол Leaflet поверх тайлов (см. комментарий у TILE_URL)
+        attributionControl: false,
     });
 
     L.tileLayer(TILE_URL, {
-        attribution: TILE_ATTRIBUTION,
         maxZoom: 19,
         subdomains: 'abcd',
     }).addTo(map);
