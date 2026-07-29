@@ -34,7 +34,11 @@ function onReady(fn) {
 // остаются в Django (переводы, {% include %} иконок), JS их только клонирует
 function buildPopup(container) {
     const template = document.getElementById('officeMapPopup');
-    if (template) return template.content.cloneNode(true);
+    // Клонируем именно элемент, а не DocumentFragment: appendChild опустошает
+    // фрагмент, и попап открылся бы пустым на второй раз
+    if (template?.content.firstElementChild) {
+        return template.content.firstElementChild.cloneNode(true);
+    }
 
     // Шаблона нет — минимальный попап из data-атрибутов
     const wrap = document.createElement('div');
