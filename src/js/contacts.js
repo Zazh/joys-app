@@ -11,12 +11,11 @@ const TILE_ATTRIBUTION =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
     '&copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-// Брендовый пин: капля #E42521 с белым кружком, остриё ровно в точке [20, 48]
+// Брендовый пин — «сердце» из логотипа DR.JOYS, остриё ровно в точке [20, 38]
 const PIN_HTML = `
 <span class="map-pin">
-    <svg width="40" height="48" viewBox="0 0 40 48" fill="none" aria-hidden="true">
-        <path d="M20 48C20 48 35 30.5 35 17.5C35 9.2 28.3 2.5 20 2.5C11.7 2.5 5 9.2 5 17.5C5 30.5 20 48 20 48Z" fill="#E42521"/>
-        <circle cx="20" cy="17.5" r="5.5" fill="#fff"/>
+    <svg width="40" height="38" viewBox="160.7 0 40.5 38" fill="none" aria-hidden="true">
+        <path d="M161.331 3.4931C163.089 3.17884 165.731 2.6985 168.94 2.08553C178.32 0.293213 178.817 -0.013871 181.126 0.000467538C183.534 0.016001 183.903 0.357736 192.837 2.08553C196.182 2.73316 198.931 3.22664 200.744 3.54448C200.837 4.31398 200.94 5.36667 200.981 6.6201C201.147 11.6625 200.169 15.4634 199.971 16.2114C198.312 22.451 194.844 26.8793 193.313 28.6692C188.978 33.7391 184.006 36.5793 181.067 38C178.086 36.547 173.361 33.7964 169.178 29.0348C167.765 27.4265 163.971 22.8071 162.104 15.8469C160.718 10.6791 160.946 6.28075 161.331 3.4931Z" fill="#E42521"/>
     </svg>
 </span>`;
 
@@ -79,9 +78,9 @@ function createMap(container) {
         icon: L.divIcon({
             className: 'map-pin-icon', // не 'leaflet-div-icon' — без белой подложки и рамки
             html: PIN_HTML,
-            iconSize: [40, 48],
-            iconAnchor: [20, 48],
-            popupAnchor: [0, -44],
+            iconSize: [40, 38],
+            iconAnchor: [20, 38],
+            popupAnchor: [0, -34],
         }),
         title: container.dataset.title || '',
         alt: container.dataset.title || '',
