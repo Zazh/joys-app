@@ -1,61 +1,16 @@
 @layer components {
-    /* Карточка канала связи: вся карточка — ссылка (tel:/mailto:/wa.me/t.me) */
-    .contact-card {
-        @apply flex flex-col gap-3 bg-stone-50 rounded-2xl p-6 transition-colors
-               hover:text-red-500 focus-brand;
+    /* Ряд каналов связи: одна разметка на футер и страницу контактов
+       (см. base/components/_contact_links.html) */
+    .contact-links {
+        @apply flex flex-wrap items-center gap-4;
     }
-    .contact-card__icon {
-        @apply w-8 h-8 shrink-0;
+    /* Иконка 32px, но зона нажатия расширена псевдоэлементом до 44px —
+       не раздвигая ряд: gap-4 = 16px, соседние зоны не пересекаются */
+    .contact-links__item {
+        @apply relative block rounded-full transition-colors hover:text-red-500
+               focus-brand after:absolute after:-inset-1.5 after:content-[''];
     }
-    .contact-card__label {
-        @apply text-xs uppercase tracking-wide text-gray-500 font-bold;
-    }
-    .contact-card__value {
-        @apply font-bold break-words;
-    }
-
-    /* Реквизиты для юрлиц и банков: dl в две колонки на desktop, в одну на мобильном */
-    .requisites {
-        @apply bg-stone-50 rounded-2xl p-6;
-    }
-    .requisites__list {
-        @apply grid md:grid-cols-2 gap-x-8 gap-y-5;
-    }
-    /* Длинные значения (адрес) — на всю ширину карточки */
-    .requisites__row--wide {
-        @apply md:col-span-2;
-    }
-    /* Канон лейблов — gray-500, но на фоне stone-50 это 3.7:1 (ниже AA для мелкого текста),
-       поэтому в блоке реквизитов лейблы на тон темнее: gray-600 даёт 7.6:1 */
-    .requisites__label {
-        @apply text-xs uppercase tracking-wide text-gray-600 font-bold;
-    }
-    .requisites__value {
-        @apply text-sm flex items-start gap-2 pt-1;
-    }
-    /* Цифры одинаковой ширины — БИН и счёт читаются как в выписке */
-    .requisites__num {
-        @apply tabular-nums;
-    }
-    /* Номер счёта длиннее колонки на мобильном */
-    .requisites__num--long {
-        @apply break-all;
-    }
-
-    /* Иконка 20px, но зона нажатия расширена псевдоэлементом до 44px —
-       не раздвигая строку реквизита */
-    .copy-btn {
-        @apply relative shrink-0 text-gray-600 hover:text-red-500 cursor-pointer transition-colors rounded
-               focus-brand after:absolute after:-inset-3 after:content-[''];
-    }
-
-    /* Тост «Скопировано»: живой регион (role=status), всегда в DOM, скрыт прозрачностью */
-    .copy-toast {
-        @apply fixed left-1/2 bottom-6 z-50 -translate-x-1/2 translate-y-2 opacity-0 pointer-events-none
-               rounded-full bg-black px-4 py-2 text-xs text-white duration-200
-               transition-[opacity,transform] motion-reduce:transition-none;
-    }
-    .copy-toast.is-visible {
-        @apply translate-y-0 opacity-100;
+    .contact-links__icon {
+        @apply block w-8 h-8;
     }
 }
