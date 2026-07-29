@@ -135,8 +135,16 @@ class PageDetailView(DetailView):
     template_name = 'pages/page.html'
     context_object_name = 'page'
 
+    # Страницы с собственной вёрсткой вместо generic pages/page.html
+    CUSTOM_TEMPLATES = {
+        'contacts': 'pages/contacts.html',
+    }
+
     def get_queryset(self):
         return Page.objects.filter(is_published=True).select_related('category')
+
+    def get_template_names(self):
+        return [self.CUSTOM_TEMPLATES.get(self.object.slug, self.template_name)]
 
 
 class BlogListView(ListView):

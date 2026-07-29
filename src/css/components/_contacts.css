@@ -1,0 +1,16 @@
+@layer components {
+    /* Карточка канала связи: вся карточка — ссылка (tel:/mailto:/wa.me/t.me) */
+    .contact-card {
+        @apply flex flex-col gap-3 bg-stone-50 rounded-2xl p-6 transition-colors
+               hover:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500;
+    }
+    .contact-card__icon {
+        @apply w-8 h-8 shrink-0;
+    }
+    .contact-card__label {
+        @apply text-xs uppercase tracking-wide text-gray-500 font-bold;
+    }
+    .contact-card__value {
+        @apply font-bold break-words;
+    }
+}

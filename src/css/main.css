@@ -28,6 +28,7 @@
 @import "./components/_modals.css";
 @import "./components/_floating-nav.css";
 @import "./components/_cart.css";
+@import "./components/_contacts.css";
 
 /* Utilities */
 @import "./utilities/custom.css";

@@ -699,3 +699,14 @@ msgstr "with an average"
 msgctxt "reviews"
 msgid "оценкой"
 msgstr "rating of"
+
+# Страница контактов
+msgid "Каналы связи"
+msgstr "Contact channels"
+
+msgid ""
+"Свяжитесь с нами удобным способом — ответим по заказу, доставке и оптовому "
+"сотрудничеству."
+msgstr ""
+"Get in touch the way that suits you — we'll answer questions about orders, "
+"delivery and wholesale."
