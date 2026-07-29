@@ -5,6 +5,10 @@
 
 {% block meta %}
 {% if page.meta_description %}<meta name="description" content="{{ page.meta_description }}">{% endif %}
+{# Хлебные крошки собирает PageDetailView для любой CMS-страницы — pages/views.py #}
+{% for jsonld_str in jsonld_blocks %}
+<script type="application/ld+json">{{ jsonld_str|safe }}</script>
+{% endfor %}
 {% endblock %}
 
 {% block og %}

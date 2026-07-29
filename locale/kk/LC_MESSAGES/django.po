@@ -24,10 +24,9 @@ msgid "Пароли не совпадают."
 msgstr "Құпия сөздер сәйкес келмейді."
 
 #: accounts/views.py:29
-#, fuzzy, python-format
-#| msgid "Слишком много заявок. Попробуйте через %(min)s мин."
+#, python-format
 msgid "Слишком много попыток. Попробуйте через %(min)s мин."
-msgstr "Өтінім тым көп. %(min)s мин кейін көріңіз."
+msgstr "Тым көп әрекет жасалды. %(min)s мин кейін көріңіз."
 
 #: accounts/views.py:46 accounts/views.py:97
 msgid "Вы уже авторизованы."

@@ -43,7 +43,9 @@ def is_honeypot_filled(fields):
 
 def is_too_fast(fields):
     """Форма отправлена раньше MIN_FILL_SECONDS после рендера."""
-    token = fields.get(TIMESTAMP_FIELD)
+    # str(): в JSON на месте метки может приехать число или true, а Signer.unsign
+    # ищет в значении разделитель — на не-строке это TypeError и 500 вместо отказа
+    token = str(fields.get(TIMESTAMP_FIELD) or '')
     if not token:
         # Метки нет: страница из кеша браузера, старый бандл или прямой
         # вызов API — не режем, такие запросы держит лимит по IP

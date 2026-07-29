@@ -95,6 +95,16 @@ class InquirySubmitTests(TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(InquirySubmission.objects.exists())
 
+    def test_non_string_timestamp_rejected_without_crash(self):
+        # В JSON на месте метки может приехать что угодно: число, true, список.
+        # Проверка подписи должна ответить отказом, а не упасть с 500
+        for junk in (123, True, ['x'], {'a': 1}):
+            with self.subTest(junk=junk):
+                resp = self.submit(**{TIMESTAMP_FIELD: junk})
+
+                self.assertEqual(resp.status_code, 400)
+                self.assertFalse(InquirySubmission.objects.exists())
+
     def test_missing_timestamp_still_accepted(self):
         # Старый бандл или страница из кеша браузера — заявку не теряем
         resp = self.submit()

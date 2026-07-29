@@ -24,10 +24,9 @@ msgid "Пароли не совпадают."
 msgstr "Passwords do not match."
 
 #: accounts/views.py:29
-#, fuzzy, python-format
-#| msgid "Слишком много заявок. Попробуйте через %(min)s мин."
+#, python-format
 msgid "Слишком много попыток. Попробуйте через %(min)s мин."
-msgstr "Too many messages. Try again in %(min)s min."
+msgstr "Too many attempts. Try again in %(min)s min."
 
 #: accounts/views.py:46 accounts/views.py:97
 msgid "Вы уже авторизованы."

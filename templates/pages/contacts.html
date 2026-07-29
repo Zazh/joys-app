@@ -89,7 +89,9 @@
     <!-- BEGIN contacts-office -->
     {# Координаты офиса (OSM, здание Бараева 13). TODO: сверить точку по 2ГИС — вход в н.п. 5 #}
     <section class="main-grid">
-        <div id="office" class="col-span-full lg:col-span-13 lg:col-start-2 scroll-mt-24 pb-16">
+        {# Колонка карты шире контентной, но левым краем совпадает с ней на всех ширинах: #}
+        {# на lg контент идёт с первой колонки, на xl — со второй (xl:col-start-2 у обоих) #}
+        <div id="office" class="col-span-full lg:col-span-13 xl:col-start-2 scroll-mt-24 pb-16">
             {# Карта во всю ширину секции, инициализируется лениво из dist/js/contacts.js #}
             {# До инициализации и без JS в контейнере виден фолбэк с адресом и маршрутами #}
             <div id="officeMap"
