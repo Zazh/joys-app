@@ -767,3 +767,13 @@ msgstr "Map: DR.JOYS office"
 
 msgid "Открыть на карте"
 msgstr "Open in maps"
+
+# Ссылки маршрутов (base/components/_route_links.html)
+msgid "Построить маршрут в 2ГИС"
+msgstr "Get directions in 2GIS"
+
+msgid "Построить маршрут в Яндекс Картах"
+msgstr "Get directions in Yandex Maps"
+
+msgid "Построить маршрут в Google Maps"
+msgstr "Get directions in Google Maps"

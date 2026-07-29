@@ -738,3 +738,13 @@ msgstr "Карта: DR.JOYS кеңсесі"
 
 msgid "Открыть на карте"
 msgstr "Картадан ашу"
+
+# Ссылки маршрутов (base/components/_route_links.html)
+msgid "Построить маршрут в 2ГИС"
+msgstr "2ГИС-те бағыт салу"
+
+msgid "Построить маршрут в Яндекс Картах"
+msgstr "Яндекс Карталарда бағыт салу"
+
+msgid "Построить маршрут в Google Maps"
+msgstr "Google Maps-те бағыт салу"

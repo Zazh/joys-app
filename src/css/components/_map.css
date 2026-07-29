@@ -6,20 +6,29 @@
 
 @layer components {
     /* --------------------------------------------
-       Блок «Офис»: слева текст, справа карта;
-       на мобильном — текст (с кнопками маршрутов), затем карта
+       Адрес и часы работы одной строкой (блок каналов связи)
        -------------------------------------------- */
-    .office-grid {
-        @apply grid gap-4 lg:grid-cols-[1fr_2fr] lg:gap-6;
+    .office-line {
+        @apply flex flex-wrap items-baseline gap-x-2 gap-y-1 font-bold;
     }
-    .office-label {
-        @apply text-xs uppercase tracking-wide text-gray-500 font-bold;
+    .office-line__sep {
+        @apply text-gray-500;
     }
-    .office-value {
-        @apply pt-2 font-bold;
+
+    /* --------------------------------------------
+       Ссылки «построить маршрут»: только иконки сервисов,
+       названия — в title/aria-label (канон иконок сайта)
+       -------------------------------------------- */
+    .route-links {
+        @apply flex flex-wrap items-center gap-4;
     }
-    .office-routes {
-        @apply flex flex-wrap items-center gap-x-6 gap-y-2 pt-2;
+    /* Зона нажатия расширена до 44px псевдоэлементом, ряд при этом не разъезжается */
+    .route-link {
+        @apply relative block rounded-full transition-opacity hover:opacity-75
+               focus-brand after:absolute after:-inset-1.5 after:content-[''];
+    }
+    .route-link__icon {
+        @apply block w-8 h-8;
     }
 
     /* --------------------------------------------
@@ -64,6 +73,16 @@
     }
     .map-popup__address {
         @apply block text-gray-600;
+    }
+    .map-popup__label {
+        @apply text-xs uppercase tracking-wide text-gray-500 font-bold pt-4;
+    }
+    .map-popup__hours {
+        @apply pt-1 font-bold;
+    }
+    /* Иконки маршрутов в попапе — чуть плотнее, чем в фолбэке */
+    .map-popup .route-links {
+        @apply gap-4 pt-2;
     }
     .leaflet-container a.leaflet-popup-close-button {
         @apply top-2 right-2 w-6 h-6 leading-6 text-gray-500 hover:text-red-500;

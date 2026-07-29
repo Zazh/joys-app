@@ -4,9 +4,9 @@
 // ============================================
 import L from 'leaflet';
 
-// CARTO Voyager — светлые нейтральные тайлы, {r} — ретина-версия из коробки.
+// CARTO Positron — монохромные серые тайлы, {r} — ретина-версия из коробки.
 // Атрибуция OSM + CARTO обязательна (условие бесплатного использования).
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 const TILE_ATTRIBUTION =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
     '&copy; <a href="https://carto.com/attributions">CARTO</a>';
@@ -28,8 +28,15 @@ function onReady(fn) {
     }
 }
 
+// Содержимое попапа лежит в <template> шаблона: адрес, часы и иконки маршрутов
+// остаются в Django (переводы, {% include %} иконок), JS их только клонирует
 function buildPopup(container) {
+    const template = document.getElementById('officeMapPopup');
+    if (template) return template.content.cloneNode(true);
+
+    // Шаблона нет — минимальный попап из data-атрибутов
     const wrap = document.createElement('div');
+    wrap.className = 'map-popup';
 
     const name = document.createElement('strong');
     name.className = 'map-popup__name';
@@ -80,7 +87,11 @@ function createMap(container) {
         alt: container.dataset.title || '',
     }).addTo(map);
 
-    marker.bindPopup(buildPopup(container));
+    marker.bindPopup(buildPopup(container), { minWidth: 240, maxWidth: 300 });
+
+    // Часы и маршруты живут в попапе, поэтому на десктопе открываем его сразу —
+    // иначе о них никто не узнает. На мобильном попап закрыл бы карту целиком
+    if (window.matchMedia('(min-width: 1024px)').matches) marker.openPopup();
 
     // Зум колёсиком — только после клика по карте, до курсора вне карты
     map.on('click', () => map.scrollWheelZoom.enable());

@@ -1,0 +1,21 @@
+{# Ряд ссылок «построить маршрут»: иконки сервисов, подписи — для скринридера #}
+{# Один источник координат офиса — правятся только здесь #}
+{# Используется в попапе карты и в фолбэке контейнера (pages/contacts.html) #}
+{% load i18n %}
+<div class="route-links {{ list_class }}">
+    <a class="route-link" href="https://2gis.kz/astana/routeSearch/rsType/car/to/71.43576,51.15824"
+       target="_blank" rel="noopener noreferrer"
+       title="2ГИС" aria-label="{% trans 'Построить маршрут в 2ГИС' %}">
+        {% include 'base/components/icons/_icon_2gis.html' %}
+    </a>
+    <a class="route-link" href="https://yandex.ru/maps/?rtext=~51.15824,71.43576&amp;rtt=auto&amp;z=16"
+       target="_blank" rel="noopener noreferrer"
+       title="{% trans 'Яндекс Карты' %}" aria-label="{% trans 'Построить маршрут в Яндекс Картах' %}">
+        {% include 'base/components/icons/_icon_yandex_maps.html' %}
+    </a>
+    <a class="route-link" href="https://www.google.com/maps/dir/?api=1&amp;destination=51.15824,71.43576"
+       target="_blank" rel="noopener noreferrer"
+       title="Google Maps" aria-label="{% trans 'Построить маршрут в Google Maps' %}">
+        {% include 'base/components/icons/_icon_google_maps.html' %}
+    </a>
+</div>
