@@ -30,6 +30,11 @@
 @import "./components/_cart.css";
 @import "./components/_contacts.css";
 
+/* Leaflet — в слой components, чтобы переопределения из _map.css
+   (тот же слой, ниже по порядку) выигрывали без !important */
+@import "leaflet/dist/leaflet.css" layer(components);
+@import "./components/_map.css";
+
 /* Utilities */
 @import "./utilities/custom.css";
 

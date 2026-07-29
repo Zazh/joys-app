@@ -1,0 +1,83 @@
+/* Появление пина: капля «падает» в точку, transform-origin — остриё */
+@keyframes map-pin-drop {
+    from { transform: scale(0.2) translateY(-8px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@layer components {
+    /* --------------------------------------------
+       Блок «Офис»: слева текст, справа карта;
+       на мобильном — текст (с кнопками маршрутов), затем карта
+       -------------------------------------------- */
+    .office-grid {
+        @apply grid gap-4 lg:grid-cols-[1fr_2fr] lg:gap-6;
+    }
+    .office-label {
+        @apply text-xs uppercase tracking-wide text-gray-500 font-bold;
+    }
+    .office-value {
+        @apply pt-2 font-bold;
+    }
+    .office-routes {
+        @apply flex flex-wrap items-center gap-x-6 gap-y-2 pt-2;
+    }
+
+    /* --------------------------------------------
+       Контейнер карты: высота фиксирована, чтобы не было layout shift
+       (до ленивой инициализации внутри — фолбэк с адресом на фоне stone-50)
+       -------------------------------------------- */
+    .map-container {
+        @apply relative h-[320px] lg:h-[440px] rounded-2xl overflow-hidden bg-stone-50;
+    }
+    /* Фолбэк без JS: адрес + ссылки на внешние карты. JS убирает его перед init */
+    .map-fallback {
+        @apply absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center;
+    }
+
+    /* --------------------------------------------
+       Leaflet: приведение к канону DR.JOYS
+       (leaflet.css импортирован в этот же слой выше — переопределения работают)
+       -------------------------------------------- */
+    .leaflet-container {
+        @apply font-sans text-base;
+    }
+    .leaflet-container a {
+        @apply text-gray-600 hover:text-red-500;
+    }
+
+    /* Брендовый пин */
+    .map-pin {
+        @apply block origin-bottom;
+        filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.35));
+        animation: map-pin-drop 350ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+    }
+
+    /* Попап */
+    .leaflet-popup-content-wrapper {
+        @apply rounded-2xl shadow-lg;
+    }
+    .leaflet-popup-content {
+        @apply m-0 p-5 pr-8 text-sm leading-snug;
+    }
+    .map-popup__name {
+        @apply block font-benzin uppercase text-xs pb-2;
+    }
+    .map-popup__address {
+        @apply block text-gray-600;
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+        @apply top-2 right-2 w-6 h-6 leading-6 text-gray-500 hover:text-red-500;
+    }
+
+    /* Контролы и атрибуция (OSM + CARTO — обязательное условие бесплатных тайлов) */
+    .leaflet-control-attribution {
+        @apply text-[10px] text-gray-600;
+    }
+    .leaflet-bar a {
+        @apply text-gray-800 hover:text-red-500;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .map-pin { animation: none; }
+}

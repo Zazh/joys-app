@@ -74,9 +74,47 @@
         </div>
     </section>
 
-    <!-- BEGIN contacts-office — заглушка, наполняется в Сессии 3 (адрес, часы, карта Leaflet) -->
+    <!-- BEGIN contacts-office -->
+    {# Координаты офиса (OSM, здание Бараева 13). TODO: сверить точку по 2ГИС — вход в н.п. 5 #}
     <section class="main-grid">
-        <div id="office" class="col-span-full lg:col-span-13 lg:col-start-2 scroll-mt-24"></div>
+        <div id="office" class="col-span-full lg:col-span-13 lg:col-start-2 scroll-mt-24 pb-16">
+            <h2 class="display-2 pb-6">{% trans "Офис" %}</h2>
+
+            <div class="office-grid">
+                <div>
+                    <p class="office-label">{% trans "Адрес" %}</p>
+                    <address class="office-value not-italic">
+                        {% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}
+                    </address>
+
+                    <p class="office-label pt-6">{% trans "Часы работы" %}</p>
+                    {# TODO: уточнить график у заказчика — пока заглушка (docs/contacts_page_redesign.md §3.4) #}
+                    <p class="office-value">{% trans "Пн–Пт 10:00–19:00" %}</p>
+
+                    <p class="office-label pt-6">{% trans "Построить маршрут" %}</p>
+                    <div class="office-routes">
+                        <a class="btn-link focus-brand" href="https://2gis.kz/astana/routeSearch/rsType/car/to/71.43576,51.15824" target="_blank" rel="noopener noreferrer">2ГИС</a>
+                        <a class="btn-link focus-brand" href="https://yandex.ru/maps/?rtext=~51.15824,71.43576&amp;rtt=auto&amp;z=16" target="_blank" rel="noopener noreferrer">{% trans "Яндекс Карты" %}</a>
+                        <a class="btn-link focus-brand" href="https://www.google.com/maps/dir/?api=1&amp;destination=51.15824,71.43576" target="_blank" rel="noopener noreferrer">Google Maps</a>
+                    </div>
+                </div>
+
+                {# Карта инициализируется лениво из dist/js/contacts.js; до этого и без JS видно фолбэк #}
+                <div id="officeMap"
+                     class="map-container"
+                     role="region"
+                     aria-label="{% trans 'Карта: офис DR.JOYS' %}"
+                     data-lat="51.15824"
+                     data-lng="71.43576"
+                     data-title="{% trans 'ТОО «DR JOYS»' %}"
+                     data-address="{% trans 'г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5' %}">
+                    <div class="map-fallback">
+                        <p class="font-bold">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}</p>
+                        <a class="btn-link focus-brand" href="https://2gis.kz/astana?m=71.43576%2C51.15824%2F16" target="_blank" rel="noopener noreferrer">{% trans "Открыть на карте" %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
     <!-- END contacts-office -->
 
@@ -91,5 +129,10 @@
         </div>
     </section>
 </main>
+{% endblock %}
+
+{% block scripts %}
+{# Leaflet — только на этой странице, отдельным бандлом #}
+<script src="{% static 'dist/js/contacts.js' %}" defer></script>
 {% endblock %}
 

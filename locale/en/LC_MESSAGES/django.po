@@ -739,3 +739,31 @@ msgstr "DR JOYS LLP"
 
 msgid "БИН"
 msgstr "BIN"
+
+# Блок «Офис + карта» (pages/contacts.html)
+msgid "Офис"
+msgstr "Office"
+
+msgid "Адрес"
+msgstr "Address"
+
+msgid "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5"
+msgstr "Astana, Baikonyr district, 13 A. Barayev St, unit 5"
+
+msgid "Часы работы"
+msgstr "Opening hours"
+
+msgid "Пн–Пт 10:00–19:00"
+msgstr "Mon–Fri 10:00–19:00"
+
+msgid "Построить маршрут"
+msgstr "Get directions"
+
+msgid "Яндекс Карты"
+msgstr "Yandex Maps"
+
+msgid "Карта: офис DR.JOYS"
+msgstr "Map: DR.JOYS office"
+
+msgid "Открыть на карте"
+msgstr "Open in maps"
