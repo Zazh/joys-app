@@ -141,6 +141,10 @@ else:
         }
     }
 
+# БД для тестов Django заводит свою, а кеш взял бы боевой — и прогон тестов
+# затирал бы общий Redis данными из пустой тестовой базы (см. core/test_runner.py)
+TEST_RUNNER = 'core.test_runner.IsolatedCacheRunner'
+
 # Сессии: кеш поверх БД — SELECT django_session только при промахе кеша
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
