@@ -113,10 +113,7 @@
                             <dt class="requisites__label">{% trans "БИН" %}</dt>
                             <dd class="requisites__value">
                                 <span class="requisites__num" data-copy-value>220140017355</span>
-                                <button type="button" class="copy-btn" data-copy
-                                        aria-label="{% trans 'Скопировать БИН' %}" title="{% trans 'Скопировать БИН' %}">
-                                    {% include 'base/components/icons/_icon_copy.html' %}
-                                </button>
+                                {% include 'base/components/_copy_button.html' with label=_('Скопировать БИН') %}
                             </dd>
                         </div>
 
@@ -134,10 +131,7 @@
                             <dt class="requisites__label">{% trans "БИК" %}</dt>
                             <dd class="requisites__value">
                                 <span data-copy-value>CASPKZKA</span>
-                                <button type="button" class="copy-btn" data-copy
-                                        aria-label="{% trans 'Скопировать БИК' %}" title="{% trans 'Скопировать БИК' %}">
-                                    {% include 'base/components/icons/_icon_copy.html' %}
-                                </button>
+                                {% include 'base/components/_copy_button.html' with label=_('Скопировать БИК') %}
                             </dd>
                         </div>
 
@@ -149,11 +143,8 @@
                         <div class="requisites__row">
                             <dt class="requisites__label">{% trans "Номер счёта" %}</dt>
                             <dd class="requisites__value">
-                                <span class="requisites__num requisites__num--long" data-copy-value>KZ45722S000012312406</span>
-                                <button type="button" class="copy-btn" data-copy
-                                        aria-label="{% trans 'Скопировать номер счёта' %}" title="{% trans 'Скопировать номер счёта' %}">
-                                    {% include 'base/components/icons/_icon_copy.html' %}
-                                </button>
+                                <span class="requisites__num break-all" data-copy-value>KZ45722S000012312406</span>
+                                {% include 'base/components/_copy_button.html' with label=_('Скопировать номер счёта') %}
                             </dd>
                         </div>
                     </dl>

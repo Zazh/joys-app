@@ -90,11 +90,11 @@ function initRequisites() {
         showToast(ok);
     }
 
-    // Одна кнопка — одно значение из соседнего [data-copy-value]
+    // Одна кнопка — одно значение из своего <dd>
     list.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-copy]');
         if (!btn) return;
-        const valueNode = btn.closest('.requisites__row')?.querySelector('[data-copy-value]');
+        const valueNode = btn.closest('dd')?.querySelector('[data-copy-value]');
         const text = valueNode?.textContent.trim();
         if (!text) return;
         copyAndReport(text, valueNode);
@@ -102,22 +102,17 @@ function initRequisites() {
 
     // «Скопировать все реквизиты» — собираем из самой разметки, чтобы
     // текст не разъезжался с таблицей и переводился вместе с ней
-    const copyAllBtn = document.querySelector('[data-copy-all]');
-    if (copyAllBtn) {
-        copyAllBtn.addEventListener('click', () => {
-            const lines = [];
-            list.querySelectorAll('.requisites__row').forEach((row) => {
-                const label = row.querySelector('.requisites__label')?.textContent.trim();
-                const value = row.querySelector('[data-copy-value]')?.textContent.trim();
-                if (label && value) lines.push(`${label}: ${value}`);
-            });
-            if (lines.length) copyAndReport(lines.join('\n'), list);
+    const copyAllBtn = list.parentElement.querySelector('[data-copy-all]');
+    copyAllBtn?.addEventListener('click', () => {
+        const lines = [];
+        list.querySelectorAll('dd').forEach((dd) => {
+            const label = dd.previousElementSibling?.textContent.trim();   // <dt>
+            const value = dd.querySelector('[data-copy-value]')?.textContent.trim();
+            if (label && value) lines.push(`${label}: ${value}`);
         });
-    }
+        if (lines.length) copyAndReport(lines.join('\n'), list);
+    });
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initRequisites);
-} else {
-    initRequisites();
-}
+// Скрипт подключён с defer — разметка уже разобрана, ждать DOMContentLoaded незачем
+initRequisites();

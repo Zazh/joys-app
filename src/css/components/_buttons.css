@@ -38,7 +38,7 @@
     }
 
     .btn-macro {
-        @apply font-benzin text-xs lg:text-base p-5 lg:p-7 cursor-pointer rounded-full leading-tight;
+        @apply font-benzin text-xs lg:text-base p-5 lg:p-7 cursor-pointer rounded-full leading-tight focus-brand;
     }
     .btn-macro.small {
         @apply font-benzin text-xs p-5 ;

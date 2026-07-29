@@ -2,7 +2,7 @@
     /* Карточка канала связи: вся карточка — ссылка (tel:/mailto:/wa.me/t.me) */
     .contact-card {
         @apply flex flex-col gap-3 bg-stone-50 rounded-2xl p-6 transition-colors
-               hover:text-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500;
+               hover:text-red-500 focus-brand;
     }
     .contact-card__icon {
         @apply w-8 h-8 shrink-0;
@@ -46,15 +46,14 @@
        не раздвигая строку реквизита */
     .copy-btn {
         @apply relative shrink-0 text-gray-600 hover:text-red-500 cursor-pointer transition-colors rounded
-               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500
-               after:absolute after:-inset-3 after:content-[''];
+               focus-brand after:absolute after:-inset-3 after:content-[''];
     }
 
     /* Тост «Скопировано»: живой регион (role=status), всегда в DOM, скрыт прозрачностью */
     .copy-toast {
         @apply fixed left-1/2 bottom-6 z-50 -translate-x-1/2 translate-y-2 opacity-0 pointer-events-none
-               rounded-full bg-black px-4 py-2 text-xs text-white transition-all duration-200
-               motion-reduce:transition-none;
+               rounded-full bg-black px-4 py-2 text-xs text-white duration-200
+               transition-[opacity,transform] motion-reduce:transition-none;
     }
     .copy-toast.is-visible {
         @apply translate-y-0 opacity-100;

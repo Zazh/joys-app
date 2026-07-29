@@ -571,3 +571,10 @@
 .br-lg > span {
     @apply lg:block;
 }
+/* Фирменное кольцо фокуса с клавиатуры — одно определение на весь сайт */
+@utility focus-brand {
+    &:focus-visible {
+        outline: 2px solid var(--color-red-500);
+        outline-offset: 2px;
+    }
+}
