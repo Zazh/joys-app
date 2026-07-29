@@ -208,10 +208,21 @@ def build_faq_jsonld(faqs):
 
 # ─── Organization ───
 
+def organization_id(request):
+    """Стабильный @id организации.
+
+    Глобальный блок и развёрнутая разметка на странице контактов описывают одно
+    юрлицо — по этому идентификатору парсеры склеивают их, а не считают двумя
+    разными компаниями.
+    """
+    return _absolute_url(request, '/') + '#organization'
+
+
 def build_organization_jsonld(request):
     return {
         '@context': 'https://schema.org',
         '@type': 'Organization',
+        '@id': organization_id(request),
         'name': 'DR.JOYS',
         'url': _absolute_url(request, '/'),
         'logo': _absolute_url(request, '/static/dist/images/svgs/logo.svg'),

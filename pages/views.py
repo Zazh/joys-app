@@ -1,13 +1,17 @@
 from django.core.cache import cache
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView, TemplateView
 
 from django.db.models import Avg, Count, Q, Value
 from django.db.models.functions import Coalesce, Length
 
+from catalog import jsonld as jld
 from inquiries.models import InquiryForm
 from modals.models import InteractiveModal
 from quiz.models import QuizQuestion, QuizResultText
 from reviews.models import Review
+from .jsonld import build_contact_page_jsonld
 from .models import PageCategory, Page, BlogPost, HeroSection, FeatureSlide, PromoBlock
 
 
@@ -146,6 +150,14 @@ class PageDetailView(DetailView):
         'contacts': 'contact',
     }
 
+    # Описание на случай пустого meta_description в бэкофисе: без него поисковик
+    # сочиняет сниппет сам, а Lighthouse снимает балл SEO. Заполненное поле страницы
+    # всегда в приоритете.
+    FALLBACK_DESCRIPTIONS = {
+        'contacts': _('Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, '
+                      'адрес офиса в Астане на карте и форма обращения.'),
+    }
+
     def get_queryset(self):
         return Page.objects.filter(is_published=True).select_related('category')
 
@@ -154,7 +166,8 @@ class PageDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        form_slug = self.INQUIRY_FORMS.get(self.object.slug)
+        page = self.object
+        form_slug = self.INQUIRY_FORMS.get(page.slug)
         if form_slug:
             # Поля и лейблы редактируются в бэкофисе, шаблон только рисует
             ctx['inquiry_form'] = (
@@ -163,6 +176,21 @@ class PageDetailView(DetailView):
                 .filter(slug=form_slug, is_active=True)
                 .first()
             )
+
+        # str() снимает ленивость: строка уходит в json.dumps, а __proxy__ он не умеет
+        description = page.meta_description or str(self.FALLBACK_DESCRIPTIONS.get(page.slug, ''))
+        ctx['meta_description'] = description
+
+        breadcrumbs = [
+            {'name': 'DR.JOYS', 'url': reverse('home')},
+            {'name': page.title, 'url': ''},
+        ]
+        ctx['breadcrumbs'] = breadcrumbs
+        ctx['jsonld_blocks'] = jld.serialize_jsonld(
+            jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
+            build_contact_page_jsonld(self.request, page, description)
+            if page.slug == 'contacts' else None,
+        )
         return ctx
 
 

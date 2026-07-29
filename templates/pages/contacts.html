@@ -4,19 +4,30 @@
 {% block title %}{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}{% endblock %}
 
 {% block meta %}
-{% if page.meta_description %}<meta name="description" content="{{ page.meta_description }}">{% endif %}
+{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}
+{# ContactPage + Organization (реквизиты, адрес, координаты, соцсети) и хлебные крошки — pages/jsonld.py #}
+{% for jsonld_str in jsonld_blocks %}
+<script type="application/ld+json">{{ jsonld_str|safe }}</script>
+{% endfor %}
 {% endblock %}
 
 {% block og %}
 <meta property="og:type" content="website">
 <meta property="og:title" content="{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}">
-{% if page.meta_description %}<meta property="og:description" content="{{ page.meta_description }}">{% endif %}
+{% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
 <meta property="og:url" content="{{ request.build_absolute_uri }}">
 {% if page.og_image %}
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}">
 {% else %}
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
 {% endif %}
+{% endblock %}
+
+{% block twitter %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}">
+{% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}">{% endif %}
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% if page.og_image %}{{ page.og_image.url }}{% else %}{% static 'dist/images/svgs/logo.svg' %}{% endif %}">
 {% endblock %}
 
 {% block content %}
@@ -26,6 +37,11 @@
 
             <!-- BEGIN contacts-hero -->
             <div class="pt-30 pb-10">
+                {# Крошки — строкой над заголовком, а не в шапке: nav_class="flex" показывает их и на мобильном, #}
+                {# hide_back=1 убирает мобильную кнопку «назад» (она fixed и легла бы поверх заголовка) #}
+                <div class="pb-4">
+                    {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs hide_back=1 nav_class="flex" %}
+                </div>
                 <h1 class="display-1">{{ page.title }}</h1>
                 <p class="pt-4 text-gray-600 max-w-xl">
                     {% trans "Свяжитесь с нами удобным способом — ответим по заказу, доставке и оптовому сотрудничеству." %}

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DR.JOYS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-19 20:09+0500\n"
+"POT-Creation-Date: 2026-07-29 23:53+0500\n"
 "PO-Revision-Date: 2026-03-19 22:00+0500\n"
 "Last-Translator: DR.JOYS Team\n"
 "Language-Team: Kazakh\n"
@@ -15,432 +15,719 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: accounts/forms.py:18 accounts/serializers.py:17
 msgid "Пользователь с таким email уже существует."
 msgstr "Бұл email-мен пайдаланушы тіркелген."
 
+#: accounts/forms.py:26 accounts/serializers.py:22
 msgid "Пароли не совпадают."
 msgstr "Құпия сөздер сәйкес келмейді."
 
+#: accounts/views.py:29
+#, fuzzy, python-format
+#| msgid "Слишком много заявок. Попробуйте через %(min)s мин."
+msgid "Слишком много попыток. Попробуйте через %(min)s мин."
+msgstr "Өтінім тым көп. %(min)s мин кейін көріңіз."
+
+#: accounts/views.py:46 accounts/views.py:97
 msgid "Вы уже авторизованы."
 msgstr "Сіз жүйеге кірген болып тұрсыз."
 
+#: accounts/views.py:129
 msgid "Неверный email или пароль."
 msgstr "Email немесе құпия сөз қате."
 
+#: accounts/views.py:163 accounts/views.py:176 orders/views.py:241
 msgid "Требуется авторизация."
 msgstr "Авторизация қажет."
 
+#: accounts/views.py:197
 msgid "Укажите email."
 msgstr "Email енгізіңіз."
 
+#: accounts/views.py:222
 msgid "Если аккаунт существует, письмо отправлено."
 msgstr "Аккаунт бар болса, хат жіберілді."
 
+#: accounts/views.py:235
 msgid "Недействительная ссылка."
 msgstr "Сілтеме жарамсыз."
 
+#: accounts/views.py:241
 msgid "Ссылка истекла или уже использована."
 msgstr "Сілтеменің мерзімі өтті немесе қолданылған."
 
+#: accounts/views.py:248
 msgid "Минимум 8 символов."
 msgstr "Кемінде 8 таңба."
 
+#: accounts/views.py:254
 msgid "Пароль успешно изменён."
 msgstr "Құпия сөз сәтті өзгертілді."
 
+#: catalog/jsonld.py:173 catalog/views.py:69
 msgid "Каталог презервативов DR.JOYS"
 msgstr "DR.JOYS мүшеқаптар каталогы"
 
+#: catalog/views.py:74
 msgid "Каталог презервативов DR.JOYS — классические, ребристые, ультратонкие"
-msgstr ""
-"DR.JOYS мүшеқаптар каталогы — классикалық, қырлы, ультра жұқа"
+msgstr "DR.JOYS мүшеқаптар каталогы — классикалық, қырлы, ультра жұқа"
 
+#: catalog/views.py:80 catalog/views.py:171 templates/pages/catalog.html:34
 msgid "Каталог"
 msgstr "Каталог"
 
+#: inquiries/serializers.py:53
 #, python-format
 msgid "Поле «%(label)s» обязательно."
 msgstr "«%(label)s» өрісі міндетті."
 
-msgid "Некорректный email."
-msgstr "Email дұрыс емес."
-
+#: inquiries/serializers.py:72
 #, python-format
 msgid "Слишком длинно: максимум %(max)s символов."
 msgstr "Тым ұзын: ең көбі %(max)s таңба."
 
+#: inquiries/serializers.py:78
+msgid "Некорректный email."
+msgstr "Email дұрыс емес."
+
+#: inquiries/serializers.py:84
+msgid "Введите число."
+msgstr "Сан енгізіңіз."
+
+#: inquiries/serializers.py:86
 #, python-format
 msgid "Минимальное значение: %(value)s."
 msgstr "Ең аз мән: %(value)s."
 
+#: inquiries/serializers.py:88
 #, python-format
 msgid "Максимальное значение: %(value)s."
 msgstr "Ең көп мән: %(value)s."
 
-msgid "Введите число."
-msgstr "Сан енгізіңіз."
-
+#: inquiries/serializers.py:93
 msgid "Недопустимое значение."
 msgstr "Жарамсыз мән."
 
+#: inquiries/views.py:42 inquiries/views.py:92
 msgid "Форма не найдена."
 msgstr "Форма табылмады."
 
+#: inquiries/views.py:56
 #, python-format
 msgid "Слишком много заявок. Попробуйте через %(min)s мин."
 msgstr "Өтінім тым көп. %(min)s мин кейін көріңіз."
 
+#: inquiries/views.py:79
 msgid "Страница устарела. Обновите её и отправьте ещё раз."
 msgstr "Бет ескірген. Оны жаңартып, қайта жіберіңіз."
 
+#: inquiries/views.py:113
+msgid "Форма отправлена слишком быстро. Попробуйте ещё раз."
+msgstr "Форма тым жылдам жіберілді. Қайта көріңіз."
+
+#: orders/forms.py:8 templates/base/components/_modal_delivery.html:21
+#: templates/orders/checkout.html:43
 msgid "Страна"
 msgstr "Ел"
 
+#: orders/forms.py:9 templates/base/components/_modal_delivery.html:29
+#: templates/orders/checkout.html:53
 msgid "Город"
 msgstr "Қала"
 
+#: orders/forms.py:10 templates/base/components/_modal_delivery.html:33
+#: templates/orders/checkout.html:59
 msgid "Улица"
 msgstr "Көше"
 
+#: orders/forms.py:11 templates/base/components/_modal_delivery.html:38
+#: templates/orders/checkout.html:66
 msgid "Дом"
 msgstr "Үй"
 
+#: orders/forms.py:12 templates/base/components/_modal_delivery.html:42
+#: templates/orders/checkout.html:71
 msgid "Квартира"
 msgstr "Пәтер"
 
+#: orders/forms.py:13 templates/base/components/_modal_partner.html:23
+#: templates/base/components/_modal_profile.html:60
+#: templates/base/components/_modal_tattoo.html:78
+#: templates/orders/checkout.html:79
 msgid "Имя"
 msgstr "Аты"
 
+#: orders/forms.py:14 templates/orders/checkout.html:85
 msgid "Фамилия"
 msgstr "Тегі"
 
+#: orders/forms.py:15 templates/base/components/_modal_delivery.html:55
+#: templates/base/components/_modal_profile.html:64
+#: templates/orders/checkout.html:91 templates/pages/contacts.html:60
 msgid "Телефон"
 msgstr "Телефон"
 
+#: orders/forms.py:16
 msgid "Email"
 msgstr "Email"
 
+#: orders/views.py:101
 msgid "Размер не найден"
 msgstr "Өлшем табылмады"
 
+#: orders/views.py:103 templates/pages/product_detail.html:120
+#: templates/pages/product_detail.html:153
+msgid "Скоро в продаже"
+msgstr "Жақында сатылымда"
+
+#: orders/views.py:112 templates/pages/catalog.html:87
+#: templates/pages/product_detail.html:120
+#: templates/pages/product_detail.html:153
+#: templates/pages/product_detail.html:334
+msgid "Нет в наличии"
+msgstr "Қоймада жоқ"
+
+#: orders/views.py:335 orders/views.py:400
 msgid "Регион не определён"
 msgstr "Аймақ анықталмады"
 
+#: orders/views.py:338 orders/views.py:405
 msgid "Товары в корзине не найдены"
 msgstr "Себеттегі тауарлар табылмады"
 
+#: orders/views.py:361 orders/views.py:425
 msgid "Ошибка платёжной системы. Попробуйте позже."
 msgstr "Төлем жүйесінің қатесі. Кейінірек қайталаңыз."
 
+#: orders/views.py:394 templates/base/components/_modal_cart.html:25
 msgid "Корзина пуста"
 msgstr "Себет бос"
 
+#: orders/views.py:489
 #, python-format
 msgid "%(name)s (%(size)s) — нет в наличии"
 msgstr "%(name)s (%(size)s) — қоймада жоқ"
 
+#: orders/views.py:493
 #, python-format
 msgid "%(name)s (%(size)s) — недостаточно на складе"
 msgstr "%(name)s (%(size)s) — қоймада жеткіліксіз"
 
+#: orders/views.py:592
 msgid "Некорректная ссылка"
 msgstr "Сілтеме дұрыс емес"
 
+#: orders/views.py:600
 msgid "Заказ не найден"
 msgstr "Тапсырыс табылмады"
 
+#: orders/views.py:653
 msgid "Сессия оплаты истекла. Попробуйте оформить заказ заново."
 msgstr "Төлем сессиясының мерзімі өтті. Тапсырысты қайта рәсімдеңіз."
 
+# Юрлицо в футере
+#: pages/jsonld.py:38 templates/base/footer/_footer.html:35
+#: templates/pages/contacts.html:101 templates/pages/contacts.html:119
+msgid "ТОО «DR JOYS»"
+msgstr "«DR JOYS» ЖШС"
+
+#: pages/jsonld.py:45 templates/base/footer/_footer.html:35
+msgid "БИН"
+msgstr "БСН"
+
+#: pages/jsonld.py:53
+msgid "Астана"
+msgstr "Астана"
+
+#: pages/jsonld.py:54
+msgid "р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5"
+msgstr "Байқоңыр ауданы, А. Бараев к-сі, 13-үй, 5-үй-жай"
+
+#: pages/views.py:157
+msgid ""
+"Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, адрес офиса в Астане "
+"на карте и форма обращения."
+msgstr ""
+"DR.JOYS байланыстары: телефон, WhatsApp, Telegram және пошта, Астанадағы "
+"кеңсенің мекенжайы картада және хабарласу нысаны."
+
+#: templates/accounts/check_email.html:4
 msgid "Проверьте почту"
 msgstr "Поштаңызды тексеріңіз"
 
+#: templates/accounts/check_email.html:21
 msgid "ПРОВЕРЬТЕ ПОЧТУ"
 msgstr "ПОШТАҢЫЗДЫ ТЕКСЕРІҢІЗ"
 
+#: templates/accounts/check_email.html:24
 msgid "Мы отправили письмо с ссылкой для подтверждения на"
 msgstr "Растау сілтемесі бар хат жібердік"
 
+#: templates/accounts/check_email.html:32
+#: templates/accounts/email_verified.html:48
 msgid "НА ГЛАВНУЮ"
 msgstr "БАСТЫ БЕТКЕ"
 
+#: templates/accounts/email_verified.html:4
 msgid "Email подтверждён"
 msgstr "Email расталды"
 
+#: templates/accounts/email_verified.html:4
 msgid "Ошибка"
 msgstr "Қате"
 
+#: templates/accounts/email_verified.html:21
 msgid "EMAIL ПОДТВЕРЖДЁН"
 msgstr "EMAIL РАСТАЛДЫ"
 
+#: templates/accounts/email_verified.html:24
 msgid ""
 "Ваш email успешно подтверждён. Теперь вы можете пользоваться всеми функциями "
 "сайта."
 msgstr ""
 "Email сәтті расталды. Енді сайттың барлық мүмкіндіктерін пайдалана аласыз."
 
+#: templates/accounts/email_verified.html:28
 msgid "ПЕРЕЙТИ К ПОКУПКАМ"
 msgstr "САТЫП АЛУҒА ӨТУ"
 
+#: templates/accounts/email_verified.html:41
 msgid "ОШИБКА"
 msgstr "ҚАТЕ"
 
+#: templates/accounts/email_verified.html:44
 msgid "Ссылка истекла или недействительна."
 msgstr "Сілтеменің мерзімі өтті немесе жарамсыз."
 
+#: templates/accounts/sso_callback.html:12
 msgid "Завершаем авторизацию..."
 msgstr "Авторизация аяқталуда..."
 
+#: templates/base.html:29 templates/base.html:38
 msgid "ультратонкие презервативы"
 msgstr "ультра жұқа мүшеқаптар"
 
+#: templates/base.html:30 templates/base.html:39
 #, python-format
 msgid "Ультратонкие презервативы DR.JOYS — неощутимые на 95%%"
 msgstr "DR.JOYS ультра жұқа мүшеқаптар — 95%% сезілмейді"
 
+#: templates/base.html:148 templates/base/components/_floating_nav.html:13
+#: templates/base/components/_floating_nav.html:17
+#: templates/base/components/_floating_nav.html:40
+#: templates/base/components/_modal_favorites.html:14
 msgid "Избранное"
 msgstr "Таңдаулылар"
 
+#: templates/base.html:157 templates/base/components/_floating_nav.html:4
+#: templates/base/components/_floating_nav.html:10
+#: templates/base/components/_floating_nav.html:32
+#: templates/base/components/_modal_cart.html:14
 msgid "Корзина"
 msgstr "Себет"
 
+#: templates/base.html:187 templates/base/components/_floating_nav.html:20
+#: templates/base/components/_floating_nav.html:25
+#: templates/base/components/_floating_nav.html:46
+#: templates/base/components/_modal_profile.html:18
 msgid "Профиль"
 msgstr "Профиль"
 
+#: templates/base.html:189
 msgid "Войти"
 msgstr "Кіру"
 
+#: templates/base.html:195
 msgid "Выбрать регион"
 msgstr "Аймақты таңдау"
 
+#: templates/base.html:197
 msgid "Выберите"
 msgstr "Таңдаңыз"
 
+#: templates/base.html:221
 msgid "Выбрать язык"
 msgstr "Тілді таңдау"
 
+#: templates/base.html:266
 msgid "Добавлено!"
 msgstr "Қосылды!"
 
+#: templates/base.html:267
 msgid "Добавить ещё"
 msgstr "Тағы қосу"
 
+#: templates/base.html:268
+#: templates/base/components/_modal_order_quantity.html:24
 msgid "Уменьшить"
 msgstr "Азайту"
 
+#: templates/base.html:269
+#: templates/base/components/_modal_order_quantity.html:30
 msgid "Увеличить"
 msgstr "Көбейту"
 
+#: templates/base.html:270
 msgid "В корзину"
 msgstr "Себетке"
 
+#: templates/base.html:271
 msgid "Удалить из избранного"
 msgstr "Таңдаулылардан жою"
 
+#: templates/base.html:272
 msgid "Ошибка загрузки"
 msgstr "Жүктеу қатесі"
 
+#: templates/base.html:273 templates/base.html:282
+#: templates/base/components/_modal_success.html:23
+#: templates/orders/checkout_success.html:14
+#: templates/orders/payment_result.html:17
 msgid "Заказ"
 msgstr "Тапсырыс"
 
+#: templates/base.html:274
 msgid "Размер"
 msgstr "Өлшем"
 
+#: templates/base.html:275
 msgid "шт."
 msgstr "дана"
 
+#: templates/base.html:276
 msgid "Адрес доставки"
 msgstr "Жеткізу мекенжайы"
 
+#: templates/base.html:277 templates/base/components/_modal_cart.html:31
+#: templates/base/components/_modal_order_quantity.html:43
+#: templates/orders/checkout.html:135
 msgid "Итого"
 msgstr "Барлығы"
 
+#: templates/base.html:278
 msgid "Ошибка входа."
 msgstr "Кіру қатесі."
 
+#: templates/base.html:279
 msgid "Ошибка сети. Попробуйте ещё раз."
 msgstr "Желі қатесі. Қайталап көріңіз."
 
+#: templates/base.html:280
 msgid "Ошибка регистрации."
 msgstr "Тіркелу қатесі."
 
+#: templates/base.html:281
 msgid "Заказ<br>оформлен!"
 msgstr "Тапсырыс<br>рәсімделді!"
 
+#: templates/base.html:283
 msgid "на сумму"
 msgstr "сомасы"
 
-msgid "Все"
-msgstr "Барлығы"
-
-msgid "Навигация магазина"
-msgstr "Дүкен навигациясы"
-
+#: templates/base/components/_breadcrumbs.html:14
+#: templates/base/components/_interactive_modal.html:13
+#: templates/base/components/_modal_auth.html:7
+#: templates/base/components/_modal_delivery.html:7
+#: templates/base/components/_modal_partner.html:7
+#: templates/base/components/_modal_profile.html:8
+#: templates/base/components/_modal_quiz.html:12
+#: templates/base/components/_modal_quiz.html:40
+#: templates/base/components/_modal_region.html:7
+#: templates/base/components/_modal_tattoo.html:26
+#: templates/base/components/_modal_tattoo.html:43
+#: templates/base/components/_modal_tattoo.html:60
+#: templates/pages/catalog.html:104
 msgid "Назад"
 msgstr "Артқа"
 
-msgid "Закрыть"
-msgstr "Жабу"
+#: templates/base/components/_catalog_filters.html:2
+msgid "Все"
+msgstr "Барлығы"
 
-msgid "Вход"
-msgstr "Кіру"
-
-msgid "Пароль"
-msgstr "Құпия сөз"
-
-msgid "Показать пароль"
-msgstr "Құпия сөзді көрсету"
-
-msgid "ВОЙТИ"
-msgstr "КІРУ"
-
-msgid "или"
-msgstr "немесе"
-
-msgid "Войти через Google"
-msgstr "Google арқылы кіру"
-
-msgid "Войти через Яндекс"
-msgstr "Яндекс арқылы кіру"
-
-msgid "Нет аккаунта? Зарегистрироваться"
-msgstr "Аккаунт жоқ па? Тіркелу"
-
-msgid "Регистрация"
-msgstr "Тіркелу"
-
-msgid "Повторите пароль"
-msgstr "Құпия сөзді қайталаңыз"
-
-msgid "СОЗДАТЬ АККАУНТ"
-msgstr "АККАУНТ ЖАСАУ"
-
-msgid "Уже есть аккаунт? Войти"
-msgstr "Аккаунт бар ма? Кіру"
-
-msgid "ОФОРМИТЬ ЗАКАЗ"
-msgstr "ТАПСЫРЫС БЕРУ"
-
-msgid "Продолжить покупки"
-msgstr "Сатып алуды жалғастыру"
-
-msgid "Доставка"
-msgstr "Жеткізу"
-
-msgid "Имя получателя"
-msgstr "Алушының аты"
-
-msgid "Фамилия получателя"
-msgstr "Алушының тегі"
-
-msgid "ПРОДОЛЖИТЬ"
-msgstr "ЖАЛҒАСТЫРУ"
-
-msgid "Пока пусто"
-msgstr "Әзірге бос"
-
-msgid "Цена за 1 шт."
-msgstr "1 дана бағасы"
-
-msgid "ДОБАВИТЬ В КОРЗИНУ"
-msgstr "СЕБЕТКЕ ҚОСУ"
-
-msgid "Стать"
-msgstr "Болу"
-
-msgid "партнером"
-msgstr "серіктес"
-
-msgid "Страна проживания"
-msgstr "Тұратын ел"
-
-msgid "Где планируете продавать"
-msgstr "Қайда сатуды жоспарлайсыз"
-
-msgid "На сколько заинтересованы в партнерстве?"
-msgstr "Серіктестікке қаншалықты қызығасыз?"
-
-msgid "Готов инвестировать в ближайшее время"
-msgstr "Жақын арада инвестиция салуға дайынмын"
-
-msgid "Пока просто изучаю информацию"
-msgstr "Әзірге ақпаратпен танысып жатырмын"
-
-msgid "Желаемый формат работы"
-msgstr "Қалаған жұмыс форматы"
-
-msgid "Стать дистрибьютором на всю страну"
-msgstr "Бүкіл ел бойынша дистрибьютор болу"
-
-msgid "Стать дистрибьютором на свой город"
-msgstr "Өз қаласында дистрибьютор болу"
-
-msgid "Стать оптовиком"
-msgstr "Көтерме сатушы болу"
-
-msgid "У меня офлайн точка"
-msgstr "Менде офлайн сауда нүктесі бар"
-
-msgid "Номер телефона"
-msgstr "Телефон нөмірі"
-
-msgid "Способ связи"
-msgstr "Байланыс тәсілі"
-
-msgid "Написать на WhatsApp"
-msgstr "WhatsApp-қа жазу"
-
+#: templates/base/components/_contact_links.html:16
+#: templates/base/components/_modal_partner.html:97
 msgid "Позвонить"
 msgstr "Қоңырау шалу"
 
+# Каналы связи: подписи для скринридера (base/components/_contact_links.html)
+#: templates/base/components/_contact_links.html:22
+msgid "Написать в WhatsApp"
+msgstr "WhatsApp-қа жазу"
+
+#: templates/base/components/_contact_links.html:28
+msgid "Написать в Telegram"
+msgstr "Telegram-ға жазу"
+
+#: templates/base/components/_contact_links.html:34
+msgid "Написать на почту"
+msgstr "Поштаға жазу"
+
+#: templates/base/components/_contact_links.html:41
+msgid "Мы в Instagram"
+msgstr "Instagram-дағы парақшамыз"
+
+#: templates/base/components/_contact_links.html:47
+msgid "Мы в TikTok"
+msgstr "TikTok-тағы парақшамыз"
+
+#: templates/base/components/_contact_links.html:53
+msgid "Мы на YouTube"
+msgstr "YouTube-тағы арнамыз"
+
+#: templates/base/components/_floating_nav.html:3
+msgid "Навигация магазина"
+msgstr "Дүкен навигациясы"
+
+#: templates/base/components/_interactive_modal.html:19
+#: templates/base/components/_modal_auth.html:10
+#: templates/base/components/_modal_cart.html:8
+#: templates/base/components/_modal_delivery.html:10
+#: templates/base/components/_modal_favorites.html:8
+#: templates/base/components/_modal_order_quantity.html:9
+#: templates/base/components/_modal_partner.html:10
+#: templates/base/components/_modal_profile.html:11
+#: templates/base/components/_modal_quiz.html:18
+#: templates/base/components/_modal_quiz.html:43
+#: templates/base/components/_modal_region.html:10
+#: templates/base/components/_modal_success.html:8
+#: templates/base/components/_modal_tattoo.html:12
+#: templates/base/components/_modal_tattoo.html:29
+#: templates/base/components/_modal_tattoo.html:46
+#: templates/base/components/_modal_tattoo.html:63
+#: templates/pages/home.html:513
+msgid "Закрыть"
+msgstr "Жабу"
+
+#: templates/base/components/_interactive_modal.html:47
+#: templates/pages/contacts.html:145
+msgid "Не удалось отправить. Проверьте связь и попробуйте ещё раз."
+msgstr "Жіберу мүмкін болмады. Байланысты тексеріп, қайта көріңіз."
+
+#: templates/base/components/_logo_small.html:3
+msgid "DR.JOYS — на главную"
+msgstr "DR.JOYS — басты бетке"
+
+#: templates/base/components/_modal_auth.html:17
+msgid "Вход"
+msgstr "Кіру"
+
+#: templates/base/components/_modal_auth.html:25
+#: templates/base/components/_modal_auth.html:92
+msgid "Пароль"
+msgstr "Құпия сөз"
+
+#: templates/base/components/_modal_auth.html:29
+#: templates/base/components/_modal_auth.html:96
+#: templates/base/components/_modal_auth.html:113
+msgid "Показать пароль"
+msgstr "Құпия сөзді көрсету"
+
+#: templates/base/components/_modal_auth.html:43
+#: templates/orders/checkout.html:23
+msgid "ВОЙТИ"
+msgstr "КІРУ"
+
+#: templates/base/components/_modal_auth.html:51
+msgid "или"
+msgstr "немесе"
+
+#: templates/base/components/_modal_auth.html:63
+msgid "Войти через Google"
+msgstr "Google арқылы кіру"
+
+#: templates/base/components/_modal_auth.html:72
+msgid "Войти через Яндекс"
+msgstr "Яндекс арқылы кіру"
+
+#: templates/base/components/_modal_auth.html:77
+msgid "Нет аккаунта? Зарегистрироваться"
+msgstr "Аккаунт жоқ па? Тіркелу"
+
+#: templates/base/components/_modal_auth.html:84
+msgid "Регистрация"
+msgstr "Тіркелу"
+
+#: templates/base/components/_modal_auth.html:109
+msgid "Повторите пароль"
+msgstr "Құпия сөзді қайталаңыз"
+
+#: templates/base/components/_modal_auth.html:127
+msgid "СОЗДАТЬ АККАУНТ"
+msgstr "АККАУНТ ЖАСАУ"
+
+#: templates/base/components/_modal_auth.html:133
+msgid "Уже есть аккаунт? Войти"
+msgstr "Аккаунт бар ма? Кіру"
+
+#: templates/base/components/_modal_cart.html:38
+#: templates/orders/checkout.html:103
+msgid "ОФОРМИТЬ ЗАКАЗ"
+msgstr "ТАПСЫРЫС БЕРУ"
+
+#: templates/base/components/_modal_cart.html:39
+msgid "Продолжить покупки"
+msgstr "Сатып алуды жалғастыру"
+
+#: templates/base/components/_modal_delivery.html:16
+#: templates/orders/checkout.html:37
+msgid "Доставка"
+msgstr "Жеткізу"
+
+#: templates/base/components/_modal_delivery.html:47
+msgid "Имя получателя"
+msgstr "Алушының аты"
+
+#: templates/base/components/_modal_delivery.html:51
+msgid "Фамилия получателя"
+msgstr "Алушының тегі"
+
+#: templates/base/components/_modal_delivery.html:62
+#: templates/base/components/_modal_order_quantity.html:50
+msgid "ПРОДОЛЖИТЬ"
+msgstr "ЖАЛҒАСТЫРУ"
+
+#: templates/base/components/_modal_favorites.html:24
+msgid "Пока пусто"
+msgstr "Әзірге бос"
+
+#: templates/base/components/_modal_order_quantity.html:39
+msgid "Цена за 1 шт."
+msgstr "1 дана бағасы"
+
+#: templates/base/components/_modal_order_quantity.html:49
+msgid "ДОБАВИТЬ В КОРЗИНУ"
+msgstr "СЕБЕТКЕ ҚОСУ"
+
+#: templates/base/components/_modal_partner.html:16
+msgid "Стать"
+msgstr "Болу"
+
+#: templates/base/components/_modal_partner.html:16
+msgid "партнером"
+msgstr "серіктес"
+
+#: templates/base/components/_modal_partner.html:29
+msgid "Страна проживания"
+msgstr "Тұратын ел"
+
+#: templates/base/components/_modal_partner.html:35
+msgid "Где планируете продавать"
+msgstr "Қайда сатуды жоспарлайсыз"
+
+#: templates/base/components/_modal_partner.html:41
+msgid "На сколько заинтересованы в партнерстве?"
+msgstr "Серіктестікке қаншалықты қызығасыз?"
+
+#: templates/base/components/_modal_partner.html:45
+msgid "Готов инвестировать в ближайшее время"
+msgstr "Жақын арада инвестиция салуға дайынмын"
+
+#: templates/base/components/_modal_partner.html:49
+msgid "Пока просто изучаю информацию"
+msgstr "Әзірге ақпаратпен танысып жатырмын"
+
+#: templates/base/components/_modal_partner.html:56
+msgid "Желаемый формат работы"
+msgstr "Қалаған жұмыс форматы"
+
+#: templates/base/components/_modal_partner.html:60
+msgid "Стать дистрибьютором на всю страну"
+msgstr "Бүкіл ел бойынша дистрибьютор болу"
+
+#: templates/base/components/_modal_partner.html:64
+msgid "Стать дистрибьютором на свой город"
+msgstr "Өз қаласында дистрибьютор болу"
+
+#: templates/base/components/_modal_partner.html:68
+msgid "Стать оптовиком"
+msgstr "Көтерме сатушы болу"
+
+#: templates/base/components/_modal_partner.html:72
+msgid "У меня офлайн точка"
+msgstr "Менде офлайн сауда нүктесі бар"
+
+#: templates/base/components/_modal_partner.html:79
+msgid "Номер телефона"
+msgstr "Телефон нөмірі"
+
+#: templates/base/components/_modal_partner.html:85
+msgid "Способ связи"
+msgstr "Байланыс тәсілі"
+
+#: templates/base/components/_modal_partner.html:89
+msgid "Написать на WhatsApp"
+msgstr "WhatsApp-қа жазу"
+
+#: templates/base/components/_modal_partner.html:103
 msgid "Отправить"
 msgstr "Жіберу"
 
+#: templates/base/components/_modal_profile.html:31
 msgid "История заказов"
 msgstr "Тапсырыстар тарихы"
 
+#: templates/base/components/_modal_profile.html:34
+#: templates/base/components/_modal_profile.html:57
 msgid "Контакты"
 msgstr "Байланыс"
 
+#: templates/base/components/_modal_profile.html:37
 msgid "Выйти"
 msgstr "Шығу"
 
+#: templates/base/components/_modal_profile.html:42
 msgid "История"
 msgstr "Тарихы"
 
+#: templates/base/components/_modal_profile.html:42
 msgid "заказов"
 msgstr "тапсырыстар"
 
+#: templates/base/components/_modal_profile.html:44
 msgid "Загрузка..."
 msgstr "Жүктелуде..."
 
+#: templates/base/components/_modal_profile.html:45
 msgid "Заказов пока нет"
 msgstr "Тапсырыстар әзірге жоқ"
 
+#: templates/base/components/_modal_region.html:18
 msgid "Ваш регион"
 msgstr "Сіздің аймағыңыз"
 
+#: templates/base/components/_modal_region.html:29
 msgid "ДА, ВСЁ ВЕРНО"
 msgstr "ИӘ, ДҰРЫС"
 
+#: templates/base/components/_modal_region.html:34
 msgid "ВЫБРАТЬ ДРУГОЙ"
 msgstr "БАСҚАСЫН ТАҢДАУ"
 
+#: templates/base/components/_modal_region.html:42
 msgid "Выберите регион"
 msgstr "Аймақты таңдаңыз"
 
+#: templates/base/components/_modal_success.html:23
+#: templates/orders/checkout_success.html:14
 msgid "оформлен!"
 msgstr "рәсімделді!"
 
+#: templates/base/components/_modal_success.html:24
 msgid "Мы свяжемся с вами для подтверждения"
 msgstr "Растау үшін сізбен байланысамыз"
 
+#: templates/base/components/_modal_success.html:27
+#: templates/orders/checkout_success.html:21
+#: templates/orders/payment_result.html:42
 msgid "ВЕРНУТЬСЯ К ПОКУПКАМ"
 msgstr "САТЫП АЛУҒА ОРАЛУ"
 
+#: templates/base/components/_modal_tattoo.html:17
 msgid "Тату с логотипом DR.JOYS"
 msgstr "DR.JOYS логотипі бар тату"
 
+#: templates/base/components/_modal_tattoo.html:19
 msgid ""
 "Сделай тату с логотипом DR.JOYS (от 5x7 см) на любом месте. Мы оплачиваем "
 "работу твоего тату-мастера."
@@ -448,21 +735,29 @@ msgstr ""
 "DR.JOYS логотипімен тату салдыр (5x7 см-ден) кез келген жерге. Тату-шебердің "
 "жұмысын біз төлейміз."
 
+#: templates/base/components/_modal_tattoo.html:20
+#: templates/base/components/_modal_tattoo.html:37
+#: templates/base/components/_modal_tattoo.html:54
 msgid "Далее"
 msgstr "Келесі"
 
+#: templates/base/components/_modal_tattoo.html:34
 msgid "Процесс нанесения тату"
 msgstr "Тату салу процесі"
 
+#: templates/base/components/_modal_tattoo.html:36
 msgid "Отправь фото и видео процесса и готового тату"
 msgstr "Процестің және дайын татудың фото мен видеосын жібер"
 
+#: templates/base/components/_modal_tattoo.html:51
 msgid "Готовое тату DR.JOYS"
 msgstr "Дайын DR.JOYS тату"
 
+#: templates/base/components/_modal_tattoo.html:53
 msgid "Получи пожизненный запас DR.JOYS в подарок"
 msgstr "DR.JOYS-тың өмір бойғы қорын сыйлыққа ал"
 
+#: templates/base/components/_modal_tattoo.html:75
 msgid ""
 "Оставляй заявку и мы расскажем подробнее про условия и поможем подобрать "
 "тату-мастера"
@@ -470,113 +765,172 @@ msgstr ""
 "Өтінім қалдыр, біз шарттар туралы толығырақ айтамыз және тату-шебер таңдауға "
 "көмектесеміз"
 
+#: templates/base/components/_modal_tattoo.html:80
 msgid "Возраст"
 msgstr "Жасы"
 
+#: templates/base/components/_modal_tattoo.html:81
 msgid "Минимальный возраст — 18 лет"
 msgstr "Ең кіші жас — 18"
 
+#: templates/base/components/_modal_tattoo.html:83
 msgid "Страна и город проживания"
 msgstr "Тұратын ел мен қала"
 
+#: templates/base/components/_modal_tattoo.html:85
 msgid "Оставить заявку"
 msgstr "Өтінім қалдыру"
 
+#: templates/base/components/_review_card.html:17
 msgid "Аноним"
 msgstr "Аноним"
 
+#: templates/base/components/_review_card.html:40
 msgid "Достоинства"
 msgstr "Артықшылықтары"
 
+#: templates/base/components/_review_card.html:46
 msgid "Недостатки"
 msgstr "Кемшіліктері"
 
+#: templates/base/components/_review_card.html:52
 msgid "Комментарий"
 msgstr "Пікір"
 
+#: templates/base/components/_review_card.html:61
 msgid "Плюсы товара"
 msgstr "Тауардың артықшылықтары"
 
+#: templates/base/components/_review_card.html:79
 msgid "Ответ Dr.Joys"
 msgstr "Dr.Joys жауабы"
 
+# Ссылки маршрутов (base/components/_route_links.html)
+#: templates/base/components/_route_links.html:8
+msgid "Построить маршрут в 2ГИС"
+msgstr "2ГИС-те бағыт салу"
+
+#: templates/base/components/_route_links.html:13
+msgid "Яндекс Карты"
+msgstr "Яндекс Карталар"
+
+#: templates/base/components/_route_links.html:13
+msgid "Построить маршрут в Яндекс Картах"
+msgstr "Яндекс Карталарда бағыт салу"
+
+#: templates/base/components/_route_links.html:18
+msgid "Построить маршрут в Google Maps"
+msgstr "Google Maps-те бағыт салу"
+
+#: templates/base/footer/_footer.html:6
 msgid "Меню"
 msgstr "Мәзір"
 
+#: templates/base/footer/_footer.html:18
 msgid "Правовая информация"
 msgstr "Құқықтық ақпарат"
 
+#: templates/base/footer/_footer.html:36
 msgid "Все права защищены"
 msgstr "Барлық құқықтар қорғалған"
 
+#: templates/inquiries/_antispam_fields.html:7
+msgid "Не заполняйте это поле"
+msgstr "Бұл өрісті толтырмаңыз"
+
+#: templates/orders/checkout.html:4 templates/orders/checkout.html:12
 msgid "Оформление заказа"
 msgstr "Тапсырысты рәсімдеу"
 
+#: templates/orders/checkout.html:21
 msgid "Для оформления заказа необходимо войти в аккаунт"
 msgstr "Тапсырыс беру үшін аккаунтқа кіру қажет"
 
+#: templates/orders/checkout.html:111
 msgid "Ваш заказ"
 msgstr "Сіздің тапсырысыңыз"
 
+#: templates/orders/checkout.html:130
 msgid "Без скидки"
 msgstr "Жеңілдіксіз"
 
+#: templates/orders/checkout_success.html:4
 msgid "Заказ оформлен"
 msgstr "Тапсырыс рәсімделді"
 
+#: templates/orders/checkout_success.html:16
 #, python-format
 msgid "Заказ #%(num)s на сумму %(total)s&nbsp;%(sym)s успешно создан."
 msgstr "#%(num)s тапсырыс %(total)s&nbsp;%(sym)s сомасына сәтті жасалды."
 
+#: templates/orders/checkout_success.html:19
+#: templates/orders/payment_result.html:22
 msgid "Мы свяжемся с вами для уточнения доставки."
 msgstr "Жеткізуді нақтылау үшін сізбен байланысамыз."
 
+#: templates/orders/halyk_redirect.html:6
 msgid "Переход к оплате"
 msgstr "Төлемге өту"
 
+#: templates/orders/halyk_redirect.html:18
 msgid "Переход к оплате..."
 msgstr "Төлемге өту..."
 
+#: templates/orders/payment_result.html:4
 msgid "Заказ оплачен"
 msgstr "Тапсырыс төленді"
 
+#: templates/orders/payment_result.html:4
 msgid "Ошибка оплаты"
 msgstr "Төлем қатесі"
 
+#: templates/orders/payment_result.html:17
 msgid "оплачен!"
 msgstr "төленді!"
 
+#: templates/orders/payment_result.html:19
 #, python-format
 msgid "Заказ #%(num)s на сумму %(total)s&nbsp;%(sym)s успешно оплачен."
 msgstr "#%(num)s тапсырыс %(total)s&nbsp;%(sym)s сомасына сәтті төленді."
 
+#: templates/orders/payment_result.html:33
 msgid "Оплата"
 msgstr "Төлем"
 
+#: templates/orders/payment_result.html:33
 msgid "не прошла"
 msgstr "сәтсіз аяқталды"
 
+#: templates/orders/payment_result.html:35
 msgid "Попробуйте ещё раз или свяжитесь с нами."
 msgstr "Қайталап көріңіз немесе бізбен байланысыңыз."
 
+#: templates/orders/payment_result.html:38
 msgid "ПОПРОБОВАТЬ СНОВА"
 msgstr "ҚАЙТАЛАП КӨРУ"
 
+#: templates/pages/blog_detail.html:5 templates/pages/blog_list.html:13
+#: templates/pages/blog_list.html:30 templates/pages/blog_list.html:79
 msgid "Блог DR.JOYS"
 msgstr "DR.JOYS блогы"
 
+#: templates/pages/blog_detail.html:55
 msgid "категория:"
 msgstr "санат:"
 
+#: templates/pages/blog_detail.html:67
 msgid "поделиться"
 msgstr "бөлісу"
 
+#: templates/pages/blog_detail.html:76
 msgid "Копировать ссылку"
 msgstr "Сілтемені көшіру"
 
+#: templates/pages/blog_list.html:5
 msgid "Блог DR.JOYS — статьи о здоровье и отношениях"
 msgstr "DR.JOYS блогы — денсаулық пен қарым-қатынас туралы мақалалар"
 
+#: templates/pages/blog_list.html:8
 msgid ""
 "Блог DR.JOYS — статьи об акциях, событиях, здоровье и отношениях. Читайте "
 "полезные материалы от команды DR.JOYS."
@@ -584,22 +938,76 @@ msgstr ""
 "DR.JOYS блогы — акциялар, оқиғалар, денсаулық пен қарым-қатынас туралы "
 "мақалалар. DR.JOYS командасының пайдалы материалдарын оқыңыз."
 
+#: templates/pages/blog_list.html:14 templates/pages/blog_list.html:80
 msgid "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS."
-msgstr "DR.JOYS-тың акциялар, оқиғалар, денсаулық пен қарым-қатынас туралы мақалалары."
+msgstr ""
+"DR.JOYS-тың акциялар, оқиғалар, денсаулық пен қарым-қатынас туралы "
+"мақалалары."
 
+#: templates/pages/blog_list.html:63
 msgid "Пока нет опубликованных статей."
 msgstr "Әзірге жарияланған мақалалар жоқ."
 
+#: templates/pages/catalog.html:96
 msgid "Товары не найдены"
 msgstr "Тауарлар табылмады"
 
+#: templates/pages/catalog.html:108
+msgid "Вперёд"
+msgstr ""
+
+#: templates/pages/category_detail.html:32
 msgid "Страницы пока не добавлены."
 msgstr "Беттер әзірге қосылмаған."
 
+#: templates/pages/contacts.html:47
+msgid ""
+"Свяжитесь с нами удобным способом — ответим по заказу, доставке и оптовому "
+"сотрудничеству."
+msgstr ""
+"Бізбен ыңғайлы тәсілмен байланысыңыз — тапсырыс, жеткізу және көтерме "
+"ынтымақтастық бойынша жауап береміз."
+
+# Страница контактов
+#: templates/pages/contacts.html:54
+msgid "Каналы связи"
+msgstr "Байланыс арналары"
+
+#: templates/pages/contacts.html:98
+msgid "Карта: офис DR.JOYS"
+msgstr "Карта: DR.JOYS кеңсесі"
+
+#: templates/pages/contacts.html:102 templates/pages/contacts.html:104
+#: templates/pages/contacts.html:121
+msgid "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5"
+msgstr "Астана қ., Байқоңыр ауданы, А. Бараев к-сі, 13-үй, 5-үй-жай"
+
+#: templates/pages/contacts.html:104 templates/pages/contacts.html:121
+msgid "Пн–Пт 10:00–19:00"
+msgstr "Дс–Жм 10:00–19:00"
+
+#: templates/pages/contacts.html:144
+msgid "Подтвердите согласие на обработку данных."
+msgstr "Деректерді өңдеуге келісіміңізді растаңыз."
+
+# Форма обращения (pages/contacts.html, inquiries)
+#: templates/pages/contacts.html:189
+#, python-format
+msgid ""
+"Согласен на обработку персональных данных и принимаю <a class=\"form-link\" "
+"href=\"%(privacy_url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">политику конфиденциальности</a>"
+msgstr ""
+"Дербес деректерді өңдеуге келісемін және <a class=\"form-link\" "
+"href=\"%(privacy_url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">құпиялылық саясатын</a> қабылдаймын"
+
+#: templates/pages/home.html:4
 #, python-format
 msgid "DR.JOYS — ультратонкие презервативы, неощутимые на 95%%"
 msgstr "DR.JOYS — ультра жұқа мүшеқаптар, 95%% сезілмейді"
 
+#: templates/pages/home.html:7
 #, python-format
 msgid ""
 "Ультратонкие презервативы DR.JOYS толщиной 0,02 мм — неощутимые на 95%%. "
@@ -608,170 +1016,119 @@ msgstr ""
 "DR.JOYS ультра жұқа мүшеқаптар 0,02 мм — 95%% сезілмейді. Классикалық, "
 "қырлы, хош иісті."
 
+#: templates/pages/home.html:226
 msgid "Пройти опрос"
 msgstr "Сауалнамадан өту"
 
+#: templates/pages/home.html:277
+msgctxt "reviews"
+msgid "Более"
+msgstr ""
+
+#: templates/pages/home.html:279
+#, fuzzy
+#| msgid "заказов"
+msgctxt "reviews"
+msgid "заказов"
+msgstr "тапсырыстар"
+
+#: templates/pages/home.html:282
+msgctxt "reviews"
+msgid "на маркетплейсах"
+msgstr ""
+
+#: templates/pages/home.html:283
+msgctxt "reviews"
+msgid "со средней"
+msgstr ""
+
+#: templates/pages/home.html:286
+msgctxt "reviews"
+msgid "оценкой"
+msgstr ""
+
+#: templates/pages/home.html:294
 #, python-format
 msgid ""
 "Всего %(pct)s%% негативных отзывов. Мы за честный фидбек, поэтому не "
 "стесняемся, а наоборот — отвечаем с удовольствием :)"
 msgstr ""
-"Барлығы %(pct)s%% теріс пікір. Біз адал кері байланысты жақтаймыз, "
-"сондықтан ұялмаймыз — керісінше, қуана жауап береміз :)"
+"Барлығы %(pct)s%% теріс пікір. Біз адал кері байланысты жақтаймыз, сондықтан "
+"ұялмаймыз — керісінше, қуана жауап береміз :)"
 
+#: templates/pages/home.html:301
 msgid "Понравилось"
 msgstr "Ұнады"
 
+#: templates/pages/home.html:306
 msgid "Не понравилось"
 msgstr "Ұнамады"
 
+#: templates/pages/home.html:339
 msgid "Отзывы скоро появятся."
 msgstr "Пікірлер жақында пайда болады."
 
+#: templates/pages/home.html:353
 msgid "Читать на WB"
 msgstr "WB-де оқу"
 
+#: templates/pages/home.html:441 templates/pages/home.html:442
+#: templates/pages/home.html:445 templates/pages/home.html:446
 msgid "Нет фото"
 msgstr "Фото жоқ"
 
+#: templates/pages/home.html:460
 msgid "тут интересно,"
 msgstr "мұнда қызық,"
 
+#: templates/pages/home.html:460
 msgid "почитай"
 msgstr "оқы"
 
+#: templates/pages/product_detail.html:82
 msgid "АРТИКУЛ"
 msgstr "АРТИКУЛ"
 
+#: templates/pages/product_detail.html:97
 msgid "Выберите размер"
 msgstr "Өлшемді таңдаңыз"
 
-msgid "Нет в наличии"
-msgstr "Қоймада жоқ"
-
-msgid "Скоро в продаже"
-msgstr "Жақында сатылымда"
-
+#: templates/pages/product_detail.html:126
 msgid "Как выбрать размер?"
 msgstr "Өлшемді қалай таңдауға болады?"
 
+#: templates/pages/product_detail.html:138
 msgid "Стоимость"
 msgstr "Бағасы"
 
+#: templates/pages/product_detail.html:153
 msgid "Добавить в корзину"
 msgstr "Себетке қосу"
 
+#: templates/pages/product_detail.html:168
 msgid "СОСТАВ И ХАРАКТЕРИСТИКИ"
 msgstr "ҚҰРАМЫ ЖӘНЕ СИПАТТАМАЛАРЫ"
 
+#: templates/pages/product_detail.html:169
 msgid "Инструкция по применению"
 msgstr "Қолдану нұсқаулығы"
 
+#: templates/pages/product_detail.html:170
 msgid "противопоказания"
 msgstr "қарсы көрсетілімдер"
 
+#: templates/pages/product_detail.html:190
 msgid "Характеристики не заполнены"
 msgstr "Сипаттамалар толтырылмаған"
 
+#: templates/pages/product_detail.html:253
 msgid "Упаковка презервативов DR.JOYS"
 msgstr "DR.JOYS мүшеқаптарының қаптамасы"
 
+#: templates/pages/product_detail.html:287
 msgid "Презерватив в индивидуальной упаковке"
 msgstr "Жеке қаптамадағы мүшеқап"
 
+#: templates/pages/product_detail.html:296
 msgid "Вам может быть интересно"
 msgstr "Сізді қызықтыруы мүмкін"
-
-# Страница контактов
-msgid "Каналы связи"
-msgstr "Байланыс арналары"
-
-msgid ""
-"Свяжитесь с нами удобным способом — ответим по заказу, доставке и оптовому "
-"сотрудничеству."
-msgstr ""
-"Бізбен ыңғайлы тәсілмен байланысыңыз — тапсырыс, жеткізу және көтерме "
-"ынтымақтастық бойынша жауап береміз."
-
-# Каналы связи: подписи для скринридера (base/components/_contact_links.html)
-msgid "Написать в WhatsApp"
-msgstr "WhatsApp-қа жазу"
-
-msgid "Написать в Telegram"
-msgstr "Telegram-ға жазу"
-
-msgid "Написать на почту"
-msgstr "Поштаға жазу"
-
-msgid "Мы в Instagram"
-msgstr "Instagram-дағы парақшамыз"
-
-msgid "Мы в TikTok"
-msgstr "TikTok-тағы парақшамыз"
-
-msgid "Мы на YouTube"
-msgstr "YouTube-тағы арнамыз"
-
-msgid "Мы в соцсетях"
-msgstr "Біз әлеуметтік желілерде"
-
-# Юрлицо в футере
-msgid "ТОО «DR JOYS»"
-msgstr "«DR JOYS» ЖШС"
-
-msgid "БИН"
-msgstr "БСН"
-
-# Блок «Офис + карта» (pages/contacts.html)
-msgid "Офис"
-msgstr "Кеңсе"
-
-msgid "Адрес"
-msgstr "Мекенжай"
-
-msgid "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5"
-msgstr "Астана қ., Байқоңыр ауданы, А. Бараев к-сі, 13-үй, 5-үй-жай"
-
-msgid "Часы работы"
-msgstr "Жұмыс уақыты"
-
-msgid "Пн–Пт 10:00–19:00"
-msgstr "Дс–Жм 10:00–19:00"
-
-msgid "Построить маршрут"
-msgstr "Бағыт салу"
-
-msgid "Яндекс Карты"
-msgstr "Яндекс Карталар"
-
-msgid "Карта: офис DR.JOYS"
-msgstr "Карта: DR.JOYS кеңсесі"
-
-msgid "Открыть на карте"
-msgstr "Картадан ашу"
-
-# Ссылки маршрутов (base/components/_route_links.html)
-msgid "Построить маршрут в 2ГИС"
-msgstr "2ГИС-те бағыт салу"
-
-msgid "Построить маршрут в Яндекс Картах"
-msgstr "Яндекс Карталарда бағыт салу"
-
-msgid "Построить маршрут в Google Maps"
-msgstr "Google Maps-те бағыт салу"
-
-# Форма обращения (pages/contacts.html, inquiries)
-msgid "Согласен на обработку персональных данных и принимаю <a class=\"form-link\" href=\"%(privacy_url)s\" target=\"_blank\" rel=\"noopener noreferrer\">политику конфиденциальности</a>"
-msgstr "Дербес деректерді өңдеуге келісемін және <a class=\"form-link\" href=\"%(privacy_url)s\" target=\"_blank\" rel=\"noopener noreferrer\">құпиялылық саясатын</a> қабылдаймын"
-
-msgid "Подтвердите согласие на обработку данных."
-msgstr "Деректерді өңдеуге келісіміңізді растаңыз."
-
-msgid "Не удалось отправить. Проверьте связь и попробуйте ещё раз."
-msgstr "Жіберу мүмкін болмады. Байланысты тексеріп, қайта көріңіз."
-
-msgid "Форма отправлена слишком быстро. Попробуйте ещё раз."
-msgstr "Форма тым жылдам жіберілді. Қайта көріңіз."
-
-msgid "Не заполняйте это поле"
-msgstr "Бұл өрісті толтырмаңыз"

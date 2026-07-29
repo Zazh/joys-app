@@ -1,3 +1,4 @@
+{% load i18n %}
 {% if breadcrumb_jsonld %}
 <script type="application/ld+json">
 {{ breadcrumb_jsonld|safe }}
@@ -6,8 +7,11 @@
 
 {% if breadcrumbs %}
 <!-- Mobile/Tablet: кнопка назад -->
+<!-- hide_back=1 — когда крошки стоят строкой в потоке страницы: кнопка fixed -->
+<!-- и легла бы поверх заголовка (см. страницу контактов) -->
 {% with prev=breadcrumbs|slice:"-2:-1"|first %}
-<a href="{{ prev.url|default:'/' }}" class="breadcrumb-back" aria-label="Назад">
+{% if not hide_back %}
+<a href="{{ prev.url|default:'/' }}" class="breadcrumb-back" aria-label="{% translate 'Назад' %}">
   <span>
       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -15,9 +19,10 @@
     </svg>
   </span>
 </a>
+{% endif %}
 
-<!-- Desktop: полный список -->
-<nav aria-label="Breadcrumb" class="hidden lg:flex">
+<!-- Полный список: в шапке только с lg, в потоке страницы (nav_class="flex") — на всех ширинах -->
+<nav aria-label="Breadcrumb" class="{{ nav_class|default:'hidden lg:flex' }}">
   <ol class="breadcrumb mt-auto">
     {% for crumb in breadcrumbs %}
     {% if not forloop.last %}

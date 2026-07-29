@@ -20,8 +20,9 @@
     @apply text-black;
 }
 
+/* gray-600, а не gray-500: у 12px-текста на белом gray-500 даёт 4.11:1 — ниже AA (4.5:1) */
 .breadcrumb-item {
-    @apply text-xs uppercase tracking-wider text-gray-500 hover:text-red-500 shrink-0 whitespace-nowrap;
+    @apply text-xs uppercase tracking-wider text-gray-600 hover:text-red-500 shrink-0 whitespace-nowrap;
 }
 .breadcrumb-item:last-child {
     @apply shrink overflow-hidden text-ellipsis;
