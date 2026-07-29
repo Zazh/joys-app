@@ -35,7 +35,7 @@
 
             <!-- BEGIN contacts-channels -->
             <section id="contacts" class="scroll-mt-24 pb-16">
-                <h2 class="display-2 font-benzin uppercase pb-6">{% trans "Каналы связи" %}</h2>
+                <h2 class="display-3 font-benzin uppercase pb-6">{% trans "Каналы связи" %}</h2>
 
                 {# Две колонки, а не четыре: в узкой карточке адрес почты рвался на две строки #}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -64,16 +64,6 @@
                     </a>
                 </div>
 
-                {# Адрес и часы одной строкой; остальное про офис — в попапе карты ниже #}
-                <div class="pt-10">
-                    <h3 class="font-benzin uppercase text-xs pb-4">{% trans "Адрес" %}</h3>
-                    <div class="office-line">
-                        <address class="not-italic">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}</address>
-                        <span class="office-line__sep" aria-hidden="true">·</span>
-                        {# TODO: уточнить график у заказчика — пока заглушка (docs/contacts_page_redesign.md §3.4) #}
-                        <span>{% trans "Пн–Пт 10:00–19:00" %}</span>
-                    </div>
-                </div>
             </section>
             <!-- END contacts-channels -->
 
@@ -84,8 +74,6 @@
     {# Координаты офиса (OSM, здание Бараева 13). TODO: сверить точку по 2ГИС — вход в н.п. 5 #}
     <section class="main-grid">
         <div id="office" class="col-span-full lg:col-span-13 lg:col-start-2 scroll-mt-24 pb-16">
-            <h2 class="display-2 font-benzin uppercase pb-6">{% trans "Офис" %}</h2>
-
             {# Карта во всю ширину секции, инициализируется лениво из dist/js/contacts.js #}
             {# До инициализации и без JS в контейнере виден фолбэк с адресом и маршрутами #}
             <div id="officeMap"
@@ -108,12 +96,8 @@
                 <div class="map-popup">
                     <strong class="map-popup__name">{% trans "ТОО «DR JOYS»" %}</strong>
                     <address class="map-popup__address not-italic">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}</address>
-
-                    <p class="map-popup__label">{% trans "Часы работы" %}</p>
                     {# TODO: уточнить график у заказчика — пока заглушка (docs/contacts_page_redesign.md §3.4) #}
                     <p class="map-popup__hours">{% trans "Пн–Пт 10:00–19:00" %}</p>
-
-                    <p class="map-popup__label">{% trans "Построить маршрут" %}</p>
                     {% include 'base/components/_route_links.html' %}
                 </div>
             </template>

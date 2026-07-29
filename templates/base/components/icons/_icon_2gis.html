@@ -1,5 +1,4 @@
-{# Иконка сервиса «2ГИС»: фирменный зелёный круг + монограмма. Размер — icon_class. #}
-<svg class="{{ icon_class|default:'route-link__icon' }}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <circle cx="16" cy="16" r="16" fill="#19AA1E"/>
-    <text x="16" y="16" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="17" font-weight="700">2</text>
-</svg>
+{# Оригинальная иконка 2ГИС (d-assets.2gis.ru/favicon.png, 136×136 — на 32px с запасом) #}
+{% load static %}
+<img class="{{ icon_class|default:'route-link__icon' }}" src="{% static 'dist/images/brands/2gis.png' %}"
+     alt="" width="32" height="32" loading="lazy" aria-hidden="true">

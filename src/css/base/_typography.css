@@ -4,6 +4,9 @@
 .display-2 {
     @apply text-2xl lg:text-[2rem] leading-tight font-bold;
 }
+.display-3 {
+    @apply text-xl lg:text-2xl leading-tight font-bold;
+}
 .h1 {
     @apply text-2xl;
 }
