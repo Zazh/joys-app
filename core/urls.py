@@ -1,43 +1,16 @@
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
-from django.http import HttpResponse
+from django.templatetags.static import static as static_url
+from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from core.decorators import staff_only_404
+from core.seo import llms_txt, robots_txt
+from core.sitemaps import SITEMAPS
 from pages.views import HomeView
-
-
-def robots_txt(request):
-    lines = [
-        'User-agent: *',
-        'Allow: /',
-        f'Disallow: /{settings.ADMIN_URL}/',
-        'Disallow: /backoffice/',
-        'Disallow: /api/',
-        '',
-        f'Sitemap: {settings.SITE_URL}/sitemap.xml',
-    ]
-    return HttpResponse('\n'.join(lines), content_type='text/plain')
-
-
-def llms_txt(request):
-    lines = [
-        '# DR.JOYS',
-        '',
-        '## About',
-        'DR.JOYS — e-commerce platform for personal care products.',
-        '',
-        '## Blocked paths',
-        f'- /{settings.ADMIN_URL}/ (admin panel)',
-        '- /backoffice/ (internal management)',
-        '- /api/ (internal API)',
-        '',
-        '## Contact',
-        'info@dr-joys.com',
-    ]
-    return HttpResponse('\n'.join(lines), content_type='text/plain')
 
 
 # Без языкового префикса
@@ -45,6 +18,16 @@ urlpatterns = [
     path(f'{settings.ADMIN_URL}/', admin.site.urls),
     path('robots.txt', robots_txt, name='robots_txt'),
     path('llms.txt', llms_txt, name='llms_txt'),
+    # Браузеры и робот Яндекса дёргают /favicon.ico напрямую, минуя <link>
+    path(
+        'favicon.ico',
+        RedirectView.as_view(
+            url=static_url('dist/images/favicon/favicon.ico'), permanent=True,
+        ),
+    ),
+    # Одним файлом: адресов на порядки меньше лимита в 50 000, индекс из
+    # нескольких карт только добавил бы роботу лишний переход.
+    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
     path('region/', include('regions.urls')),
     path('orders/', include('orders.urls')),
     path('accounts/', include('allauth.urls')),  # OAuth callbacks — без языкового префикса

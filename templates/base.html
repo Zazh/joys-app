@@ -9,18 +9,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% block meta %}{% endblock %}
 
-    <!-- Canonical: без utm/gclid и прочего мусора — см. core.context_processors -->
+    {# SITE_INDEXABLE=False (staging, превью) — страницы не должны попасть в индекс #}
+    {% if not site_indexable %}<meta name="robots" content="noindex, nofollow">{% endif %}
+
+    <!-- Canonical: боевой домен из SITE_URL, без utm/gclid — см. core.context_processors -->
     <link rel="canonical" href="{{ canonical_url }}">
 
-    <!-- hreflang -->
-    {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
-    <link rel="alternate" hreflang="{{ lang_code }}" href="{{ request.scheme }}://{{ request.get_host }}/{{ lang_code }}{{ request.path|slice:'3:' }}">
+    <!-- hreflang: список собирает core.context_processors.seo (пусто вне i18n-страниц) -->
+    {% for link in hreflang_links %}
+    <link rel="alternate" hreflang="{{ link.lang }}" href="{{ link.url }}">
     {% endfor %}
-    <link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}/ru{{ request.path|slice:'3:' }}">
 
-    <!-- Favicon -->
+    {# Иконки. SVG — для браузеров, ICO — для тех, кто по традиции дёргает
+       /favicon.ico, PNG 96px — для Google: он требует размер, кратный 48. #}
     <link rel="icon" href="{% static 'dist/images/svgs/logo.svg' %}" type="image/svg+xml">
+    <link rel="icon" href="{% static 'dist/images/favicon/favicon.ico' %}" sizes="16x16 32x32 48x48">
+    <link rel="icon" href="{% static 'dist/images/favicon/favicon-96.png' %}" type="image/png" sizes="96x96">
+    <link rel="apple-touch-icon" href="{% static 'dist/images/favicon/apple-touch-icon.png' %}" sizes="180x180">
+    <link rel="manifest" href="{% static 'dist/images/favicon/site.webmanifest' %}">
+    <meta name="theme-color" content="#e42521">
 
+    {# og:image по умолчанию — растр 1200×630. SVG-логотип, который стоял здесь
+       раньше, ни Facebook, ни WhatsApp, ни VK в превью не рендерят. #}
     <!-- Open Graph -->
     <meta property="og:site_name" content="DR.JOYS">
     <meta property="og:locale" content="{% if LANGUAGE_CODE == 'en' %}en_US{% elif LANGUAGE_CODE == 'kk' %}kk_KZ{% else %}ru_RU{% endif %}">
@@ -29,7 +39,9 @@
     <meta property="og:title" content="{% block og_title %}DR.JOYS — {% trans 'ультратонкие презервативы' %}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{% trans 'Ультратонкие презервативы DR.JOYS — неощутимые на 95%' %}{% endblock %}">
     <meta property="og:url" content="{{ canonical_url }}">
-    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+    <meta property="og:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     {% endblock %}
 
     <!-- Twitter Card -->
@@ -37,7 +49,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="DR.JOYS — {% trans 'ультратонкие презервативы' %}">
     <meta name="twitter:description" content="{% trans 'Ультратонкие презервативы DR.JOYS — неощутимые на 95%' %}">
-    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+    <meta name="twitter:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
     {% endblock %}
 
     <!-- Global JSON-LD -->

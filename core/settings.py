@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.sitemaps',
     # allauth
     'allauth',
     'allauth.account',
@@ -102,7 +103,7 @@ TEMPLATES = [
                 'pages.context_processors.navigation',
                 'pages.context_processors.contacts',
                 'core.context_processors.analytics',
-                'core.context_processors.canonical',
+                'core.context_processors.seo',
             ],
         },
     },
@@ -219,7 +220,17 @@ PAYMENT_BASE_URL = os.environ.get('PAYMENT_BASE_URL', '')
 
 # Базовый URL сайта для ссылок в email, редиректов и т.д.
 # dev: http://localhost:8009, staging: https://app.dr-joys.com, prod: https://dr-joys.com
+# Он же — единственный источник домена для canonical, hreflang, sitemap.xml,
+# robots.txt и llms.txt (core/seo.py): переезд на боевой домен = правка этой
+# строки в .env, ничего больше менять не нужно.
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8009')
+
+# Открыт ли сайт поисковикам. False → robots.txt закрывает всё и в <head>
+# уходит noindex. Ставить False на staging/превью: копия каталога на
+# техническом домене в индексе — это дубли боевых страниц.
+# Дефолт «открыт на проде, закрыт локально»: забытый флаг на staging стоит
+# дешевле, чем случайно выпавший из индекса боевой сайт.
+SITE_INDEXABLE = os.environ.get('SITE_INDEXABLE', str(not DEBUG)).lower() == 'true'
 
 # Секретный URL админки — обязательно задать в .env
 ADMIN_URL = os.environ['ADMIN_URL']
