@@ -30,12 +30,23 @@
     <section class="main-grid">
         <div class="col-span-full mb-6 lg:mb-12 lg:col-start-2 flex flex-wrap gap-6 justify-center lg:justify-between items-end">
             <div class="w-full lg:w-auto">
+                {# Крошки только при выбранной категории (их собирает CatalogListView) #}
+                {# и только с lg: на мобильном роль «где я» играют чипсы фильтра, #}
+                {# а строка крошек отняла бы место у заголовка. hide_back=1 — #}
+                {# fixed-кнопка «назад» легла бы поверх заголовка. #}
+                {% if breadcrumbs %}
+                <div class="hidden lg:block pb-2">
+                    {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs hide_back=1 nav_class="flex" %}
+                </div>
+                {% endif %}
                 <h1 class="page-title text-center lg:text-left">
                     {% if single_category %}{{ single_category.name }}{% elif current_category %}{{ current_category.name }}{% else %}{% trans "Каталог" %}{% endif %}
                 </h1>
             </div>
             {% if show_filters %}
-            <div class="flex gap-8">
+            {# flex-wrap: на узком экране чипс уезжает на новую строку целиком, #}
+            {# а не ломается посреди слова #}
+            <div class="flex flex-wrap justify-center gap-x-8 gap-y-2">
                 {% include 'base/components/_catalog_filters.html' %}
             </div>
             {% endif %}

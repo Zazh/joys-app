@@ -29,11 +29,14 @@
         @apply w-full h-[1.5px] bg-black absolute transition-all duration-300;
     }
 
+    /* whitespace-nowrap: длинные названия («Презервативы») рвались посреди слова, */
+    /* когда ряд фильтров не влезал в ширину — пусть чипс переносится целиком */
     .btn-link {
-        @apply uppercase text-gray-500 tracking-wide font-bold cursor-pointer text-sm hover:text-red-500;
+        @apply uppercase text-gray-500 tracking-wide font-bold cursor-pointer text-sm
+               whitespace-nowrap hover:text-red-500;
     }
     .btn-link.active {
-        @apply text-black;
+        @apply text-red-500;
     }
 
     .faq-button {
