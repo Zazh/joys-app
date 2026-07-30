@@ -4,6 +4,8 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.generic import ListView, DetailView
 
+from core import seo
+
 from .models import Category, Product, ProductSize, FAQ, RegionPrice, Stock
 from . import jsonld as jld
 
@@ -69,7 +71,12 @@ class CatalogListView(ListView):
             else _('Каталог презервативов DR.JOYS')
         )
         ctx['meta_description'] = (
-            current_category.meta_description
+            seo.first_filled(
+                current_category.meta_description,
+                current_category.description,
+                _('%(name)s DR.JOYS — официальный интернет-магазин, доставка '
+                  'по Казахстану и России.') % {'name': current_category.name},
+            )
             if current_category
             else _('Каталог презервативов DR.JOYS — классические, ребристые, ультратонкие')
         )
@@ -200,8 +207,22 @@ class ProductDetailView(DetailView):
             ),
         )
 
-        ctx['meta_title'] = product.meta_title or product.name
-        ctx['meta_description'] = product.meta_description or product.description
+        # Заголовок и описание: заполненные в бэкофисе поля в приоритете, иначе
+        # собираем сами. Голое `product.name` («Классика 17 шт») не совпадает
+        # с запросом ни одним словом, кроме числа, и Google такой заголовок
+        # всё равно переписывает — лучше дать ему готовый.
+        ctx['meta_title'] = product.meta_title or seo.with_brand(
+            product.name, seo.category_suffix(product.category.name, product.name),
+        )
+        ctx['meta_description'] = seo.first_filled(
+            product.meta_description,
+            product.description,
+            product.tagline,
+            _('%(name)s — %(category)s DR.JOYS. Официальный интернет-магазин, '
+              'доставка по Казахстану и России.') % {
+                'name': product.name, 'category': product.category.name,
+            },
+        )
 
         # Связанные товары (из той же категории)
         region = getattr(self.request, 'region', None)

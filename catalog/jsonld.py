@@ -15,13 +15,34 @@ def _get_region_price(size, region):
 
 
 def _absolute_url(request, path):
-    return request.build_absolute_uri(path)
+    """Абсолютный адрес на боевом домене (SITE_URL), а не на текущем хосте.
+
+    В JSON-LD и в rel=canonical должен стоять один и тот же адрес: если
+    разметка товара сошлётся на app.dr-joys.com, а canonical — на dr-joys.com,
+    поисковик получит два взаимоисключающих сигнала об одной странице.
+    """
+    from core.seo import absolute_url
+
+    return absolute_url(path)
 
 
 def _image_url(request, image_field):
     if image_field and image_field.name:
-        return request.build_absolute_uri(image_field.url)
+        return _absolute_url(request, image_field.url)
     return None
+
+
+def logo_url():
+    """Логотип для разметки — PNG, а не SVG.
+
+    Векторный логотип в поле `logo` читают не все: Google Search рисует
+    Organization из растра, соцсети и мессенджеры SVG не рендерят вовсе.
+    """
+    from django.templatetags.static import static
+
+    from core.seo import absolute_url
+
+    return absolute_url(static('dist/images/seo/logo.png'))
 
 
 # ─── BreadcrumbList ───
@@ -65,12 +86,19 @@ def build_product_jsonld(request, product, sizes, cover_image, main_images, char
     if not images:
         images.append(_absolute_url(request, '/static/dist/images/placeholder.svg'))
 
-    # Offers из размеров
+    # Offers только из размеров с ценой.
+    # Размеры «скоро в продаже» заведены с ценой 0, и раньше они попадали
+    # и в список, и в вилку: получалось `lowPrice: "0.00"` — Google такую
+    # разметку либо отклоняет, либо показывает в сниппете «от 0 ₸».
+    # Offer без price невалиден по схеме, поэтому такие размеры не размечаем
+    # вовсе: предложения купить их сейчас всё равно нет.
     currency_code = region.currency_code if region else 'KZT'
     offers_list = []
     prices = []
     for size in sizes:
         price = _get_region_price(size, region)
+        if not price:
+            continue
         offers_list.append({
             '@type': 'Offer',
             'name': f'{product.name} {size.name}',
@@ -79,7 +107,7 @@ def build_product_jsonld(request, product, sizes, cover_image, main_images, char
             'priceCurrency': currency_code,
             'availability': (
                 'https://schema.org/PreOrder' if size.coming_soon
-                else 'https://schema.org/InStock' if size.in_stock and price
+                else 'https://schema.org/InStock' if size.in_stock
                 else 'https://schema.org/OutOfStock'
             ),
             'itemCondition': 'https://schema.org/NewCondition',
@@ -240,7 +268,7 @@ def build_organization_jsonld(request):
         '@id': organization_id(request),
         'name': 'DR.JOYS',
         'url': _absolute_url(request, '/'),
-        'logo': _absolute_url(request, '/static/dist/images/svgs/logo.svg'),
+        'logo': logo_url(),
     }
     if contacts.phone_e164:
         result['telephone'] = contacts.phone_e164

@@ -15,14 +15,14 @@
 <meta property="og:title" content="{{ meta_title }}">
 {% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
 <meta property="og:url" content="{{ canonical_url }}">
-<meta property="og:image" content="{% static 'dist/images/svgs/logo.svg' %}">
+<meta property="og:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
 {% endblock %}
 
 {% block twitter %}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ meta_title }}">
 {% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}">{% endif %}
-<meta name="twitter:image" content="{% static 'dist/images/svgs/logo.svg' %}">
+<meta name="twitter:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
 {% endblock %}
 
 {% block content %}

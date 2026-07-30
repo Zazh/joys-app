@@ -15,14 +15,14 @@
 <meta property="og:title" content="{{ meta_title }}">
 {% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
 <meta property="og:url" content="{{ canonical_url }}">
-{% if cover_image %}<meta property="og:image" content="{{ cover_image.image.url }}">{% else %}<meta property="og:image" content="{{ placeholder_image_url }}">{% endif %}
+{% if cover_image %}<meta property="og:image" content="{{ site_url }}{{ cover_image.image.url }}">{% else %}<meta property="og:image" content="{{ site_url }}{{ placeholder_image_url }}">{% endif %}
 {% endblock %}
 
 {% block twitter %}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ meta_title }}">
 {% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}">{% endif %}
-{% if cover_image %}<meta name="twitter:image" content="{{ cover_image.image.url }}">{% else %}<meta name="twitter:image" content="{{ placeholder_image_url }}">{% endif %}
+{% if cover_image %}<meta name="twitter:image" content="{{ site_url }}{{ cover_image.image.url }}">{% else %}<meta name="twitter:image" content="{{ site_url }}{{ placeholder_image_url }}">{% endif %}
 {% endblock %}
 
 {% block header_right %}{% endblock %}
