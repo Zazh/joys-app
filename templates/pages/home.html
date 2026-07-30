@@ -48,21 +48,21 @@
                     <!-- Product image -->
                     <div class="hero-carousel-card_layer [ flex justify-center ]" data-depth="-0.2">
                         <div class="w-[80%] relative">
-                            <img src="{% if card1 and card1.image %}{{ card1.image.url }}{% else %}{% static 'dist/images/hero/1.png' %}{% endif %}" fetchpriority="high" class="absolute bottom-10 hero-carousel-card-product_img">
+                            <img src="{% if card1 and card1.image %}{{ card1.image.url }}{% else %}{% static 'dist/images/hero/1.png' %}{% endif %}" fetchpriority="high" alt="{% trans "Упаковка ультратонких презервативов DR.JOYS, 5 штук" %}" class="absolute bottom-10 hero-carousel-card-product_img">
                         </div>
                     </div>
 
                     <!-- Count -->
                     <div class="hero-carousel-card_layer [ flex justify-end ]" data-depth="1.5">
                         <div class="w-[45%] relative">
-                            <img src="{% if card1 and card1.count_image %}{{ card1.count_image.url }}{% else %}{% static 'dist/images/hero/counter/5.svg' %}{% endif %}" class="w-full absolute bottom-8 -right-[1.5rem]">
+                            <img src="{% if card1 and card1.count_image %}{{ card1.count_image.url }}{% else %}{% static 'dist/images/hero/counter/5.svg' %}{% endif %}" alt="" class="w-full absolute bottom-8 -right-[1.5rem]">
                         </div>
                     </div>
 
                     <!-- Light spark -->
                     <div class="hero-carousel-card_layer [ flex justify-center items-center ]" data-depth="0.5">
                         <div class="w-full relative z-50">
-                            <img src="{% static 'dist/images/hero/light.svg' %}" class="">
+                            <img src="{% static 'dist/images/hero/light.svg' %}" alt="" class="">
                         </div>
                     </div>
                 </div>
@@ -89,28 +89,28 @@
                     <!-- Product image -->
                     <div class="hero-carousel-card_layer [ flex justify-center ]" data-depth="-0.2">
                         <div class="w-[70%] relative product-image">
-                            <img src="{% if card2 and card2.image %}{{ card2.image.url }}{% else %}{% static 'dist/images/hero/2.png' %}{% endif %}" class="absolute bottom-10 hero-carousel-card-product_img">
+                            <img src="{% if card2 and card2.image %}{{ card2.image.url }}{% else %}{% static 'dist/images/hero/2.png' %}{% endif %}" alt="{% trans "Упаковка ультратонких презервативов DR.JOYS, 17 штук" %}" class="absolute bottom-10 hero-carousel-card-product_img">
                         </div>
                     </div>
 
                     <!-- Count -->
                     <div class="hero-carousel-card_layer [ flex justify-end ]" data-depth="1.5">
                         <div class="w-[60%] relative">
-                            <img src="{% if card2 and card2.count_image %}{{ card2.count_image.url }}{% else %}{% static 'dist/images/hero/counter/17.svg' %}{% endif %}" class="w-full absolute bottom-8 -right-[1.5rem]">
+                            <img src="{% if card2 and card2.count_image %}{{ card2.count_image.url }}{% else %}{% static 'dist/images/hero/counter/17.svg' %}{% endif %}" alt="" class="w-full absolute bottom-8 -right-[1.5rem]">
                         </div>
                     </div>
 
                     <!-- Light spark -->
                     <div class="hero-carousel-card_layer [ flex justify-center items-center ]" data-depth="0.5">
                         <div class="w-full relative z-50">
-                            <img src="{% static 'dist/images/hero/light.svg' %}" class="">
+                            <img src="{% static 'dist/images/hero/light.svg' %}" alt="" class="">
                         </div>
                     </div>
 
                     <!-- Bundle -->
                     <div class="hero-carousel-card_layer [ flex justify-start items-center ]"  data-depth="-0.5">
                         <div class="inset-0 w-full aspect-square relative">
-                            <img src="{% static 'dist/images/hero/top.svg' %}" class="absolute top-0 -left-[1.5rem]">
+                            <img src="{% static 'dist/images/hero/top.svg' %}" alt="" class="absolute top-0 -left-[1.5rem]">
                         </div>
                     </div>
                 </div>
@@ -129,21 +129,21 @@
                     <!-- Product image -->
                     <div class="hero-carousel-card_layer [ flex justify-center ]" data-depth="-0.2">
                         <div class="w-[80%] relative">
-                            <img src="{% if card3 and card3.image %}{{ card3.image.url }}{% else %}{% static 'dist/images/hero/3.png' %}{% endif %}" class="absolute bottom-10 hero-carousel-card-product_img">
+                            <img src="{% if card3 and card3.image %}{{ card3.image.url }}{% else %}{% static 'dist/images/hero/3.png' %}{% endif %}" alt="{% trans "Упаковка ультратонких презервативов DR.JOYS, 30 штук" %}" class="absolute bottom-10 hero-carousel-card-product_img">
                         </div>
                     </div>
 
                     <!-- Count -->
                     <div class="hero-carousel-card_layer [ flex justify-end ]" data-depth="1.5">
                         <div class="w-[50%] relative">
-                            <img src="{% if card3 and card3.count_image %}{{ card3.count_image.url }}{% else %}{% static 'dist/images/hero/counter/30.svg' %}{% endif %}" class="w-full absolute bottom-10 -right-[1.5rem]">
+                            <img src="{% if card3 and card3.count_image %}{{ card3.count_image.url }}{% else %}{% static 'dist/images/hero/counter/30.svg' %}{% endif %}" alt="" class="w-full absolute bottom-10 -right-[1.5rem]">
                         </div>
                     </div>
 
                     <!-- Light spark -->
                     <div class="hero-carousel-card_layer [ flex justify-center items-center ]">
                         <div class="w-full relative z-50">
-                            <img src="{% static 'dist/images/hero/light.svg' %}" class="">
+                            <img src="{% static 'dist/images/hero/light.svg' %}" alt="" class="">
                         </div>
                     </div>
                 </div>
@@ -464,7 +464,7 @@
             <div class="blog-carousel-track">
                 {% for post in blog_posts %}
                 <div class="blog-carousel-slide">
-                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                    <article class="blog-card">
                         <a href="{{ post.get_absolute_url }}" class="blog-card-link">
                             <figure class="blog-card-figure">
                                 {% if post.cover_image %}
@@ -473,7 +473,6 @@
                                         src="{{ post.cover_image.url }}"
                                         alt="{{ post.title }}"
                                         loading="lazy"
-                                        itemprop="image"
                                 >
                                 {% else %}
                                 <img
@@ -481,17 +480,16 @@
                                         src="{% static 'dist/images/blog/1.jpg' %}"
                                         alt="{{ post.title }}"
                                         loading="lazy"
-                                        itemprop="image"
                                 >
                                 {% endif %}
                             </figure>
                             <div class="blog-card-content">
                                 <div class="blog-card-info">
                                     <div class="blog-card-title">
-                                        <h3 class="text-sm md:text-xl" itemprop="headline">{{ post.title }}</h3>
+                                        <h3 class="text-sm md:text-xl">{{ post.title }}</h3>
                                     </div>
                                     <div class="blog-card-meta">
-                                        <time datetime="{{ post.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ post.published_at|date:'j E Y' }}</time>
+                                        <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:'j E Y' }}</time>
                                     </div>
                                 </div>
                             </div>

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{# Страница отдаётся со статусом 404 — из индекса её исключает сам статус,
+   noindex тут не нужен. Шапка и футер на месте: с битой ссылки человек должен
+   попасть в каталог, а не в тупик. #}
+
+{% block title %}{% trans "Страница не найдена" %} — DR.JOYS{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
+            <div class="blog-container pt-30 pb-20 text-center">
+                <p class="display-1 font-benzin text-red-500">404</p>
+                <h1 class="page-title pt-4">{% trans "Такой страницы нет" %}</h1>
+                <p class="pt-4 text-stone-500">
+                    {% trans "Возможно, адрес набран с опечаткой или страницу удалили." %}
+                </p>
+                <div class="pt-8 flex flex-wrap gap-3 justify-center">
+                    <a href="{% url 'catalog:catalog' %}" class="btn-cat">{% trans "В каталог" %}</a>
+                    <a href="{% url 'home' %}" class="btn-cat">{% trans "На главную" %}</a>
+                    <a href="{% url 'pages:blog_list' %}" class="btn-cat">{% trans "В блог" %}</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
