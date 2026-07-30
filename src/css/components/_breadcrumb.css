@@ -24,6 +24,9 @@
 .breadcrumb-item {
     @apply text-xs uppercase tracking-wider text-gray-600 hover:text-red-500 shrink-0 whitespace-nowrap;
 }
+.breadcrumb-item:first-child {
+    @apply font-bold;
+}
 .breadcrumb-item:last-child {
     @apply shrink overflow-hidden text-ellipsis;
 }

@@ -31,10 +31,10 @@
       </div>
     </div>
 
-    <div class="col-span-full lg:col-start-2 pt-12 pb-8 flex flex-col gap-1 text-xs uppercase tracking-wide text-center md:text-left">
-      {# Юрлицо и БИН — из ContactSettings, поля обязательные: пусто здесь не бывает #}
-      <p>{{ contacts.legal_name }} · {{ contacts.bin_label }} <span class="tabular-nums">{{ contacts.bin }}</span></p>
-      <p>© {% now "Y" %} DR.JOYS - {% trans "Все права защищены" %}</p>
+    <div class="col-span-full lg:col-start-2 pt-12 pb-8 text-xs uppercase tracking-wide text-center md:text-left">
+      {# Копирайт и владелец — одна строка, в каноне: © год, юрлицо с БИН, права #}
+      {# Значения из ContactSettings, поля обязательные — пусто здесь не бывает #}
+      <p>© {% now "Y" %} {{ contacts.legal_name }}, {{ contacts.bin_label }} <span class="tabular-nums">{{ contacts.bin }}</span>. {% trans "Все права защищены" %}.</p>
     </div>
   </section>
 </footer>
