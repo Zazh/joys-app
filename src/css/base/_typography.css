@@ -1,6 +1,10 @@
 .display-1 {
     @apply text-2xl lg:text-[2.5rem] leading-tight font-benzin uppercase;
 }
+/* Заголовок страницы (каталог, блог, о нас, партнёрам, контакты) — 40px на всех брейкпоинтах */
+.page-title {
+    @apply text-[2.5rem] leading-tight font-benzin uppercase break-words;
+}
 .display-2 {
     @apply text-2xl lg:text-[2rem] leading-tight font-bold;
 }

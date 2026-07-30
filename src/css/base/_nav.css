@@ -7,11 +7,11 @@
     @apply flex flex-col gap-4  py-8;
 }
 .main-nav__item > a {
-    @apply block uppercase tracking-wider text-gray-500 text-sm
-           hover:text-black transition-colors;
+    @apply block uppercase tracking-wider font-benzin text-black text-sm
+           hover:text-red-500 transition-colors;
 }
 .main-nav__item.active > a {
-    @apply text-black font-bold;
+    @apply text-red-500;
 }
 .main-nav__footer {
     @apply px-4 lg:px-8 pb-4 pt-2;
