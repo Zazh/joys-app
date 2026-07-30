@@ -100,6 +100,7 @@ TEMPLATES = [
                 'orders.context_processors.cart_context',
                 'backoffice.context_processors.backoffice_badges',
                 'pages.context_processors.navigation',
+                'pages.context_processors.contacts',
                 'core.context_processors.analytics',
             ],
         },

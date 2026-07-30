@@ -342,3 +342,142 @@ class PromoImage(models.Model):
 
     def __str__(self):
         return f'Фото #{self.order}'
+
+
+class ContactSettings(models.Model):
+    """Контакты компании: телефоны, соцсети, реквизиты, адрес офиса.
+
+    Singleton (pk=1): единственный источник контактных данных для футера,
+    страницы контактов, карты, маршрутов и JSON-LD. Раньше всё это было
+    захардкожено в шаблонах — см. docs/contact_settings.md.
+
+    Форматирование (телефон для показа, ссылки мессенджеров, строка адреса)
+    живёт здесь, а не в шаблонах: одни и те же значения нужны в нескольких
+    местах, а собирать их вручную в каждом — путь к расхождениям.
+    """
+
+    phone = models.CharField(
+        'Телефон', max_length=32, blank=True,
+        help_text='В международном формате, только + и цифры: +77766103836',
+    )
+    whatsapp_phone = models.CharField(
+        'Телефон WhatsApp', max_length=32, blank=True,
+        help_text='Если пусто — используется основной телефон',
+    )
+    telegram_username = models.CharField(
+        'Telegram', max_length=64, blank=True,
+        help_text='Только имя пользователя, без @ и без t.me/: drjoysoriginal',
+    )
+    email = models.EmailField('Email', blank=True)
+
+    instagram_url = models.URLField(
+        'Instagram', max_length=300, blank=True,
+        help_text='Полная ссылка. Пусто — иконка не показывается',
+    )
+    tiktok_url = models.URLField('TikTok', max_length=300, blank=True)
+    youtube_url = models.URLField('YouTube', max_length=300, blank=True)
+    marketplace_url = models.URLField(
+        'Маркетплейс', max_length=300, blank=True,
+        help_text='Витрина на Wildberries или другом маркетплейсе',
+    )
+
+    legal_name = models.CharField(
+        'Юридическое название', max_length=200, blank=True,
+        help_text='Как в свидетельстве: ТОО «DR JOYS»',
+    )
+    bin = models.CharField(
+        'БИН', max_length=12, blank=True,
+        help_text='12 цифр',
+    )
+    bin_label = models.CharField(
+        'Подпись БИН', max_length=16, blank=True,
+        help_text='Как называется код на этом языке: БИН / БСН / BIN',
+    )
+
+    address_locality = models.CharField(
+        'Город', max_length=100, blank=True,
+    )
+    address_street = models.CharField(
+        'Улица, дом', max_length=255, blank=True,
+        help_text='Без города: р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5',
+    )
+    work_hours = models.CharField(
+        'Часы работы', max_length=120, blank=True,
+        help_text='Пн–Пт 10:00–19:00. Пусто — адрес показывается без графика',
+    )
+    office_lat = models.DecimalField(
+        'Широта', max_digits=9, decimal_places=6, null=True, blank=True,
+        help_text='Широта офиса, как в 2ГИС: 51.158240',
+    )
+    office_lng = models.DecimalField(
+        'Долгота', max_digits=9, decimal_places=6, null=True, blank=True,
+        help_text='Долгота офиса, как в 2ГИС: 71.435760',
+    )
+
+    class Meta:
+        verbose_name = 'Контакты компании'
+        verbose_name_plural = 'Контакты компании'
+
+    def __str__(self):
+        return 'Контакты компании'
+
+    def save(self, *args, **kwargs):
+        # Singleton: всегда pk=1
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @staticmethod
+    def _digits(value):
+        return ''.join(ch for ch in (value or '') if ch.isdigit())
+
+    @property
+    def phone_display(self):
+        """Телефон для показа человеку: +7 776 610 38 36.
+
+        Форматируем только казахстанские номера (+7 и 11 цифр) — правила
+        группировки у каждой страны свои, выдумывать их для стран, которых
+        у нас нет, незачем: такой номер отдаём как есть.
+        """
+        digits = self._digits(self.phone)
+        if len(digits) == 11 and digits[0] == '7':
+            return f'+{digits[0]} {digits[1:4]} {digits[4:7]} {digits[7:9]} {digits[9:]}'
+        return self.phone
+
+    @property
+    def whatsapp_url(self):
+        digits = self._digits(self.whatsapp_phone) or self._digits(self.phone)
+        return f'https://wa.me/{digits}' if digits else ''
+
+    @property
+    def telegram_url(self):
+        return f'https://t.me/{self.telegram_username}' if self.telegram_username else ''
+
+    @property
+    def telegram_display(self):
+        return f'@{self.telegram_username}' if self.telegram_username else ''
+
+    @property
+    def address_line(self):
+        """Адрес одной строкой — так он выводится в фолбэке карты и в попапе метки."""
+        parts = [self.address_locality, self.address_street, self.work_hours]
+        return ', '.join(p for p in parts if p)
+
+    @property
+    def social_links(self):
+        """Непустые профили компании — для sameAs в JSON-LD.
+
+        Telegram здесь наравне с соцсетями: в разметке он всегда был в sameAs.
+        """
+        links = [
+            self.instagram_url,
+            self.tiktok_url,
+            self.youtube_url,
+            self.telegram_url,
+            self.marketplace_url,
+        ]
+        return [link for link in links if link]

@@ -13,7 +13,7 @@ class PagesConfig(AppConfig):
         # Сброс кеша навигации при изменении меню/страниц в админке
         from django.core.cache import cache
         from django.db.models.signals import post_delete, post_save
-        from .models import MenuItem, Page, PageCategory
+        from .models import ContactSettings, MenuItem, Page, PageCategory
 
         def _clear_nav_cache(**kwargs):
             cache.delete('navigation_data')
@@ -21,3 +21,9 @@ class PagesConfig(AppConfig):
         for model in (MenuItem, Page, PageCategory):
             post_save.connect(_clear_nav_cache, sender=model, weak=False)
             post_delete.connect(_clear_nav_cache, sender=model, weak=False)
+
+        # Контакты компании: правку в бэкофисе видно сразу, а не через 10 минут
+        def _clear_contacts_cache(**kwargs):
+            cache.delete('contact_settings')
+
+        post_save.connect(_clear_contacts_cache, sender=ContactSettings, weak=False)
