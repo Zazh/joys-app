@@ -891,6 +891,10 @@ msgid "ПОПРОБОВАТЬ СНОВА"
 msgstr "ҚАЙТАЛАП КӨРУ"
 
 #: templates/pages/blog_detail.html:5 templates/pages/blog_list.html:13
+#: pages/views.py templates/pages/blog_list.html
+msgid "Блог"
+msgstr "Блог"
+
 #: templates/pages/blog_list.html:30 templates/pages/blog_list.html:79
 msgid "Блог DR.JOYS"
 msgstr "DR.JOYS блогы"
