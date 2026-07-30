@@ -306,9 +306,14 @@
                     <article class="carousel-card">
                         <a href="{{ related.get_absolute_url }}" class="block">
                             <div class="carousel-card_picture">
-                                {% with related_cover=related.images.all|first %}
+                                {# related.images не существует — связь называется main_images, #}
+                                {# и обращение к несуществующему полю молча давало пустоту, #}
+                                {# из-за чего в карточках всегда рисовался плейсхолдер. #}
+                                {# get_cover_image() берёт помеченную обложку, иначе первое фото #}
+                                {% with related_cover=related.get_cover_image %}
                                 {% if related_cover %}
-                                <img src="{{ related_cover.image.url }}" class="w-full h-full object-cover" alt="{{ related.name }}" loading="lazy">
+                                {% if related_cover.thumbnail %}{% localized_img related_cover 'thumbnail' as related_img_url %}{% else %}{% localized_img related_cover 'image' as related_img_url %}{% endif %}
+                                <img src="{{ related_img_url }}" class="w-full h-full object-cover" alt="{{ related_cover.alt_text|default:related.name }}" loading="lazy">
                                 {% else %}
                                 <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="{{ related.name }}" loading="lazy">
                                 {% endif %}
