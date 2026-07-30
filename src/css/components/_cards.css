@@ -76,8 +76,14 @@
 .blog-card-info {
     @apply p-5 md:p-10 absolute bottom-0 w-full h-full flex flex-col gap-2;
 }
+/* Межстрочный задаём дочернему заголовку, а не обёртке: у h2/h3 свой text-xl,
+   а он ставит line-height через var(--tw-leading, …). Переменная не наследуется
+   (@property inherits: false), поэтому leading на обёртке до текста не доходил */
 .blog-card-title {
-    @apply mt-auto text-white font-bold leading-[1.2];
+    @apply mt-auto text-white font-bold;
+}
+.blog-card-title > * {
+    @apply leading-[1.2];
 }
 .blog-card-meta {
     @apply text-white md:text-sm text-xs;
