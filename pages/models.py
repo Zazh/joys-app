@@ -5,6 +5,8 @@ from django.urls import reverse, NoReverseMatch
 
 # Префикс ссылки на телеграм — срезаем, чтобы из вставленной ссылки осталось имя
 _TELEGRAM_URL_PREFIX = re.compile(r'^(?:https?://)?(?:www\.)?t(?:elegram)?\.me/', re.I)
+# Что телеграм разрешает в имени пользователя: латиница, цифры, подчёркивание, 5–32 знака
+_TELEGRAM_USERNAME = re.compile(r'^[A-Za-z0-9_]{5,32}$')
 
 
 class PageCategory(models.Model):
@@ -469,6 +471,17 @@ class ContactSettings(models.Model):
         value = (value or '').strip()
         return _TELEGRAM_URL_PREFIX.sub('', value).strip('@/ ')
 
+    @staticmethod
+    def is_telegram_username(handle):
+        """Соберётся ли с этим именем рабочая ссылка t.me.
+
+        Применяется к уже нормализованному имени. Живёт здесь, а не в форме
+        бэкофиса: правило одно, а мест два — форма отбивает кривой ввод понятной
+        ошибкой, а чтение (ниже) считает битое имя пустым. Второго регекспа
+        в проекте быть не должно (§6).
+        """
+        return bool(_TELEGRAM_USERNAME.match(handle))
+
     @classmethod
     def _format_phone(cls, value):
         """Телефон для показа человеку: +7 776 610 38 36.
@@ -527,13 +540,25 @@ class ContactSettings(models.Model):
         return f'https://wa.me/{digits}' if digits else ''
 
     @property
-    def telegram_url(self):
+    def _telegram_handle(self):
+        """Имя из колонки — но только если ссылка t.me с ним будет рабочей.
+
+        Тот же инвариант, что у `tel:` (§2R): ссылка цела при любом содержимом
+        колонки, включая запись в обход формы. На имени вроде «др джойс» канал
+        ведёт себя как пустой — не рисуется вовсе, вместо битой ссылки в футере
+        и в `sameAs`.
+        """
         handle = self.normalize_telegram_username(self.telegram_username)
+        return handle if self.is_telegram_username(handle) else ''
+
+    @property
+    def telegram_url(self):
+        handle = self._telegram_handle
         return f'https://t.me/{handle}' if handle else ''
 
     @property
     def telegram_display(self):
-        handle = self.normalize_telegram_username(self.telegram_username)
+        handle = self._telegram_handle
         return f'@{handle}' if handle else ''
 
     @property

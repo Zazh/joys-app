@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
-from backoffice.forms import ContactSettingsForm
+from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
 from pages.models import ContactSettings
 
@@ -55,12 +55,6 @@ class ContactsEditViewTests(TestCase):
                                  role=User.Role.MANAGER)
         self.client.login(email='manager@example.com', password='x')
 
-    def test_get_renders_all_three_languages(self):
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        for name in ('legal_name_ru', 'legal_name_kk', 'legal_name_en'):
-            self.assertContains(response, f'name="{name}"')
-
     def test_save_updates_and_drops_cache(self):
         """Правка видна на сайте сразу — кеш сброшен сигналом (§4).
 
@@ -84,6 +78,37 @@ class ContactsEditViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ContactSettings.load().phone, '+77766103836')
 
+    def test_no_required_attribute_on_inputs(self):
+        """С атрибутом required «Сохранить» выглядит нерабочей кнопкой.
+
+        Обязательные переводы лежат на скрытых табах, а невидимое поле браузер
+        отчитать не может: он молча блокирует отправку, и до серверной валидации
+        с form.error_tab дело не доходит. Проверено вживую — клик не делал ничего.
+        """
+        html = self.client.get(self.url).content.decode()
+        self.assertNotIn('required', html)
+
+    def test_every_field_is_rendered(self):
+        """Поле формы, не попавшее в разметку, POST затрёт пустым — молча.
+
+        Разметка раскладывает поля по четырём блокам руками, так что новое поле
+        легко забыть.
+        """
+        html = self.client.get(self.url).content.decode()
+        for name in ContactSettingsForm.base_fields:
+            self.assertIn(f'name="{name}"', html, f'поле {name} не выводится в разметке')
+
+    def test_form_covers_every_model_field(self):
+        """Поле, добавленное в ContactSettings, должно доехать до редактора.
+
+        Meta.fields перечислен руками: и новая колонка, и новое переводимое поле
+        в pages/translation.py иначе молча остались бы только в модели, а на /kk/
+        проступил бы русский (§4). Базовые переводимые поля в форме не участвуют —
+        их заменяют языковые колонки.
+        """
+        columns = {f.name for f in ContactSettings._meta.fields} - {'id'}
+        self.assertEqual(set(ContactSettingsForm.base_fields), columns - set(TRANSLATED_FIELDS))
+
 
 class ContactSettingsFormTests(TestCase):
     def test_phone_canonicalized(self):
@@ -100,10 +125,21 @@ class ContactSettingsFormTests(TestCase):
                 self.assertTrue(form.is_valid(), form.errors)
                 self.assertEqual(form.cleaned_data['phone'], expected)
 
-    def test_phone_typo_rejected(self):
-        form = ContactSettingsForm(payload(phone='+7776610'), instance=ContactSettings.load())
-        self.assertFalse(form.is_valid())
-        self.assertIn('phone', form.errors)
+    def test_bad_phone_rejected(self):
+        """Опечатка и текст без цифр — ошибка, а не тихая запись в колонку.
+
+        У WhatsApp поле необязательное, так что «уточняется» молча ушло бы пустой
+        строкой; у основного телефона `to_e164` отдал бы пустоту, и заказчик видел
+        бы у заполненного поля «Это поле не может быть пустым».
+        """
+        for name, entered in (('phone', '+7776610'), ('phone', 'уточняется'),
+                              ('whatsapp_phone', 'уточняется')):
+            with self.subTest(name=name, entered=entered):
+                form = ContactSettingsForm(payload(**{name: entered}),
+                                           instance=ContactSettings.load())
+                self.assertFalse(form.is_valid())
+                self.assertIn(name, form.errors)
+        self.assertIn('цифр', ' '.join(form.errors['whatsapp_phone']))
 
     def test_whatsapp_phone_canonicalized_and_optional(self):
         form = ContactSettingsForm(payload(whatsapp_phone='8 701 124 45 96'),
@@ -125,6 +161,30 @@ class ContactSettingsFormTests(TestCase):
                 self.assertTrue(form.is_valid(), form.errors)
                 self.assertEqual(form.cleaned_data['telegram_username'], 'drjoysoriginal')
                 self.assertEqual(form.save().telegram_url, 'https://t.me/drjoysoriginal')
+
+    def test_telegram_broken_handle_rejected(self):
+        """Ссылка t.me с пробелом или кириллицей — битая, лучше ошибка в форме."""
+        for entered in ('dr joys', 'дрджойс', 'др', 't.me/joinchat/AbCdEf'):
+            with self.subTest(entered=entered):
+                form = ContactSettingsForm(payload(telegram_username=entered),
+                                           instance=ContactSettings.load())
+                self.assertFalse(form.is_valid())
+                self.assertIn('telegram_username', form.errors)
+
+    def test_social_url_without_scheme_becomes_https(self):
+        """Django 5 сама подставила бы http:// — небезопасная ссылка в sameAs."""
+        form = ContactSettingsForm(payload(tiktok_url='tiktok.com/@drjoysoriginal'),
+                                   instance=ContactSettings.load())
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['tiktok_url'], 'https://tiktok.com/@drjoysoriginal')
+
+    def test_bin_must_be_twelve_digits(self):
+        """БИН печатается в футере и уходит в taxID разметки — «abc» там не место."""
+        for entered in ('abc', '123', '220 140 017'):
+            with self.subTest(entered=entered):
+                form = ContactSettingsForm(payload(bin=entered), instance=ContactSettings.load())
+                self.assertFalse(form.is_valid())
+                self.assertIn('bin', form.errors)
 
     def test_translations_required(self):
         """Пустой kk/en не сохраняем: modeltranslation отдал бы вместо них русский."""
@@ -158,6 +218,15 @@ class ContactSettingsFormTests(TestCase):
                                    instance=ContactSettings.load())
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data['office_lat'], Decimal('51.158240'))
+
+    def test_coordinates_out_of_range_rejected(self):
+        """Опечатка «851» вместо «51» не должна доехать до карты."""
+        for name, entered in (('office_lat', '851.158240'), ('office_lng', '-181.435760')):
+            with self.subTest(name=name):
+                form = ContactSettingsForm(payload(**{name: entered}),
+                                           instance=ContactSettings.load())
+                self.assertFalse(form.is_valid())
+                self.assertIn(name, form.errors)
 
     def test_error_tab_opens_language_with_error(self):
         form = ContactSettingsForm(payload(legal_name_en=''), instance=ContactSettings.load())

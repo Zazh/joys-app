@@ -109,6 +109,21 @@ class ContactSettingsFormatTests(TestCase):
         ContactSettings.objects.filter(pk=1).update(telegram_username='@drjoysoriginal')
         self.assertEqual(ContactSettings.load().telegram_url, 'https://t.me/drjoysoriginal')
 
+    def test_telegram_broken_handle_reads_as_empty_channel(self):
+        """Из имени, с которым t.me не работает, битую ссылку не собираем.
+
+        Тот же инвариант, что у `tel:`: колонку можно заполнить в обход формы
+        (`queryset.update()`, перенос базы с прода), а в футер и в `sameAs`
+        уйти должна либо рабочая ссылка, либо ничего.
+        """
+        for raw in ('др джойс', 'dr joys', 'др', 't.me/joinchat/AbCdEf'):
+            with self.subTest(raw=raw):
+                ContactSettings.objects.filter(pk=1).update(telegram_username=raw)
+                fresh = ContactSettings.load()
+                self.assertEqual(fresh.telegram_url, '')
+                self.assertEqual(fresh.telegram_display, '')
+                self.assertNotIn(raw, fresh.social_links)
+
     def test_address_line_with_hours(self):
         self.assertEqual(
             self.settings.address_line,
