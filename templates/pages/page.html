@@ -28,8 +28,13 @@
     <section class="main-grid">
         <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
             <div class="blog-container pt-30">
+                {# Крошки строкой над заголовком (как на контактах): nav_class="flex" #}
+                {# показывает их и на мобильном, hide_back=1 убирает fixed-кнопку «назад» #}
+                <div class="pb-4">
+                    {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs hide_back=1 nav_class="flex" %}
+                </div>
                 <div>
-                    <h1 class="display-2 uppercase font-benzin">{{ page.title }}</h1>
+                    <h1 class="page-title">{{ page.title }}</h1>
                 </div>
                 <div class="blog-content">
                     <div>{{ page.body|sanitize }}</div>

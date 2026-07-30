@@ -181,10 +181,16 @@ class PageDetailView(DetailView):
         description = page.meta_description or str(self.FALLBACK_DESCRIPTIONS.get(page.slug, ''))
         ctx['meta_description'] = description
 
-        breadcrumbs = [
-            {'name': 'DR.JOYS', 'url': reverse('home')},
-            {'name': page.title, 'url': ''},
-        ]
+        # Раздел в середину цепочки, если страница лежит в категории («Правовая
+        # информация» и т.п.): у категории есть свой URL, и без неё цепочка врёт
+        # об уровне вложенности
+        breadcrumbs = [{'name': 'DR.JOYS', 'url': reverse('home')}]
+        if page.category:
+            breadcrumbs.append({
+                'name': page.category.name,
+                'url': page.category.get_absolute_url(),
+            })
+        breadcrumbs.append({'name': page.title, 'url': ''})
         ctx['breadcrumbs'] = breadcrumbs
         ctx['jsonld_blocks'] = jld.serialize_jsonld(
             jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
@@ -210,6 +216,14 @@ class BlogListView(ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['page_type'] = 'blog_list'
+        breadcrumbs = [
+            {'name': 'DR.JOYS', 'url': reverse('home')},
+            {'name': str(_('Блог')), 'url': ''},
+        ]
+        ctx['breadcrumbs'] = breadcrumbs
+        ctx['jsonld_blocks'] = jld.serialize_jsonld(
+            jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
+        )
         return ctx
 
 
@@ -228,4 +242,15 @@ class BlogDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['page_type'] = 'blog_detail'
+        # Категорию в цепочку не берём: у BlogCategory нет своей страницы,
+        # ссылаться неоткуда, а крошка без URL ломает уровень вложенности
+        breadcrumbs = [
+            {'name': 'DR.JOYS', 'url': reverse('home')},
+            {'name': str(_('Блог')), 'url': reverse('pages:blog_list')},
+            {'name': self.object.title, 'url': ''},
+        ]
+        ctx['breadcrumbs'] = breadcrumbs
+        ctx['jsonld_blocks'] = jld.serialize_jsonld(
+            jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
+        )
         return ctx

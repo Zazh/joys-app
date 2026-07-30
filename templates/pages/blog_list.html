@@ -6,6 +6,9 @@
 
 {% block meta %}
 <meta name="description" content="{% trans "Блог DR.JOYS — статьи об акциях, событиях, здоровье и отношениях. Читайте полезные материалы от команды DR.JOYS." %}">
+{% for jsonld_str in jsonld_blocks %}
+<script type="application/ld+json">{{ jsonld_str|safe }}</script>
+{% endfor %}
 {% endblock %}
 
 {% block og %}
@@ -16,16 +19,17 @@
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
 {% endblock %}
 
-{% block header_right %}
-{% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
-{% endblock %}
-
 {% block content %}
 <main>
     <section class="main-grid">
         <div class="col-span-full lg:col-span-13 xl:col-span-13 xl:col-start-2">
             <div class="blog-container pt-30">
                 <!-- BEGIN заголовок блога -->
+                {# Крошки строкой над заголовком (как на контактах): nav_class="flex" #}
+                {# показывает их и на мобильном, hide_back=1 убирает fixed-кнопку «назад» #}
+                <div class="pb-4">
+                    {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs hide_back=1 nav_class="flex" %}
+                </div>
                 <div class="pb-6">
                     <h1 class="page-title">{% trans "Блог DR.JOYS" %}</h1>
                 </div>

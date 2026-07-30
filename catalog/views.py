@@ -74,18 +74,25 @@ class CatalogListView(ListView):
             else _('Каталог презервативов DR.JOYS — классические, ребристые, ультратонкие')
         )
 
+        # Крошки — только на странице категории. На общем списке цепочка была бы
+        # «DR.JOYS / Каталог», то есть пересказ заголовка, поэтому её нет ни в
+        # вёрстке, ни в JSON-LD: размечать то, чего пользователь не видит, —
+        # против рекомендаций Google по структурированным данным.
+        # Опора на category_slug из URL, а не на current_category: когда активна
+        # одна категория, она подставляется и на /catalog/, и последняя крошка
+        # указывала бы на URL, отличный от текущего.
+        breadcrumbs = []
+        if category_slug and current_category:
+            breadcrumbs = [
+                {'name': 'DR.JOYS', 'url': reverse('home')},
+                {'name': _('Каталог'), 'url': reverse('catalog:catalog')},
+                {'name': current_category.name, 'url': ''},
+            ]
+        ctx['breadcrumbs'] = breadcrumbs
+
         # JSON-LD
-        breadcrumbs = [
-            {'name': 'DR.JOYS', 'url': reverse('home')},
-            {'name': _('Каталог'), 'url': reverse('catalog:catalog')},
-        ]
-        if current_category:
-            breadcrumbs.append({
-                'name': current_category.name,
-                'url': current_category.get_absolute_url(),
-            })
         ctx['jsonld_blocks'] = jld.serialize_jsonld(
-            jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
+            jld.build_breadcrumb_jsonld(self.request, breadcrumbs) if breadcrumbs else None,
             jld.build_catalog_itemlist_jsonld(
                 self.request, ctx['products'], current_category,
                 region=getattr(self.request, 'region', None),
