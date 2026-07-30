@@ -227,10 +227,10 @@ msgstr "Payment session expired. Please place a new order."
 
 #: pages/views.py:157
 msgid ""
-"Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, адрес офиса в Астане "
+"Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, адрес офиса в Алматы "
 "на карте и форма обращения."
 msgstr ""
-"DR.JOYS contacts: phone, WhatsApp, Telegram and email, our Astana office on "
+"DR.JOYS contacts: phone, WhatsApp, Telegram and email, our Almaty office on "
 "the map and a contact form."
 
 #: templates/accounts/check_email.html:4

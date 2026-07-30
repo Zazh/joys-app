@@ -155,7 +155,7 @@ class PageDetailView(DetailView):
     # всегда в приоритете.
     FALLBACK_DESCRIPTIONS = {
         'contacts': _('Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, '
-                      'адрес офиса в Астане на карте и форма обращения.'),
+                      'адрес офиса в Алматы на карте и форма обращения.'),
     }
 
     def get_queryset(self):

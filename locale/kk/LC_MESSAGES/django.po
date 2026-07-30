@@ -227,10 +227,10 @@ msgstr "Төлем сессиясының мерзімі өтті. Тапсыр�
 
 #: pages/views.py:157
 msgid ""
-"Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, адрес офиса в Астане "
+"Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, адрес офиса в Алматы "
 "на карте и форма обращения."
 msgstr ""
-"DR.JOYS байланыстары: телефон, WhatsApp, Telegram және пошта, Астанадағы "
+"DR.JOYS байланыстары: телефон, WhatsApp, Telegram және пошта, Алматыдағы "
 "кеңсенің мекенжайы картада және хабарласу нысаны."
 
 #: templates/accounts/check_email.html:4
