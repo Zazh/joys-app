@@ -1,5 +1,10 @@
+import re
+
 from django.db import models
 from django.urls import reverse, NoReverseMatch
+
+# Префикс ссылки на телеграм — срезаем, чтобы из вставленной ссылки осталось имя
+_TELEGRAM_URL_PREFIX = re.compile(r'^(?:https?://)?(?:www\.)?t(?:elegram)?\.me/', re.I)
 
 
 class PageCategory(models.Model):
@@ -357,7 +362,7 @@ class ContactSettings(models.Model):
     """
 
     phone = models.CharField(
-        'Телефон', max_length=32, blank=True,
+        'Телефон', max_length=32,
         help_text='В международном формате, только + и цифры: +77766103836',
     )
     whatsapp_phone = models.CharField(
@@ -366,45 +371,61 @@ class ContactSettings(models.Model):
     )
     telegram_username = models.CharField(
         'Telegram', max_length=64, blank=True,
-        help_text='Только имя пользователя, без @ и без t.me/: drjoysoriginal',
+        help_text='Имя пользователя: drjoysoriginal. Можно вставить с @ или ссылкой — '
+                  'приведём к имени сами. Пусто — канал не показывается',
     )
-    email = models.EmailField('Email', blank=True)
+    email = models.EmailField(
+        'Email', blank=True,
+        help_text='Пусто — канал не показывается',
+    )
 
+    # Пустая ссылка = канала нет: ни иконки в футере, ни sameAs в JSON-LD. Подсказка
+    # стоит у каждого поля, а не только у первого: в форме бэкофиса они идут вразбивку
     instagram_url = models.URLField(
         'Instagram', max_length=300, blank=True,
         help_text='Полная ссылка. Пусто — иконка не показывается',
     )
-    tiktok_url = models.URLField('TikTok', max_length=300, blank=True)
-    youtube_url = models.URLField('YouTube', max_length=300, blank=True)
+    tiktok_url = models.URLField(
+        'TikTok', max_length=300, blank=True,
+        help_text='Полная ссылка. Пусто — иконка не показывается',
+    )
+    youtube_url = models.URLField(
+        'YouTube', max_length=300, blank=True,
+        help_text='Полная ссылка. Пусто — иконка не показывается',
+    )
     marketplace_url = models.URLField(
         'Маркетплейс', max_length=300, blank=True,
-        help_text='Витрина на Wildberries или другом маркетплейсе',
+        help_text='Витрина на Wildberries или другом маркетплейсе. Пусто — ссылки нет',
     )
 
     legal_name = models.CharField(
-        'Юридическое название', max_length=200, blank=True,
+        'Юридическое название', max_length=200,
         help_text='Как в свидетельстве: ТОО «DR JOYS»',
     )
     bin = models.CharField(
-        'БИН', max_length=12, blank=True,
+        'БИН', max_length=12,
         help_text='12 цифр',
     )
     bin_label = models.CharField(
-        'Подпись БИН', max_length=16, blank=True,
+        'Подпись БИН', max_length=16,
         help_text='Как называется код на этом языке: БИН / БСН / BIN',
     )
 
     address_locality = models.CharField(
-        'Город', max_length=100, blank=True,
+        'Город', max_length=100,
+        help_text='Без приставки «г.»: Астана',
     )
     address_street = models.CharField(
-        'Улица, дом', max_length=255, blank=True,
+        'Улица, дом', max_length=255,
         help_text='Без города: р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5',
     )
     work_hours = models.CharField(
         'Часы работы', max_length=120, blank=True,
         help_text='Пн–Пт 10:00–19:00. Пусто — адрес показывается без графика',
     )
+    # Координаты nullable, хотя офис у нас один и всегда известен: load() создаёт
+    # синглтон через get_or_create() без аргументов, и NOT NULL без default уронил бы
+    # контекст-процессор с IntegrityError на каждой странице, если строки вдруг нет.
     office_lat = models.DecimalField(
         'Широта', max_digits=9, decimal_places=6, null=True, blank=True,
         help_text='Широта офиса, как в 2ГИС: 51.158240',
@@ -435,6 +456,19 @@ class ContactSettings(models.Model):
     def _digits(value):
         return ''.join(ch for ch in (value or '') if ch.isdigit())
 
+    @staticmethod
+    def normalize_telegram_username(value):
+        """Имя пользователя из того, что удобно вставить: @name, t.me/name, ссылка.
+
+        Чистим при чтении, а не в save(): так ссылка цела при любом содержимом колонки,
+        включая запись в обход save() (`queryset.update()`, перенос базы с прода).
+        Приводить саму колонку к чистому виду — дело формы бэкофиса (§6): там заказчик
+        видит результат. Отсюда же форма и берёт эту функцию, чтобы не плодить второй
+        регексп. Ровно та же схема, что у телефона: `_digits` чистит на чтении.
+        """
+        value = (value or '').strip()
+        return _TELEGRAM_URL_PREFIX.sub('', value).strip('@/ ')
+
     @property
     def phone_display(self):
         """Телефон для показа человеку: +7 776 610 38 36.
@@ -455,11 +489,13 @@ class ContactSettings(models.Model):
 
     @property
     def telegram_url(self):
-        return f'https://t.me/{self.telegram_username}' if self.telegram_username else ''
+        handle = self.normalize_telegram_username(self.telegram_username)
+        return f'https://t.me/{handle}' if handle else ''
 
     @property
     def telegram_display(self):
-        return f'@{self.telegram_username}' if self.telegram_username else ''
+        handle = self.normalize_telegram_username(self.telegram_username)
+        return f'@{handle}' if handle else ''
 
     @property
     def address_line(self):
@@ -471,7 +507,10 @@ class ContactSettings(models.Model):
     def social_links(self):
         """Непустые профили компании — для sameAs в JSON-LD.
 
-        Telegram здесь наравне с соцсетями: в разметке он всегда был в sameAs.
+        Порядок совпадает с прежним списком SAME_AS в pages/jsonld.py, чтобы после
+        переезда (Сессия 2) разметка сошлась с эталоном. Telegram здесь наравне с
+        соцсетями — он всегда был в sameAs; витрина маркетплейса тоже официальный
+        профиль компании, её место здесь же.
         """
         links = [
             self.instagram_url,
