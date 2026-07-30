@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static i18n inquiries_extras %}
+{% load static i18n l10n inquiries_extras %}
 
 {% block title %}{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}{% endblock %}
 
@@ -54,30 +54,39 @@
                 <h2 class="display-3 font-benzin uppercase pb-6">{% trans "Каналы связи" %}</h2>
 
                 {# Две колонки, а не четыре: в узкой карточке адрес почты рвался на две строки #}
+                {# Значения — из ContactSettings; пустой канал карточкой не рисуем #}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <a class="contact-card" href="tel:+77766103836">
+                    {% if contacts.phone %}
+                    <a class="contact-card" href="tel:{{ contacts.phone }}">
                         {% include 'base/components/icons/_icon_phone.html' with icon_class="contact-card__icon" %}
                         <span class="contact-card__label">{% trans "Телефон" %}</span>
-                        <span class="contact-card__value">+7 776 610 38 36</span>
+                        <span class="contact-card__value">{{ contacts.phone_display }}</span>
                     </a>
+                    {% endif %}
 
-                    <a class="contact-card" href="https://wa.me/77766103836" target="_blank" rel="noopener noreferrer">
+                    {% if contacts.whatsapp_url %}
+                    <a class="contact-card" href="{{ contacts.whatsapp_url }}" target="_blank" rel="noopener noreferrer">
                         {% include 'base/components/icons/_icon_whatsapp.html' with icon_class="contact-card__icon" %}
                         <span class="contact-card__label">WhatsApp</span>
-                        <span class="contact-card__value">+7 776 610 38 36</span>
+                        <span class="contact-card__value">{{ contacts.whatsapp_display }}</span>
                     </a>
+                    {% endif %}
 
-                    <a class="contact-card" href="https://t.me/drjoysoriginal" target="_blank" rel="noopener noreferrer">
+                    {% if contacts.telegram_url %}
+                    <a class="contact-card" href="{{ contacts.telegram_url }}" target="_blank" rel="noopener noreferrer">
                         {% include 'base/components/icons/_icon_telegram.html' with icon_class="contact-card__icon" %}
                         <span class="contact-card__label">Telegram</span>
-                        <span class="contact-card__value">@drjoysoriginal</span>
+                        <span class="contact-card__value">{{ contacts.telegram_display }}</span>
                     </a>
+                    {% endif %}
 
-                    <a class="contact-card" href="mailto:drjoysoriginal@gmail.com">
+                    {% if contacts.email %}
+                    <a class="contact-card" href="mailto:{{ contacts.email }}">
                         {% include 'base/components/icons/_icon_email.html' with icon_class="contact-card__icon" %}
                         <span class="contact-card__label">Email</span>
-                        <span class="contact-card__value">drjoysoriginal@gmail.com</span>
+                        <span class="contact-card__value">{{ contacts.email }}</span>
                     </a>
+                    {% endif %}
                 </div>
 
             </section>
@@ -87,23 +96,25 @@
     </section>
 
     <!-- BEGIN contacts-office -->
-    {# Координаты офиса (OSM, здание Бараева 13). TODO: сверить точку по 2ГИС — вход в н.п. 5 #}
+    {# Адрес и координаты офиса — из ContactSettings, правятся в бэкофисе без релиза #}
     <section class="main-grid">
         {# Колонка карты шире контентной, но левым краем совпадает с ней на всех ширинах: #}
         {# на lg контент идёт с первой колонки, на xl — со второй (xl:col-start-2 у обоих) #}
         <div id="office" class="col-span-full lg:col-span-13 xl:col-start-2 scroll-mt-24 pb-16">
             {# Карта во всю ширину секции, инициализируется лениво из dist/js/contacts.js #}
             {# До инициализации и без JS в контейнере виден фолбэк с адресом и маршрутами #}
+            {# Нет координат — data-атрибутов нет, createMap() выходит на NaN и фолбэк остаётся #}
+            {# unlocalize обязателен: на /ru/ float печатается как «51,15824» и parseFloat даёт 51 #}
             <div id="officeMap"
                  class="map-container"
                  role="region"
                  aria-label="{% trans 'Карта: офис DR.JOYS' %}"
-                 data-lat="51.15824"
-                 data-lng="71.43576"
-                 data-title="{% trans 'ТОО «DR JOYS»' %}"
-                 data-address="{% trans 'г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5' %}">
+                 {% if contacts.geo %}data-lat="{{ contacts.geo.lat|unlocalize }}"
+                 data-lng="{{ contacts.geo.lng|unlocalize }}"
+                 {% endif %}data-title="{{ contacts.legal_name }}"
+                 data-address="{{ contacts.address_line }}">
                 <div class="map-fallback">
-                    <address class="not-italic font-bold">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}, {% trans "Пн–Пт 10:00–19:00" %}</address>
+                    <address class="not-italic font-bold">{{ contacts.address_line }}</address>
                     {% include 'base/components/_route_links.html' with list_class="justify-center" %}
                 </div>
             </div>
@@ -118,9 +129,8 @@
             {# Держим в шаблоне, чтобы иконки и переводы жили в Django, а не в JS #}
             <template id="officeMapPopup">
                 <div class="map-popup">
-                    <strong class="map-popup__name">{% trans "ТОО «DR JOYS»" %}</strong>
-                    {# TODO: уточнить график у заказчика — пока заглушка (docs/contacts_page_redesign.md §3.4) #}
-                    <address class="map-popup__address not-italic">{% trans "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5" %}, {% trans "Пн–Пт 10:00–19:00" %}</address>
+                    <strong class="map-popup__name">{{ contacts.legal_name }}</strong>
+                    <address class="map-popup__address not-italic">{{ contacts.address_line }}</address>
                     {% include 'base/components/_route_links.html' %}
                 </div>
             </template>

@@ -1,8 +1,12 @@
 {% load i18n %}
 {% comment %}
-Каналы связи DR.JOYS — единый источник ссылок для футера и страницы контактов.
+Каналы связи DR.JOYS — единый источник разметки для футера и страницы контактов.
 Разметка общая, но каждый пункт ведёт в свой канал: звонок, мессенджер, почта, соцсеть.
-Меняются контакты — правится только этот файл.
+Сами контакты живут в ContactSettings и правятся из бэкофиса, сюда приходят
+контекст-процессором pages.context_processors.contacts. Пустое поле = канала нет:
+иконка не рисуется совсем (docs/contact_settings.md §5).
+
+Явный список, а не цикл: у каждой иконки свой aria-label и свой партиал.
 
 Параметры:
   list_class — выравнивание ряда у конкретного места вставки;
@@ -11,47 +15,61 @@
 {% endcomment %}
 <ul class="contact-links {{ list_class|default:'' }}">
     {% if group != 'social' %}
+    {% if contacts.phone %}
     <li>
-        <a class="contact-links__item" href="tel:+77766103836"
+        <a class="contact-links__item" href="tel:{{ contacts.phone }}"
            aria-label="{% trans "Позвонить" %}" title="{% trans "Позвонить" %}">
             {% include 'base/components/icons/_icon_phone.html' %}
         </a>
     </li>
+    {% endif %}
+    {% if contacts.whatsapp_url %}
     <li>
-        <a class="contact-links__item" href="https://wa.me/77766103836" target="_blank" rel="noopener noreferrer"
+        <a class="contact-links__item" href="{{ contacts.whatsapp_url }}" target="_blank" rel="noopener noreferrer"
            aria-label="{% trans "Написать в WhatsApp" %}" title="{% trans "Написать в WhatsApp" %}">
             {% include 'base/components/icons/_icon_whatsapp.html' %}
         </a>
     </li>
+    {% endif %}
+    {% if contacts.telegram_url %}
     <li>
-        <a class="contact-links__item" href="https://t.me/drjoysoriginal" target="_blank" rel="noopener noreferrer"
+        <a class="contact-links__item" href="{{ contacts.telegram_url }}" target="_blank" rel="noopener noreferrer"
            aria-label="{% trans "Написать в Telegram" %}" title="{% trans "Написать в Telegram" %}">
             {% include 'base/components/icons/_icon_telegram.html' %}
         </a>
     </li>
+    {% endif %}
+    {% if contacts.email %}
     <li>
-        <a class="contact-links__item" href="mailto:drjoysoriginal@gmail.com"
+        <a class="contact-links__item" href="mailto:{{ contacts.email }}"
            aria-label="{% trans "Написать на почту" %}" title="{% trans "Написать на почту" %}">
             {% include 'base/components/icons/_icon_email.html' %}
         </a>
     </li>
     {% endif %}
+    {% endif %}
+    {% if contacts.instagram_url %}
     <li>
-        <a class="contact-links__item" href="https://www.instagram.com/drjoysoriginal/" target="_blank" rel="noopener noreferrer"
+        <a class="contact-links__item" href="{{ contacts.instagram_url }}" target="_blank" rel="noopener noreferrer"
            aria-label="{% trans "Мы в Instagram" %}" title="{% trans "Мы в Instagram" %}">
             {% include 'base/components/icons/_icon_instagram.html' %}
         </a>
     </li>
+    {% endif %}
+    {% if contacts.tiktok_url %}
     <li>
-        <a class="contact-links__item" href="https://www.tiktok.com/@drjoysoriginal" target="_blank" rel="noopener noreferrer"
+        <a class="contact-links__item" href="{{ contacts.tiktok_url }}" target="_blank" rel="noopener noreferrer"
            aria-label="{% trans "Мы в TikTok" %}" title="{% trans "Мы в TikTok" %}">
             {% include 'base/components/icons/_icon_tiktok.html' %}
         </a>
     </li>
+    {% endif %}
+    {% if contacts.youtube_url %}
     <li>
-        <a class="contact-links__item" href="https://www.youtube.com/@drjoysoriginal" target="_blank" rel="noopener noreferrer"
+        <a class="contact-links__item" href="{{ contacts.youtube_url }}" target="_blank" rel="noopener noreferrer"
            aria-label="{% trans "Мы на YouTube" %}" title="{% trans "Мы на YouTube" %}">
             {% include 'base/components/icons/_icon_youtube.html' %}
         </a>
     </li>
+    {% endif %}
 </ul>

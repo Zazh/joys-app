@@ -1,4 +1,9 @@
-"""Тесты ContactSettings: форматирование, кеш контекст-процессора, переводы."""
+"""Тесты ContactSettings: форматирование, кеш контекст-процессора, переводы,
+и то, как контакты доезжают до шаблонов и до JSON-LD."""
+
+import json
+import re
+from decimal import Decimal
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -7,7 +12,7 @@ from django.test import TestCase
 from django.utils import translation
 
 from .context_processors import CONTACTS_CACHE_KEY, contacts
-from .models import ContactSettings
+from .models import ContactSettings, Page
 
 
 class ContactSettingsFormatTests(TestCase):
@@ -83,6 +88,31 @@ class ContactSettingsFormatTests(TestCase):
             self.settings.address_line,
             'Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5',
         )
+
+    def test_whatsapp_display_falls_back_to_phone(self):
+        self.settings.whatsapp_phone = ''
+        self.assertEqual(self.settings.whatsapp_display, '+7 776 610 38 36')
+
+    def test_whatsapp_display_uses_own_number(self):
+        """Дистрибьюторский номер показываем его же, а не основной: в карточке
+        текст должен совпадать с тем, куда ведёт ссылка."""
+        self.settings.whatsapp_phone = '+77011244596'
+        self.assertEqual(self.settings.whatsapp_display, '+7 701 124 45 96')
+        self.assertEqual(self.settings.whatsapp_url, 'https://wa.me/77011244596')
+
+    def test_geo_returns_floats(self):
+        """float, а не Decimal: json.dumps Decimal не сериализует, а в шаблоне
+        Decimal печатается с незначащими нулями (51.158240)."""
+        geo = self.settings.geo
+        self.assertEqual(geo, {'lat': 51.15824, 'lng': 71.43576})
+        self.assertIsInstance(geo['lat'], float)
+
+    def test_geo_none_without_coords(self):
+        """Одна проверка на карту и на три deep-link'а маршрутов."""
+        for lat, lng in ((None, None), (None, Decimal('71.43576')), (Decimal('51.15824'), None)):
+            with self.subTest(lat=lat, lng=lng):
+                self.settings.office_lat, self.settings.office_lng = lat, lng
+                self.assertIsNone(self.settings.geo)
 
     def test_social_links_skip_empty(self):
         """Пустой канал не попадает в sameAs."""
@@ -181,3 +211,113 @@ class ContactSettingsCacheTests(TestCase):
         contacts(None)
         ContactSettings.objects.filter(pk=1).delete()
         self.assertIsNone(cache.get(CONTACTS_CACHE_KEY))
+
+
+class ContactsPageRenderTests(TestCase):
+    """Страница контактов и футер: контакты доезжают из модели в разметку.
+
+    Сессия 2 (docs/contact_settings.md §5) — переезд шаблонов и JSON-LD на модель.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.page = Page.objects.create(
+            slug='contacts', title='Контакты', body='',
+            meta_title='Контакты — DR.JOYS',
+        )
+
+    def setUp(self):
+        cache.delete(CONTACTS_CACHE_KEY)
+
+    def _get(self, lang):
+        """Страница контактов на заданном языке (get_absolute_url уже с префиксом)."""
+        with translation.override(lang):
+            url = self.page.get_absolute_url()
+        return self.client.get(url)
+
+    def _jsonld(self, response, type_):
+        """Блок JSON-LD нужного @type со страницы."""
+        for raw in re.findall(
+            rb'<script type="application/ld\+json">(.*?)</script>',
+            response.content, re.S,
+        ):
+            # Разметка отдаётся с <-экранированием, json.loads его разворачивает
+            data = json.loads(raw.decode('utf-8'))
+            if data.get('@type') == type_:
+                return data
+        self.fail(f'блок JSON-LD @type={type_} на странице не найден')
+
+    def test_coordinates_not_localized(self):
+        """На /ru/ float печатается как «51,15824», и parseFloat в contacts.js даёт 51 —
+        карта уезжает в степь, а три deep-link'а маршрутов ведут не туда.
+        Отсюда unlocalize в шаблоне; тест не даёт запятой вернуться."""
+        response = self._get('ru')
+        self.assertContains(response, 'data-lat="51.15824"')
+        self.assertContains(response, 'data-lng="71.43576"')
+        self.assertNotContains(response, 'data-lat="51,15824"')
+        # Те же координаты в deep-link'ах маршрутов — точкой, а не запятой
+        self.assertContains(response, 'destination=51.15824,71.43576')
+
+    def test_footer_legal_line_from_model(self):
+        """Юрлицо и подпись БИН переводятся: на /kk/ не проступает русский."""
+        response = self._get('kk')
+        self.assertContains(response, '«DR JOYS» ЖШС')
+        self.assertContains(response, 'БСН')
+        self.assertNotContains(response, 'ТОО «DR JOYS»')
+
+    def test_jsonld_uses_model_values(self):
+        response = self._get('en')
+        org = self._jsonld(response, 'ContactPage')['mainEntity']
+
+        self.assertEqual(org['legalName'], 'DR JOYS LLP')
+        self.assertEqual(org['telephone'], '+77766103836')
+        self.assertEqual(org['taxID'], '220140017355')
+        self.assertEqual(org['identifier']['name'], 'BIN')
+        self.assertEqual(org['address']['addressLocality'], 'Astana')
+        self.assertEqual(org['location']['geo']['latitude'], 51.15824)
+        self.assertIn('https://t.me/drjoysoriginal', org['sameAs'])
+
+    def test_jsonld_organization_id_shared_with_global_block(self):
+        """@id общий — иначе парсер сочтёт развёрнутый и глобальный блок
+        двумя разными компаниями."""
+        response = self._get('ru')
+        page_org = self._jsonld(response, 'ContactPage')['mainEntity']
+        global_org = self._jsonld(response, 'Organization')
+        self.assertEqual(page_org['@id'], global_org['@id'])
+        # Глобальный блок есть на каждой странице: телефон и sameAs в нём, реквизитов нет
+        self.assertEqual(global_org['telephone'], '+77766103836')
+        self.assertNotIn('address', global_org)
+        self.assertNotIn('taxID', global_org)
+
+    def test_empty_channel_disappears_everywhere(self):
+        """Пустой канал не рисуем ни иконкой, ни карточкой, ни пустой строкой в sameAs."""
+        obj = ContactSettings.load()
+        obj.tiktok_url = ''
+        obj.email = ''
+        obj.save()
+
+        response = self._get('ru')
+        self.assertNotContains(response, 'tiktok.com')
+        self.assertNotContains(response, 'mailto:')
+
+        org = self._jsonld(response, 'ContactPage')['mainEntity']
+        self.assertNotIn('email', org)
+        self.assertNotIn('email', org['contactPoint'])
+        self.assertNotIn('', org['sameAs'])
+        self.assertTrue(all('tiktok' not in link for link in org['sameAs']))
+
+    def test_no_coordinates_hides_map_data_and_routes(self):
+        """Без координат маршруты не рисуем, geo в разметку не уходит,
+        а фолбэк с адресом остаётся — карта и так подставляет его без JS."""
+        obj = ContactSettings.load()
+        obj.office_lat = obj.office_lng = None
+        obj.save()
+
+        response = self._get('ru')
+        self.assertNotContains(response, 'data-lat')
+        self.assertNotContains(response, 'route-link')
+        self.assertContains(response, 'map-fallback')
+        self.assertContains(response, 'р-н Байконыр')
+
+        location = self._jsonld(response, 'ContactPage')['mainEntity']['location']
+        self.assertNotIn('geo', location)

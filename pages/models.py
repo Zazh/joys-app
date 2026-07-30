@@ -469,18 +469,32 @@ class ContactSettings(models.Model):
         value = (value or '').strip()
         return _TELEGRAM_URL_PREFIX.sub('', value).strip('@/ ')
 
-    @property
-    def phone_display(self):
+    @classmethod
+    def _format_phone(cls, value):
         """Телефон для показа человеку: +7 776 610 38 36.
 
         Форматируем только казахстанские номера (+7 и 11 цифр) — правила
         группировки у каждой страны свои, выдумывать их для стран, которых
         у нас нет, незачем: такой номер отдаём как есть.
         """
-        digits = self._digits(self.phone)
+        digits = cls._digits(value)
         if len(digits) == 11 and digits[0] == '7':
             return f'+{digits[0]} {digits[1:4]} {digits[4:7]} {digits[7:9]} {digits[9:]}'
-        return self.phone
+        return value
+
+    @property
+    def phone_display(self):
+        return self._format_phone(self.phone)
+
+    @property
+    def whatsapp_display(self):
+        """Номер в карточке WhatsApp — свой, если задан, иначе основной.
+
+        Карточка на странице контактов показывает номер текстом, и он должен
+        совпадать с тем, куда ведёт ссылка: у дистрибьюторского WhatsApp
+        (§1) номер отличается от основного.
+        """
+        return self._format_phone(self.whatsapp_phone or self.phone)
 
     @property
     def whatsapp_url(self):
@@ -502,6 +516,21 @@ class ContactSettings(models.Model):
         """Адрес одной строкой — так он выводится в фолбэке карты и в попапе метки."""
         parts = [self.address_locality, self.address_street, self.work_hours]
         return ', '.join(p for p in parts if p)
+
+    @property
+    def geo(self):
+        """Координаты офиса для карты, маршрутов и JSON-LD — или None, если их нет.
+
+        Пара, а не два поля: карту, попап и три deep-link'а маршрутов закрывает
+        одна проверка `{% if contacts.geo %}`, а не две на каждый из них (§3.1).
+
+        Отдаём float, а не Decimal: json.dumps Decimal не сериализует вообще,
+        а в шаблоне он печатается со незначащими нулями — `data-lat="51.158240"`
+        вместо `51.15824`.
+        """
+        if self.office_lat is None or self.office_lng is None:
+            return None
+        return {'lat': float(self.office_lat), 'lng': float(self.office_lng)}
 
     @property
     def social_links(self):

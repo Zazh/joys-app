@@ -219,7 +219,22 @@ def organization_id(request):
 
 
 def build_organization_jsonld(request):
-    return {
+    """Глобальный блок организации — он есть на каждой странице сайта.
+
+    Телефон и sameAs здесь, а адрес, БИН и координаты — нет (решение Сессии 2,
+    docs/contact_settings.md §5). sameAs — то, чем Google связывает соцпрофили с
+    компанией, и до этого он лежал только на /contacts/: на главной, куда парсер
+    приходит первым делом, у организации не было ни одного такого признака.
+    Адрес и реквизиты, наоборот, относятся к одной канонической странице —
+    дублировать их в каталоге и в каждой карточке товара незачем.
+
+    Второго источника правды не появляется: значения те же, из ContactSettings,
+    из того же кеша, что уже читает футер на этой же странице.
+    """
+    from pages.context_processors import get_contacts
+
+    contacts = get_contacts()
+    result = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
         '@id': organization_id(request),
@@ -227,6 +242,11 @@ def build_organization_jsonld(request):
         'url': _absolute_url(request, '/'),
         'logo': _absolute_url(request, '/static/dist/images/svgs/logo.svg'),
     }
+    if contacts.phone:
+        result['telephone'] = contacts.phone
+    if contacts.social_links:
+        result['sameAs'] = contacts.social_links
+    return result
 
 
 # ─── WebSite ───

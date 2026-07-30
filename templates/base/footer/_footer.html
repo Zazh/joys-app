@@ -32,7 +32,8 @@
     </div>
 
     <div class="col-span-full lg:col-start-2 pt-12 pb-8 flex flex-col gap-1 text-xs uppercase tracking-wide text-center md:text-left">
-      <p>{% trans "ТОО «DR JOYS»" %} · {% trans "БИН" %} <span class="tabular-nums">220140017355</span></p>
+      {# Юрлицо и БИН — из ContactSettings, поля обязательные: пусто здесь не бывает #}
+      <p>{{ contacts.legal_name }} · {{ contacts.bin_label }} <span class="tabular-nums">{{ contacts.bin }}</span></p>
       <p>© {% now "Y" %} DR.JOYS - {% trans "Все права защищены" %}</p>
     </div>
   </section>

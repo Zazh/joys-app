@@ -33,11 +33,18 @@ def navigation(request):
     return cache.get_or_set(NAV_CACHE_KEY, _build_navigation, 600)
 
 
-def contacts(request):
-    """Контакты компании — футер рисуется на каждой странице, кеш 10 минут.
+def get_contacts():
+    """Контакты компании из кеша — футер рисуется на каждой странице, кеш 10 минут.
 
     В кеш кладём сам объект, а не отрендеренные строки: переводимые поля
     modeltranslation отдаёт по активному языку в момент обращения, а кеш
     один на все языки — иначе на /kk/ и /en/ проступит русский.
+
+    Отдельно от контекст-процессора: JSON-LD собирается во view, до рендера
+    шаблона, и должен ходить в тот же кеш, а не делать второй запрос.
     """
-    return {'contacts': cache.get_or_set(CONTACTS_CACHE_KEY, ContactSettings.load, 600)}
+    return cache.get_or_set(CONTACTS_CACHE_KEY, ContactSettings.load, 600)
+
+
+def contacts(request):
+    return {'contacts': get_contacts()}

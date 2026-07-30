@@ -1,81 +1,86 @@
 """JSON-LD страницы контактов: ContactPage + развёрнутая Organization.
 
-Реквизиты продублированы из шаблонов (`base/components/_contact_links.html` —
-ссылки каналов, `base/footer/_footer.html` — юрлицо и БИН, `pages/contacts.html` —
-адрес и координаты карты): там данные для человека, здесь те же данные для
-поисковиков. Меняются контакты — править оба места.
+Реквизиты берутся из `ContactSettings` — того же объекта, что рисует футер и
+карточки каналов, через тот же кеш (`get_contacts()`). Шаблоны показывают эти
+данные человеку, здесь те же данные уходят поисковикам; второго источника правды
+больше нет, всё правится в бэкофисе (docs/contact_settings.md §5).
+
+Развёрнутый блок — только тут: адрес, БИН и координаты относятся к одной
+канонической странице. Глобальная Organization на всех страницах ограничена
+телефоном и sameAs (см. catalog/jsonld.py).
 """
 
 from django.templatetags.static import static
-from django.utils.translation import get_language, gettext as _
+from django.utils.translation import get_language
 
 from catalog.jsonld import organization_id
 
-PHONE = '+77766103836'
-EMAIL = 'drjoysoriginal@gmail.com'
-BIN = '220140017355'
-
-# Координаты офиса — те же, что у карты Leaflet (data-lat/data-lng в contacts.html)
-OFFICE_LAT = 51.15824
-OFFICE_LNG = 71.43576
-
-# Профили компании — те же ссылки, что в _contact_links.html
-SAME_AS = [
-    'https://www.instagram.com/drjoysoriginal/',
-    'https://www.tiktok.com/@drjoysoriginal',
-    'https://www.youtube.com/@drjoysoriginal',
-    'https://t.me/drjoysoriginal',
-]
+from .context_processors import get_contacts
 
 
 def build_contact_page_jsonld(request, page, description=''):
     page_url = request.build_absolute_uri(page.get_absolute_url())
+    contacts = get_contacts()
 
     address = {
         '@type': 'PostalAddress',
         'addressCountry': 'KZ',
-        'addressLocality': _('Астана'),
-        'streetAddress': _('р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5'),
+        'addressLocality': contacts.address_locality,
+        'streetAddress': contacts.address_street,
+    }
+
+    # Место офиса — отдельным Place: geo у schema.org есть только у Place,
+    # у Organization его нет. Без координат Place не нужен вовсе.
+    location = {
+        '@type': 'Place',
+        'name': contacts.legal_name,
+        'address': address,
+    }
+    if contacts.geo:
+        location['geo'] = {
+            '@type': 'GeoCoordinates',
+            'latitude': contacts.geo['lat'],
+            'longitude': contacts.geo['lng'],
+        }
+
+    contact_point = {
+        '@type': 'ContactPoint',
+        'contactType': 'customer support',
+        'telephone': contacts.phone,
+        'email': contacts.email,
+        'areaServed': 'KZ',
+        'availableLanguage': ['ru', 'kk', 'en'],
     }
 
     organization = {
         '@type': 'Organization',
         '@id': organization_id(request),
         'name': 'DR.JOYS',
-        'legalName': _('ТОО «DR JOYS»'),
+        'legalName': contacts.legal_name,
         'url': request.build_absolute_uri('/'),
         'logo': request.build_absolute_uri(static('dist/images/svgs/logo.svg')),
         # taxID читают агрегаторы, identifier — Google: даём БИН обоими способами
-        'taxID': BIN,
+        'taxID': contacts.bin,
         'identifier': {
             '@type': 'PropertyValue',
-            'name': _('БИН'),
-            'value': BIN,
+            'name': contacts.bin_label,
+            'value': contacts.bin,
         },
-        'telephone': PHONE,
-        'email': EMAIL,
+        'telephone': contacts.phone,
+        'email': contacts.email,
         'address': address,
-        # Координаты — на Place: geo у schema.org есть только у Place, у Organization нет
-        'location': {
-            '@type': 'Place',
-            'name': _('ТОО «DR JOYS»'),
-            'address': address,
-            'geo': {
-                '@type': 'GeoCoordinates',
-                'latitude': OFFICE_LAT,
-                'longitude': OFFICE_LNG,
-            },
-        },
-        'contactPoint': {
-            '@type': 'ContactPoint',
-            'contactType': 'customer support',
-            'telephone': PHONE,
-            'email': EMAIL,
-            'areaServed': 'KZ',
-            'availableLanguage': ['ru', 'kk', 'en'],
-        },
-        'sameAs': SAME_AS,
+        'location': location,
+        'contactPoint': contact_point,
+        'sameAs': contacts.social_links,
     }
+
+    # Пустой канал — не пустая строка в разметке, а отсутствующий ключ: пустой
+    # email или sameAs поисковик прочитает как заявленный и сломанный (§5)
+    if not contacts.email:
+        del organization['email']
+        del contact_point['email']
+    if not contacts.social_links:
+        del organization['sameAs']
 
     result = {
         '@context': 'https://schema.org',
