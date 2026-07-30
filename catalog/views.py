@@ -149,10 +149,20 @@ class ProductDetailView(DetailView):
                         return rp.price
             return size.price
 
-        ctx['default_size'] = next(
+        purchasable = next(
             (s for s in sizes if not s.coming_soon and s.in_stock and _effective_price(s)),
-            sizes[0] if sizes else None,
+            None,
         )
+        ctx['default_size'] = purchasable or (sizes[0] if sizes else None)
+        # Состояние кнопки покупки одним флагом: от него зависят и подпись, и стиль,
+        # и показ цены. В шаблоне это условие собиралось трижды и расходилось —
+        # размер без остатка, но с ценой, давал «Добавить в корзину».
+        if purchasable:
+            ctx['buy_state'] = 'available'
+        elif ctx['default_size'] and ctx['default_size'].coming_soon:
+            ctx['buy_state'] = 'coming_soon'
+        else:
+            ctx['buy_state'] = 'out_of_stock'
         cover_image = product.get_cover_image()
         ctx['cover_image'] = cover_image
         main_images = list(product.main_images.all())

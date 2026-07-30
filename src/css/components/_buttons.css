@@ -5,6 +5,19 @@
     .btn-cat.btn-cat--active {
         @apply bg-red-500 text-white;
     }
+    /* Купить нельзя — кнопка не должна отвечать на наведение: заливка и курсор-рука
+       обещают действие, которого не будет. Селектор с :hover идёт после .btn-cat,
+       поэтому перебивает его hover-заливку при той же специфичности */
+    .btn-cat--soon,
+    .btn-cat--soon:hover {
+        @apply bg-white text-red-500 cursor-default;
+    }
+    /* Нет в наличии — серая: не приманка, а констатация. text-stone-500, а не 400:
+       на stone-100 у 400 контраст 2.3:1, подпись не прочитать */
+    .btn-cat--out,
+    .btn-cat--out:hover {
+        @apply bg-stone-100 text-stone-500 border-stone-300 cursor-default;
+    }
     .btn-cat-list {
         @apply cursor-pointer py-2 px-4 text-xs text-left flex items-center justify-between w-full hover:text-red-500;
     }

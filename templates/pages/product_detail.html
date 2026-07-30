@@ -134,7 +134,7 @@
                         <!-- BEGIN price -->
                         {% if default_size %}
                         {% region_price_data default_size as pd %}
-                        <div class="flex justify-between items-start shrink-1 {% if default_size.coming_soon or not pd.price %}hidden{% endif %}" id="priceRow">
+                        <div class="flex justify-between items-start shrink-1 {% if buy_state != 'available' %}hidden{% endif %}" id="priceRow">
                             <span class="text-xs text-black uppercase tracking-wider flex items-center gap-2 font-bold">{% trans "Стоимость" %}</span>
                             <div class="flex items-center gap-2 flex-wrap" id="priceBlock">
                                 <span class="text-xs text-stone-400 line-through {% if not pd.has_discount %}hidden{% endif %}" id="priceOld">{{ pd.old_price|format_price }} {{ currency_symbol }}</span>
@@ -149,8 +149,11 @@
                         <!-- END price -->
 
                         <!-- BEGIN buy section -->
-                        <div class="product-buy flex gap-2" id="productBuy" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}" data-coming-soon="{{ default_size.coming_soon|yesno:'true,false' }}">
-                            <button class="btn-cat flex-1 font-benzin" type="button" id="buyAnonymousBtn"{% if default_size.coming_soon or not pd.price %} disabled{% endif %}>{% if default_size.coming_soon %}{% trans "Скоро в продаже" %}{% elif not pd.price %}{% trans "Нет в наличии" %}{% else %}{% trans "Добавить в корзину" %}{% endif %}</button>
+                        <div class="product-buy flex gap-2" id="productBuy" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}">
+                            {# Недоступная кнопка получает свой модификатор: она не отвечает на наведение, #}
+                            {# иначе выглядит нажимаемой. «Нет в наличии» вдобавок серая (см. _buttons.css) #}
+                            <button class="btn-cat flex-1 font-benzin{% if buy_state == 'coming_soon' %} btn-cat--soon{% elif buy_state == 'out_of_stock' %} btn-cat--out{% endif %}"
+                                    type="button" id="buyAnonymousBtn"{% if buy_state != 'available' %} disabled{% endif %}>{% if buy_state == 'coming_soon' %}{% trans "Скоро в продаже" %}{% elif buy_state == 'out_of_stock' %}{% trans "Нет в наличии" %}{% else %}{% trans "Добавить в корзину" %}{% endif %}</button>
                             <button class="btn-favorite{% if is_favorited %} active{% endif %}" type="button" id="productFavoriteBtn" aria-label="Добавить в избранное">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="{% if is_favorited %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
