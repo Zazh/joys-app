@@ -18,6 +18,17 @@ from catalog.jsonld import organization_id
 from .context_processors import get_contacts
 
 
+def _without_empty(block):
+    """Убрать ключи с пустым значением.
+
+    Пустой канал — не пустая строка в разметке, а отсутствующий ключ: пустой
+    email, telephone или sameAs поисковик прочитает как заявленный и сломанный
+    (docs/contact_settings.md §5). Фильтруем блок целиком, а не перечисляем
+    ключи по именам: иначе новое необязательное поле про это правило забудет.
+    """
+    return {key: value for key, value in block.items() if value != '' and value != []}
+
+
 def build_contact_page_jsonld(request, page, description=''):
     page_url = request.build_absolute_uri(page.get_absolute_url())
     contacts = get_contacts()
@@ -43,16 +54,16 @@ def build_contact_page_jsonld(request, page, description=''):
             'longitude': contacts.geo['lng'],
         }
 
-    contact_point = {
+    contact_point = _without_empty({
         '@type': 'ContactPoint',
         'contactType': 'customer support',
-        'telephone': contacts.phone,
+        'telephone': contacts.phone_e164,
         'email': contacts.email,
         'areaServed': 'KZ',
         'availableLanguage': ['ru', 'kk', 'en'],
-    }
+    })
 
-    organization = {
+    organization = _without_empty({
         '@type': 'Organization',
         '@id': organization_id(request),
         'name': 'DR.JOYS',
@@ -66,21 +77,13 @@ def build_contact_page_jsonld(request, page, description=''):
             'name': contacts.bin_label,
             'value': contacts.bin,
         },
-        'telephone': contacts.phone,
+        'telephone': contacts.phone_e164,
         'email': contacts.email,
         'address': address,
         'location': location,
         'contactPoint': contact_point,
         'sameAs': contacts.social_links,
-    }
-
-    # Пустой канал — не пустая строка в разметке, а отсутствующий ключ: пустой
-    # email или sameAs поисковик прочитает как заявленный и сломанный (§5)
-    if not contacts.email:
-        del organization['email']
-        del contact_point['email']
-    if not contacts.social_links:
-        del organization['sameAs']
+    })
 
     result = {
         '@context': 'https://schema.org',

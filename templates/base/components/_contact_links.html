@@ -8,16 +8,12 @@
 
 Явный список, а не цикл: у каждой иконки свой aria-label и свой партиал.
 
-Параметры:
-  list_class — выравнивание ряда у конкретного места вставки;
-  group="social" — только соцсети (на странице контактов звонок, WhatsApp, Telegram
-                   и почта показаны карточками, дублировать их иконками незачем).
+Параметр list_class — выравнивание ряда у конкретного места вставки.
 {% endcomment %}
 <ul class="contact-links {{ list_class|default:'' }}">
-    {% if group != 'social' %}
-    {% if contacts.phone %}
+    {% if contacts.phone_e164 %}
     <li>
-        <a class="contact-links__item" href="tel:{{ contacts.phone }}"
+        <a class="contact-links__item" href="tel:{{ contacts.phone_e164 }}"
            aria-label="{% trans "Позвонить" %}" title="{% trans "Позвонить" %}">
             {% include 'base/components/icons/_icon_phone.html' %}
         </a>
@@ -46,7 +42,6 @@
             {% include 'base/components/icons/_icon_email.html' %}
         </a>
     </li>
-    {% endif %}
     {% endif %}
     {% if contacts.instagram_url %}
     <li>

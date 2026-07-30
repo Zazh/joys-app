@@ -35,6 +35,25 @@ class ContactSettingsFormatTests(TestCase):
         self.settings.phone = ''
         self.assertEqual(self.settings.phone_display, '')
 
+    def test_phone_e164(self):
+        """`tel:` собирается из чистого номера, что бы ни лежало в колонке:
+        пробел в `tel:` URI недопустим по RFC 3966, а до формы Сессии 3
+        заказчик правит контакты в админке без всякой валидации. Иностранный
+        номер тоже приводим — «как есть» обещано показу, а не ссылке.
+        Без цифр ссылки нет: по этому же признаку шаблон прячет канал."""
+        for stored, expected in (
+            ('+7 (776) 610-38-36', '+77766103836'),
+            ('+7 776 610 38 36', '+77766103836'),
+            ('+77766103836', '+77766103836'),
+            ('+44 20 7946 0958', '+442079460958'),
+            ('', ''),
+            ('   ', ''),
+            ('нет', ''),
+        ):
+            with self.subTest(stored=stored):
+                self.settings.phone = stored
+                self.assertEqual(self.settings.phone_e164, expected)
+
     def test_whatsapp_url_falls_back_to_phone(self):
         self.settings.phone = '+77766103836'
         self.settings.whatsapp_phone = ''
@@ -49,6 +68,21 @@ class ContactSettingsFormatTests(TestCase):
         self.settings.phone = ''
         self.settings.whatsapp_phone = ''
         self.assertEqual(self.settings.whatsapp_url, '')
+
+    def test_whatsapp_card_and_link_agree(self):
+        """Карточка и ссылка выбирают номер одинаково. Если бы карточка
+        смотрела на непустую строку, а ссылка на наличие цифр, то на значении
+        без цифр карточка показала бы одно, а ссылка повела на другое."""
+        self.settings.phone = '+77766103836'
+        for whatsapp in ('', '   ', 'уточняется'):
+            with self.subTest(whatsapp=whatsapp):
+                self.settings.whatsapp_phone = whatsapp
+                self.assertEqual(self.settings.whatsapp_display, '+7 776 610 38 36')
+                self.assertEqual(self.settings.whatsapp_url, 'https://wa.me/77766103836')
+
+        self.settings.whatsapp_phone = '+7 701 124 45 96'
+        self.assertEqual(self.settings.whatsapp_display, '+7 701 124 45 96')
+        self.assertEqual(self.settings.whatsapp_url, 'https://wa.me/77011244596')
 
     def test_telegram_links(self):
         self.settings.telegram_username = 'drjoysoriginal'
@@ -257,6 +291,26 @@ class ContactsPageRenderTests(TestCase):
         self.assertNotContains(response, 'data-lat="51,15824"')
         # Те же координаты в deep-link'ах маршрутов — точкой, а не запятой
         self.assertContains(response, 'destination=51.15824,71.43576')
+
+    def test_tel_href_is_clean_on_dirty_column(self):
+        """Заказчик вставил номер «как удобно» — ссылка всё равно собирается
+        валидной: и в футере (он на каждой странице), и в карточке канала,
+        и в JSON-LD. Показываем при этом по-прежнему сгруппированный номер."""
+        obj = ContactSettings.load()
+        obj.phone = '+7 (776) 610-38-36'
+        obj.save()
+
+        response = self._get('ru')
+        self.assertContains(response, 'href="tel:+77766103836"')
+        self.assertNotContains(response, 'tel:+7 (776)')
+        # Человеку — по-прежнему группами, а не слитно
+        self.assertContains(response, '+7 776 610 38 36')
+
+        org = self._jsonld(response, 'ContactPage')['mainEntity']
+        self.assertEqual(org['telephone'], '+77766103836')
+        self.assertEqual(org['contactPoint']['telephone'], '+77766103836')
+        self.assertEqual(self._jsonld(response, 'Organization')['telephone'],
+                         '+77766103836')
 
     def test_footer_legal_line_from_model(self):
         """Юрлицо и подпись БИН переводятся: на /kk/ не проступает русский."""

@@ -225,24 +225,6 @@ msgstr "Order not found"
 msgid "Сессия оплаты истекла. Попробуйте оформить заказ заново."
 msgstr "Payment session expired. Please place a new order."
 
-# Юрлицо в футере
-#: pages/jsonld.py:38 templates/base/footer/_footer.html:35
-#: templates/pages/contacts.html:101 templates/pages/contacts.html:119
-msgid "ТОО «DR JOYS»"
-msgstr "DR JOYS LLP"
-
-#: pages/jsonld.py:45 templates/base/footer/_footer.html:35
-msgid "БИН"
-msgstr "BIN"
-
-#: pages/jsonld.py:53
-msgid "Астана"
-msgstr "Astana"
-
-#: pages/jsonld.py:54
-msgid "р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5"
-msgstr "Baikonyr district, 13 A. Barayev St, unit 5"
-
 #: pages/views.py:157
 msgid ""
 "Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, адрес офиса в Астане "
@@ -974,15 +956,6 @@ msgstr "Contact channels"
 #: templates/pages/contacts.html:98
 msgid "Карта: офис DR.JOYS"
 msgstr "Map: DR.JOYS office"
-
-#: templates/pages/contacts.html:102 templates/pages/contacts.html:104
-#: templates/pages/contacts.html:121
-msgid "г. Астана, р-н Байконыр, ул. А. Бараева, д. 13, н.п. 5"
-msgstr "Astana, Baikonyr district, 13 A. Barayev St, unit 5"
-
-#: templates/pages/contacts.html:104 templates/pages/contacts.html:121
-msgid "Пн–Пт 10:00–19:00"
-msgstr "Mon–Fri 10:00–19:00"
 
 #: templates/pages/contacts.html:144
 msgid "Подтвердите согласие на обработку данных."

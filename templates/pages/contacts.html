@@ -56,8 +56,8 @@
                 {# Две колонки, а не четыре: в узкой карточке адрес почты рвался на две строки #}
                 {# Значения — из ContactSettings; пустой канал карточкой не рисуем #}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {% if contacts.phone %}
-                    <a class="contact-card" href="tel:{{ contacts.phone }}">
+                    {% if contacts.phone_e164 %}
+                    <a class="contact-card" href="tel:{{ contacts.phone_e164 }}">
                         {% include 'base/components/icons/_icon_phone.html' with icon_class="contact-card__icon" %}
                         <span class="contact-card__label">{% trans "Телефон" %}</span>
                         <span class="contact-card__value">{{ contacts.phone_display }}</span>

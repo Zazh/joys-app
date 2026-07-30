@@ -242,8 +242,8 @@ def build_organization_jsonld(request):
         'url': _absolute_url(request, '/'),
         'logo': _absolute_url(request, '/static/dist/images/svgs/logo.svg'),
     }
-    if contacts.phone:
-        result['telephone'] = contacts.phone
+    if contacts.phone_e164:
+        result['telephone'] = contacts.phone_e164
     if contacts.social_links:
         result['sameAs'] = contacts.social_links
     return result

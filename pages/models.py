@@ -486,19 +486,44 @@ class ContactSettings(models.Model):
     def phone_display(self):
         return self._format_phone(self.phone)
 
+    @classmethod
+    def to_e164(cls, value):
+        """«+» и цифры — вид, в котором номер годится для ссылки и для разметки.
+
+        Пробел в `tel:` URI недопустим по RFC 3966, а в JSON-LD `telephone`
+        Google ждёт международный формат — из `+7 (776) 610-38-36` ссылка
+        должна собраться как `tel:+77766103836`. Человеку номер по-прежнему
+        показывает `phone_display`: группировку мы не съедаем (§3.2).
+
+        Публичный и параметризованный по образцу `normalize_telegram_username`:
+        форма бэкофиса (§6) обязана канонизировать телефон в колонке и зовёт
+        отсюда, а не пишет второе такое же выражение.
+        """
+        digits = cls._digits(value)
+        return f'+{digits}' if digits else ''
+
+    @property
+    def phone_e164(self):
+        return self.to_e164(self.phone)
+
+    @property
+    def _whatsapp_number(self):
+        """Номер WhatsApp: свой, если задан, иначе основной.
+
+        Одно место на карточку и на ссылку: у дистрибьюторского WhatsApp (§1)
+        номер отличается от основного, и если бы карточка выбирала его по
+        непустой строке, а ссылка — по наличию цифр, то на значении вроде
+        «уточняется» карточка показала бы одно, а ссылка повела на другое.
+        """
+        return self.whatsapp_phone if self._digits(self.whatsapp_phone) else self.phone
+
     @property
     def whatsapp_display(self):
-        """Номер в карточке WhatsApp — свой, если задан, иначе основной.
-
-        Карточка на странице контактов показывает номер текстом, и он должен
-        совпадать с тем, куда ведёт ссылка: у дистрибьюторского WhatsApp
-        (§1) номер отличается от основного.
-        """
-        return self._format_phone(self.whatsapp_phone or self.phone)
+        return self._format_phone(self._whatsapp_number)
 
     @property
     def whatsapp_url(self):
-        digits = self._digits(self.whatsapp_phone) or self._digits(self.phone)
+        digits = self._digits(self._whatsapp_number)
         return f'https://wa.me/{digits}' if digits else ''
 
     @property
