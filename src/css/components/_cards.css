@@ -77,7 +77,7 @@
     @apply p-5 md:p-10 absolute bottom-0 w-full h-full flex flex-col gap-2;
 }
 .blog-card-title {
-    @apply mt-auto text-white font-bold leading-tight;
+    @apply mt-auto text-white font-bold leading-[1.2];
 }
 .blog-card-meta {
     @apply text-white md:text-sm text-xs;
