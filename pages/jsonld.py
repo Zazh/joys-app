@@ -10,10 +10,10 @@
 телефоном и sameAs (см. catalog/jsonld.py).
 """
 
-from django.templatetags.static import static
 from django.utils.translation import get_language
 
-from catalog.jsonld import organization_id
+from catalog.jsonld import logo_url, organization_id
+from core.seo import absolute_url, plain_text
 
 from .context_processors import get_contacts
 
@@ -30,7 +30,7 @@ def _without_empty(block):
 
 
 def build_contact_page_jsonld(request, page, description=''):
-    page_url = request.build_absolute_uri(page.get_absolute_url())
+    page_url = absolute_url(page.get_absolute_url())
     contacts = get_contacts()
 
     address = {
@@ -68,8 +68,8 @@ def build_contact_page_jsonld(request, page, description=''):
         '@id': organization_id(request),
         'name': 'DR.JOYS',
         'legalName': contacts.legal_name,
-        'url': request.build_absolute_uri('/'),
-        'logo': request.build_absolute_uri(static('dist/images/svgs/logo.svg')),
+        'url': absolute_url('/'),
+        'logo': logo_url(),
         # taxID читают агрегаторы, identifier — Google: даём БИН обоими способами
         'taxID': contacts.bin,
         'identifier': {
@@ -96,4 +96,81 @@ def build_contact_page_jsonld(request, page, description=''):
     }
     if description:
         result['description'] = description
+    return result
+
+
+def build_blog_list_jsonld(request, posts):
+    """Список статей — Blog + ItemList, по образцу каталога.
+
+    Карточки в вёрстке были размечены как BlogPosting, но без publisher, author
+    и dateModified: для Google это невалидные статьи, а не список ссылок.
+    Список ссылок и надо размечать списком — сами статьи описывает страница
+    статьи (`build_blogposting_jsonld`).
+    """
+    items = []
+    for i, post in enumerate(posts, 1):
+        item = {
+            '@type': 'ListItem',
+            'position': i,
+            'url': absolute_url(post.get_absolute_url()),
+            'name': post.title,
+        }
+        items.append(item)
+
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Blog',
+        '@id': absolute_url(request.path) + '#blog',
+        'name': 'DR.JOYS',
+        'inLanguage': get_language(),
+        'mainEntity': {
+            '@type': 'ItemList',
+            'itemListElement': items,
+            'numberOfItems': len(items),
+        },
+    }
+
+
+def build_blogposting_jsonld(request, post, description=''):
+    """Разметка статьи блога.
+
+    JSON-LD вместо микроразметки в вёрстке: Google явно рекомендует его как
+    основной формат, а держать два описания одного объекта на странице — способ
+    однажды их рассинхронизировать.
+
+    `publisher` обязателен и обязан быть объектом Organization с логотипом:
+    строкой «DR.JOYS», как было в itemprop, Google эту разметку не примет.
+    headline режем по 110 символам — предел из документации, длиннее блок
+    считается невалидным.
+    """
+    post_url = absolute_url(post.get_absolute_url())
+
+    result = {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        '@id': post_url,
+        'mainEntityOfPage': {'@type': 'WebPage', '@id': post_url},
+        'url': post_url,
+        'headline': plain_text(post.title, 110),
+        'inLanguage': get_language(),
+        'datePublished': post.published_at.isoformat(),
+        'dateModified': post.updated_at.isoformat(),
+        'author': {
+            '@type': 'Organization' if not post.author else 'Person',
+            'name': post.author or 'DR.JOYS',
+            'url': absolute_url('/'),
+        },
+        'publisher': {
+            '@type': 'Organization',
+            '@id': organization_id(request),
+            'name': 'DR.JOYS',
+            'logo': {'@type': 'ImageObject', 'url': logo_url()},
+        },
+    }
+    if description:
+        result['description'] = description
+    if post.cover_image:
+        result['image'] = [absolute_url(post.cover_image.url)]
+    if post.category:
+        result['articleSection'] = post.category.name
     return result

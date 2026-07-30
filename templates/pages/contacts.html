@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static i18n l10n inquiries_extras %}
 
-{% block title %}{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}{% endblock %}
+{% block title %}{{ meta_title }}{% endblock %}
 
 {% block meta %}
 {% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}
@@ -13,21 +13,21 @@
 
 {% block og %}
 <meta property="og:type" content="website">
-<meta property="og:title" content="{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}">
+<meta property="og:title" content="{{ meta_title }}">
 {% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
 <meta property="og:url" content="{{ canonical_url }}">
 {% if page.og_image %}
-<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}">
+<meta property="og:image" content="{{ site_url }}{{ page.og_image.url }}">
 {% else %}
-<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+<meta property="og:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
 {% endif %}
 {% endblock %}
 
 {% block twitter %}
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} — DR.JOYS{% endif %}">
+<meta name="twitter:title" content="{{ meta_title }}">
 {% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}">{% endif %}
-<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% if page.og_image %}{{ page.og_image.url }}{% else %}{% static 'dist/images/svgs/logo.svg' %}{% endif %}">
+<meta name="twitter:image" content="{{ site_url }}{% if page.og_image %}{{ page.og_image.url }}{% else %}{% static 'dist/images/seo/og-default.jpg' %}{% endif %}">
 {% endblock %}
 
 {% block content %}

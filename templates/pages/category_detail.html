@@ -2,13 +2,32 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{{ category.name }} — DR.JOYS{% endblock %}
+{% block title %}{{ meta_title }}{% endblock %}
+
+{% block meta %}
+{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}
+{% for jsonld_str in jsonld_blocks %}
+<script type="application/ld+json">{{ jsonld_str|safe }}</script>
+{% endfor %}
+{% endblock %}
+
+{% block og %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ meta_title }}">
+{% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
+<meta property="og:url" content="{{ canonical_url }}">
+<meta property="og:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
+{% endblock %}
 
 {% block content %}
 <main>
     <section class="main-grid">
         <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
             <div class="blog-container pt-30">
+                {# Крошки строкой над заголовком, как на остальных внутренних страницах #}
+                <div class="pb-4">
+                    {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs hide_back=1 nav_class="flex" %}
+                </div>
                 <!-- BEGIN category header -->
                 <div>
                     <h1 class="display-2 uppercase font-benzin">{{ category.name }}</h1>

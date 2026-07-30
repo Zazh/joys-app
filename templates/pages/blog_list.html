@@ -16,7 +16,7 @@
 <meta property="og:title" content="{% trans "Блог DR.JOYS" %}">
 <meta property="og:description" content="{% trans "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS." %}">
 <meta property="og:url" content="{{ canonical_url }}">
-<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
+<meta property="og:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
 {% endblock %}
 
 {% block content %}
@@ -39,24 +39,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
                     {% for post in posts %}
-                    <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
-                        <a href="{% url 'pages:blog_detail' slug=post.slug %}" class="blog-card-link" itemprop="url">
+                    <article class="blog-card">
+                        <a href="{% url 'pages:blog_detail' slug=post.slug %}" class="blog-card-link">
                             <figure class="blog-card-figure">
                                 <img
                                     class="blog-card-img"
                                     src="{% if post.cover_image %}{{ post.cover_image.url }}{% else %}{% static 'dist/images/blog/1.jpg' %}{% endif %}"
                                     alt="{{ post.title }}"
                                     loading="lazy"
-                                    itemprop="image"
                                 >
                             </figure>
                             <div class="blog-card-content">
                                 <div class="blog-card-info">
                                     <div class="blog-card-title">
-                                        <h2 class="text-sm md:text-xl" itemprop="headline">{{ post.title }}</h2>
+                                        <h2 class="text-sm md:text-xl">{{ post.title }}</h2>
                                     </div>
                                     <div class="blog-card-meta">
-                                        <time datetime="{{ post.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ post.published_at|date:'j E Y' }}</time>
+                                        <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:'j E Y' }}</time>
                                     </div>
                                 </div>
                             </div>
@@ -74,34 +73,5 @@
         </div>
     </section>
 
-    {% if posts %}
-    <!-- JSON-LD structured data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Blog",
-        "name": "{% trans "Блог DR.JOYS" %}",
-        "description": "{% trans "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS." %}",
-        "url": "{{ canonical_url }}",
-        "publisher": {
-            "@type": "Organization",
-            "name": "DR.JOYS"
-        },
-        "blogPost": [
-            {% for post in posts %}{% if not forloop.first %},{% endif %}
-            {
-                "@type": "BlogPosting",
-                "headline": "{{ post.title }}",
-                "datePublished": "{{ post.published_at|date:'Y-m-d' }}"{% if post.author %},
-                "author": {
-                    "@type": "Person",
-                    "name": "{{ post.author }}"
-                }{% endif %}
-            }
-            {% endfor %}
-        ]
-    }
-    </script>
-    {% endif %}
 </main>
 {% endblock %}

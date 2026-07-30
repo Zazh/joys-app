@@ -7,11 +7,14 @@ from django.db.models import Avg, Count, Q, Value
 from django.db.models.functions import Coalesce, Length
 
 from catalog import jsonld as jld
+from core import seo
 from inquiries.models import InquiryForm
 from modals.models import InteractiveModal
 from quiz.models import QuizQuestion, QuizResultText
 from reviews.models import Review
-from .jsonld import build_contact_page_jsonld
+from .jsonld import (
+    build_blog_list_jsonld, build_blogposting_jsonld, build_contact_page_jsonld,
+)
 from .models import PageCategory, Page, BlogPost, HeroSection, FeatureSlide, PromoBlock
 
 
@@ -131,7 +134,22 @@ class PageCategoryDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['pages'] = self.object.pages.filter(is_published=True).order_by('order', 'title')
+        category = self.object
+        pages = list(category.pages.filter(is_published=True).order_by('order', 'title'))
+        ctx['pages'] = pages
+        ctx['meta_title'] = seo.with_brand(category.name)
+        ctx['meta_description'] = seo.first_filled(
+            category.description,
+            ', '.join(page.title for page in pages),
+        )
+        breadcrumbs = [
+            {'name': 'DR.JOYS', 'url': reverse('home')},
+            {'name': category.name, 'url': ''},
+        ]
+        ctx['breadcrumbs'] = breadcrumbs
+        ctx['jsonld_blocks'] = jld.serialize_jsonld(
+            jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
+        )
         return ctx
 
 
@@ -150,9 +168,9 @@ class PageDetailView(DetailView):
         'contacts': 'contact',
     }
 
-    # Описание на случай пустого meta_description в бэкофисе: без него поисковик
-    # сочиняет сниппет сам, а Lighthouse снимает балл SEO. Заполненное поле страницы
-    # всегда в приоритете.
+    # Описание для страниц, чей шаблон не показывает `body`: у них взять текст
+    # для сниппета больше неоткуда. Для остальных фолбэк — начало самого текста
+    # страницы (см. get_context_data). Заполненное в бэкофисе поле всегда важнее.
     FALLBACK_DESCRIPTIONS = {
         'contacts': _('Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, '
                       'адрес офиса в Алматы на карте и форма обращения.'),
@@ -178,8 +196,13 @@ class PageDetailView(DetailView):
             )
 
         # str() снимает ленивость: строка уходит в json.dumps, а __proxy__ он не умеет
-        description = page.meta_description or str(self.FALLBACK_DESCRIPTIONS.get(page.slug, ''))
+        description = seo.first_filled(
+            page.meta_description,
+            str(self.FALLBACK_DESCRIPTIONS.get(page.slug, '')),
+            page.body,
+        )
         ctx['meta_description'] = description
+        ctx['meta_title'] = seo.with_brand(page.meta_title or page.title)
 
         # Раздел в середину цепочки, если страница лежит в категории («Правовая
         # информация» и т.п.): у категории есть свой URL, и без неё цепочка врёт
@@ -223,6 +246,7 @@ class BlogListView(ListView):
         ctx['breadcrumbs'] = breadcrumbs
         ctx['jsonld_blocks'] = jld.serialize_jsonld(
             jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
+            build_blog_list_jsonld(self.request, ctx['posts']),
         )
         return ctx
 
@@ -241,16 +265,24 @@ class BlogDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        post = self.object
         ctx['page_type'] = 'blog_detail'
+        # Описание: без него шаблон вообще не выводил тег, и сниппет в выдаче
+        # Google сочинял сам. Анонс и начало текста — уже написанный редактором
+        # текст об этой же статье, лучшего фолбэка нет.
+        ctx['meta_description'] = seo.first_filled(
+            post.meta_description, post.excerpt, post.body,
+        )
         # Категорию в цепочку не берём: у BlogCategory нет своей страницы,
         # ссылаться неоткуда, а крошка без URL ломает уровень вложенности
         breadcrumbs = [
             {'name': 'DR.JOYS', 'url': reverse('home')},
             {'name': str(_('Блог')), 'url': reverse('pages:blog_list')},
-            {'name': self.object.title, 'url': ''},
+            {'name': post.title, 'url': ''},
         ]
         ctx['breadcrumbs'] = breadcrumbs
         ctx['jsonld_blocks'] = jld.serialize_jsonld(
             jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
+            build_blogposting_jsonld(self.request, post, ctx['meta_description']),
         )
         return ctx
