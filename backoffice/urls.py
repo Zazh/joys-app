@@ -8,6 +8,7 @@ from .views.qrcodes import (
     QRCodeListView, QRCodeCreateView, QRCodeDetailView,
     QRCodeDeleteView, QRCodeDownloadView,
 )
+from .views.contacts import ContactsEditView
 from .views.catalog import (
     ProductListView, ProductEditView, ProductCreateView,
     ProductToggleActiveView, ProductImageUploadView,
@@ -54,6 +55,7 @@ urlpatterns = [
     path('inquiries/', InquiryListView.as_view(), name='inquiry_list'),
     path('inquiries/<int:pk>/', InquiryDetailView.as_view(), name='inquiry_detail'),
     path('inquiries/<int:pk>/toggle/', InquiryToggleProcessedView.as_view(), name='inquiry_toggle'),
+    path('contacts/', ContactsEditView.as_view(), name='contacts'),
     path('qrcodes/', QRCodeListView.as_view(), name='qrcode_list'),
     path('qrcodes/create/', QRCodeCreateView.as_view(), name='qrcode_create'),
     path('qrcodes/<int:pk>/', QRCodeDetailView.as_view(), name='qrcode_detail'),

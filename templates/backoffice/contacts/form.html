@@ -1,0 +1,100 @@
+{% extends 'backoffice/base.html' %}
+{% load l10n %}
+
+{% block title %}Контакты компании{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-4 mb-4">
+    <h2 class="text-sm font-bold">Контакты компании</h2>
+    <a href="{% url 'pages:page_detail' 'contacts' %}" target="_blank" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        Страница контактов на сайте
+    </a>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 space-y-4">
+            <!-- Каналы связи -->
+            <div class="bg-white rounded-xl border border-stone-200">
+                <div class="px-4 py-3 border-b border-stone-100">
+                    <h3 class="text-sm font-bold">Каналы связи</h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    {% include 'backoffice/components/_notice.html' with title="Пустое поле — канала нет" text="Иконка в футере и карточка на странице контактов просто не рисуются, в разметке для поисковиков ссылка тоже не появится." %}
+                    {% for field in form.channel_fields %}
+                    {% include 'backoffice/contacts/_field.html' %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Соцсети -->
+            <div class="bg-white rounded-xl border border-stone-200">
+                <div class="px-4 py-3 border-b border-stone-100">
+                    <h3 class="text-sm font-bold">Соцсети и маркетплейс</h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    {% for field in form.social_fields %}
+                    {% include 'backoffice/contacts/_field.html' %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Тексты на трёх языках -->
+            <div class="bg-white rounded-xl border border-stone-200" x-data="{ tab: '{{ form.error_tab }}' }">
+                <div class="px-4 py-3 border-b border-stone-100 flex items-center gap-4">
+                    <h3 class="text-sm font-bold">Реквизиты и адрес</h3>
+                    <div class="flex gap-1 ml-auto">
+                        {% for group in form.translated_groups %}
+                        <button type="button" @click="tab='{{ group.code }}'" :class="tab==='{{ group.code }}' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">
+                            {{ group.label }}{% if group.has_errors %} <span class="text-red-500">•</span>{% endif %}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="p-4">
+                    {% for group in form.translated_groups %}
+                    <div x-show="tab==='{{ group.code }}'" {% if not forloop.first %}x-cloak{% endif %} class="space-y-3">
+                        {% for field in group.fields %}
+                        {% include 'backoffice/contacts/_field.html' %}
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Реквизиты -->
+            <div class="bg-white rounded-xl border border-stone-200 p-4 space-y-3">
+                <h3 class="text-sm font-bold">Юридические данные</h3>
+                {% include 'backoffice/contacts/_field.html' with field=form.bin %}
+                <p class="text-xs text-stone-400">Название компании и подпись кода («БИН» / «БСН» / «BIN») — в блоке «Реквизиты и адрес», они переводятся.</p>
+            </div>
+
+            <!-- Офис на карте -->
+            <div class="bg-white rounded-xl border border-stone-200 p-4 space-y-3"
+                 x-data="{ lat: '{{ form.office_lat.value|default_if_none:''|unlocalize }}', lng: '{{ form.office_lng.value|default_if_none:''|unlocalize }}' }">
+                <h3 class="text-sm font-bold">Точка офиса на карте</h3>
+                <p class="text-xs text-stone-400">Широта, долгота — как в 2ГИС. По этой точке ставится метка на карте и строятся маршруты.</p>
+                {% include 'backoffice/contacts/_field.html' with field=form.office_lat %}
+                {% include 'backoffice/contacts/_field.html' with field=form.office_lng %}
+                {% localize off %}
+                <a href="https://www.google.com/maps?q={{ form.instance.office_lat|default_if_none:'' }},{{ form.instance.office_lng|default_if_none:'' }}"
+                   :href="'https://www.google.com/maps?q=' + lat + ',' + lng"
+                   target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                    Проверить точку на карте
+                </a>
+                {% endlocalize %}
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">
+                Сохранить
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

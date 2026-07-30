@@ -1,0 +1,16 @@
+{% comment %}
+Поле формы контактов: подпись, сам виджет, подсказка и ошибки.
+
+    {% include 'backoffice/contacts/_field.html' with field=form.phone %}
+
+Подпись и подсказка приходят с модели (verbose_name / help_text), в разметке
+их не дублируем — иначе они разъедутся при первой же правке модели.
+{% endcomment %}
+<div>
+    <label for="{{ field.id_for_label }}" class="block text-xs text-stone-500 mb-1">
+        {{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}
+    </label>
+    {{ field }}
+    {% if field.help_text %}<p class="mt-1 text-xs text-stone-400">{{ field.help_text }}</p>{% endif %}
+    {% for error in field.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
+</div>
