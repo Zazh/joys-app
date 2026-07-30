@@ -71,7 +71,7 @@
     @apply object-cover w-full h-full;
 }
 .blog-card-content {
-    @apply bg-black/20;
+    @apply bg-black/50;
 }
 .blog-card-info {
     @apply p-5 md:p-10 absolute bottom-0 w-full h-full flex flex-col gap-2;
