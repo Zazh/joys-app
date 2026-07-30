@@ -15,7 +15,7 @@
 <meta property="og:type" content="blog">
 <meta property="og:title" content="{% trans "Блог DR.JOYS" %}">
 <meta property="og:description" content="{% trans "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS." %}">
-<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:url" content="{{ canonical_url }}">
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
 {% endblock %}
 
@@ -82,7 +82,7 @@
         "@type": "Blog",
         "name": "{% trans "Блог DR.JOYS" %}",
         "description": "{% trans "Статьи об акциях, событиях, здоровье и отношениях от DR.JOYS." %}",
-        "url": "{{ request.build_absolute_uri }}",
+        "url": "{{ canonical_url }}",
         "publisher": {
             "@type": "Organization",
             "name": "DR.JOYS"

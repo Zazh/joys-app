@@ -102,6 +102,7 @@ TEMPLATES = [
                 'pages.context_processors.navigation',
                 'pages.context_processors.contacts',
                 'core.context_processors.analytics',
+                'core.context_processors.canonical',
             ],
         },
     },

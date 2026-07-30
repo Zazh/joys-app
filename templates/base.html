@@ -9,8 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% block meta %}{% endblock %}
 
-    <!-- Canonical -->
-    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <!-- Canonical: без utm/gclid и прочего мусора — см. core.context_processors -->
+    <link rel="canonical" href="{{ canonical_url }}">
 
     <!-- hreflang -->
     {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
@@ -28,7 +28,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{% block og_title %}DR.JOYS — {% trans 'ультратонкие презервативы' %}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{% trans 'Ультратонкие презервативы DR.JOYS — неощутимые на 95%' %}{% endblock %}">
-    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:url" content="{{ canonical_url }}">
     <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'dist/images/svgs/logo.svg' %}">
     {% endblock %}
 

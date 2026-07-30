@@ -14,7 +14,7 @@
 <meta property="og:type" content="product">
 <meta property="og:title" content="{{ meta_title }}">
 {% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
-<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:url" content="{{ canonical_url }}">
 {% if cover_image %}<meta property="og:image" content="{{ cover_image.image.url }}">{% else %}<meta property="og:image" content="{{ placeholder_image_url }}">{% endif %}
 {% endblock %}
 

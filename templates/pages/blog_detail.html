@@ -15,7 +15,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="{{ post.meta_title|default:post.title }}">
 {% if post.meta_description %}<meta property="og:description" content="{{ post.meta_description }}">{% endif %}
-<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:url" content="{{ canonical_url }}">
 {% if post.cover_image %}
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.cover_image.url }}">
 {% else %}
@@ -154,7 +154,7 @@
         {% if post.category %}"articleSection": "{{ post.category.name }}",{% endif %}
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "{{ request.build_absolute_uri }}"
+            "@id": "{{ canonical_url }}"
         }
     }
     </script>

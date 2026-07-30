@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ meta_title }}">
 {% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
-<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:url" content="{{ canonical_url }}">
 <meta property="og:image" content="{% static 'dist/images/svgs/logo.svg' %}">
 {% endblock %}
 
@@ -29,13 +29,16 @@
 <main class="mt-[6rem] lg:mt-40">
     <section class="main-grid">
         <div class="col-span-full mb-6 lg:mb-12 lg:col-start-2 flex flex-wrap gap-6 justify-center lg:justify-between items-end">
-            <div class="w-full lg:w-auto">
+            <div class="w-full lg:w-auto relative">
                 {# Крошки только при выбранной категории (их собирает CatalogListView) #}
                 {# и только с lg: на мобильном роль «где я» играют чипсы фильтра, #}
                 {# а строка крошек отняла бы место у заголовка. hide_back=1 — #}
                 {# fixed-кнопка «назад» легла бы поверх заголовка. #}
+                {# absolute bottom-full: крошки висят над заголовком, не занимая места #}
+                {# в потоке — иначе при переходе с «Все» на категорию заголовок #}
+                {# прыгал бы вниз на высоту строки. pb-4 задаёт отступ до заголовка. #}
                 {% if breadcrumbs %}
-                <div class="hidden lg:block pb-2">
+                <div class="hidden lg:block absolute bottom-full left-0 pb-4">
                     {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs hide_back=1 nav_class="flex" %}
                 </div>
                 {% endif %}
