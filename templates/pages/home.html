@@ -1279,6 +1279,11 @@
                 const btn = document.getElementById('quizResultBtn');
 
                 img.src = product.image_url || (window.DRJOYS?.placeholderUrl || '');
+                if (product.image_url_2x) {
+                    img.srcset = `${product.image_url} 1x, ${product.image_url_2x} 2x`;
+                } else {
+                    img.removeAttribute('srcset');
+                }
                 img.alt = product.name;
                 name.textContent = product.name;
                 btn.href = product.url;

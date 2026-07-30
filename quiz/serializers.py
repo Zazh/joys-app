@@ -16,3 +16,4 @@ class QuizProductSerializer(serializers.Serializer):
     bg_dark = serializers.BooleanField()
     url = serializers.CharField()
     image_url = serializers.CharField()
+    image_url_2x = serializers.CharField(allow_blank=True)

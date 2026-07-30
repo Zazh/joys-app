@@ -2,7 +2,17 @@ import io
 from pathlib import Path
 
 from PIL import Image
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile
+
+
+def copy_image_upload(image_field):
+    """Байтовая копия загруженного файла — когда оптимизация не нужна,
+    а тот же оригинал надо положить во второе поле."""
+    image_field.file.seek(0)
+    data = image_field.file.read()
+    image_field.file.seek(0)
+    return ContentFile(data, name=Path(image_field.name).name)
 
 
 def optimize_image_field(

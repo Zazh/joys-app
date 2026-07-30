@@ -57,10 +57,15 @@ class QuizResultView(APIView):
 
     def _serialize_product(self, product, bg_map):
         lang = get_language()
+        image_url_2x = ''
         if lang == 'kk' and product.transparent_image_kk:
             image_url = product.transparent_image_kk.url
+            if product.transparent_image_kk_2x:
+                image_url_2x = product.transparent_image_kk_2x.url
         elif product.transparent_image:
             image_url = product.transparent_image.url
+            if product.transparent_image_2x:
+                image_url_2x = product.transparent_image_2x.url
         else:
             cover = product.get_cover_image()
             if cover:
@@ -86,6 +91,7 @@ class QuizResultView(APIView):
             'bg_dark': bg.is_dark_theme if bg else False,
             'url': product.get_absolute_url(),
             'image_url': image_url,
+            'image_url_2x': image_url_2x,
         }
 
     def _get_bg_key(self, product):

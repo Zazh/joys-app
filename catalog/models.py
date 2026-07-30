@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 
-from .utils import optimize_image_field
+from .utils import copy_image_upload, optimize_image_field
 
 
 # ─── Категория ───
@@ -87,11 +87,20 @@ class Product(models.Model):
     # Прозрачное фото (для квиза, промо-блоков)
     transparent_image = models.ImageField(
         'Прозрачное фото RU (PNG)', upload_to='products/transparent/', blank=True,
-        help_text='PNG с прозрачным фоном. Для результатов квиза и промо.',
+        help_text='PNG с прозрачным фоном, обрезка вплотную к пачке. Любой размер: '
+                  'система сама нарежет стандарт (до 400px) и ретину (до 800px).',
+    )
+    transparent_image_2x = models.ImageField(
+        'Прозрачное фото RU 2x (ретина)', upload_to='products/transparent/2x/',
+        blank=True, editable=False,
     )
     transparent_image_kk = models.ImageField(
         'Прозрачное фото KK (PNG)', upload_to='products/transparent/kk/', blank=True,
         help_text='Казахская версия. Если пусто — используется основное.',
+    )
+    transparent_image_kk_2x = models.ImageField(
+        'Прозрачное фото KK 2x (ретина)', upload_to='products/transparent/kk/2x/',
+        blank=True, editable=False,
     )
 
     # Zoom (одна картинка, скролл-эффект)
@@ -153,27 +162,29 @@ class Product(models.Model):
                 if result:
                     self.zoom_image = result
 
-        # Прозрачное фото: max height 400px, PNG
-        if self.transparent_image:
-            changed = not old or old.transparent_image.name != self.transparent_image.name
-            if changed:
-                result = optimize_image_field(
-                    self.transparent_image, max_height=400,
-                    preserve_transparency=True,
-                )
-                if result:
-                    self.transparent_image = result
-
-        # Прозрачное фото KK
-        if self.transparent_image_kk:
-            changed = not old or old.transparent_image_kk.name != self.transparent_image_kk.name
-            if changed:
-                result = optimize_image_field(
-                    self.transparent_image_kk, max_height=400,
-                    preserve_transparency=True,
-                )
-                if result:
-                    self.transparent_image_kk = result
+        # Прозрачное фото: из загруженного оригинала режем ретину (до 800px)
+        # и стандарт (до 400px), оба PNG. Ретина обязательно до стандарта —
+        # после ресайза основного поля оригинал уже потерян.
+        for field_name, retina_name in (
+            ('transparent_image', 'transparent_image_2x'),
+            ('transparent_image_kk', 'transparent_image_kk_2x'),
+        ):
+            image = getattr(self, field_name)
+            if not image:
+                setattr(self, retina_name, '')
+                continue
+            changed = not old or getattr(old, field_name).name != image.name
+            if not changed:
+                continue
+            retina = optimize_image_field(
+                image, max_height=800, preserve_transparency=True,
+            )
+            setattr(self, retina_name, retina or copy_image_upload(image))
+            standard = optimize_image_field(
+                image, max_height=400, preserve_transparency=True,
+            )
+            if standard:
+                setattr(self, field_name, standard)
 
         super().save(*args, **kwargs)
 
