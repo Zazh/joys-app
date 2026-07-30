@@ -42,27 +42,12 @@
             </div>
 
             <!-- Тексты на трёх языках -->
-            <div class="bg-white rounded-xl border border-stone-200" x-data="{ tab: '{{ form.error_tab }}' }">
-                <div class="px-4 py-3 border-b border-stone-100 flex items-center gap-4">
-                    <h3 class="text-sm font-bold">Реквизиты и адрес</h3>
-                    <div class="flex gap-1 ml-auto">
-                        {% for group in form.translated_groups %}
-                        <button type="button" @click="tab='{{ group.code }}'" :class="tab==='{{ group.code }}' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'" class="px-2.5 py-1 rounded text-xs font-medium transition-colors">
-                            {{ group.label }}{% if group.has_errors %} <span class="text-red-500">•</span>{% endif %}
-                        </button>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="p-4">
-                    {% for group in form.translated_groups %}
-                    <div x-show="tab==='{{ group.code }}'" {% if not forloop.first %}x-cloak{% endif %} class="space-y-3">
-                        {% for field in group.fields %}
-                        {% include 'backoffice/contacts/_field.html' %}
-                        {% endfor %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
+            {% include 'backoffice/contacts/_translated_card.html' with form=form title="Реквизиты и адрес" %}
+
+            <!-- Заголовок и мета-теги самой страницы контактов -->
+            {% if seo_form %}
+            {% include 'backoffice/contacts/_translated_card.html' with form=seo_form title="Заголовок и SEO страницы" note="Это заголовок и мета-теги страницы «Контакты» на сайте. Раньше они правились в разделе «Страницы» — теперь всё про контакты собрано здесь." %}
+            {% endif %}
         </div>
 
         <div class="space-y-4">

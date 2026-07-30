@@ -14,7 +14,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from modeltranslation.utils import get_translation_fields
 
-from pages.models import ContactSettings
+from pages.models import ContactSettings, Page
 
 # Классы Tailwind у полей одни и те же — навешиваем в __init__, а не в widgets
 INPUT_CLASS = ('w-full px-3 py-2 border border-stone-300 rounded-lg text-sm '
@@ -61,13 +61,16 @@ class HttpsURLField(forms.URLField):
         super().__init__(**kwargs)
 
 
-class ContactSettingsForm(forms.ModelForm):
-    """Контакты компании: каналы, реквизиты, адрес офиса.
+class LanguageTabsMixin:
+    """Форма, где переводимые поля разложены по табам ru/kk/en.
 
-    Языковые колонки перечислены вместо базовых полей: базовое поле у
-    modeltranslation — прокси на активный язык, и через него заполнить kk и en
-    невозможно. Порядок полей в `fields` задаёт порядок в разметке.
+    Языковые колонки перечисляются в `Meta.fields` вместо базовых полей: базовое
+    поле у modeltranslation — прокси на активный язык, и через него заполнить kk
+    и en невозможно. Порядок в `fields` задаёт порядок в разметке.
     """
+
+    # Базовые имена переводимых полей — в порядке вывода на табе
+    translated_fields = ()
 
     # Обязательные переводы лежат на скрытых табах, а невидимое поле браузер
     # отчитать не может — он молча блокирует отправку, и «Сохранить» выглядит
@@ -76,6 +79,69 @@ class ContactSettingsForm(forms.ModelForm):
     # равно приходят с сервера, а таб с ошибкой открывается сам (error_tab).
     # Звёздочка у подписи рисуется из field.field.required и не страдает.
     use_required_attribute = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', INPUT_CLASS)
+
+        # Языковые колонки modeltranslation всегда blank=True, поэтому обязательность
+        # берём с базового поля: иначе заказчик сохранит только русский, а на /kk/ и
+        # /en/ проступит он же через фолбэк (docs/contact_settings.md §4).
+        for base in self.translated_fields:
+            base_field = self._meta.model._meta.get_field(base)
+            for name in get_translation_fields(base):
+                self.fields[name].required = not base_field.blank
+                # modeltranslation дописывает к подписи язык («Город [kk]»), но язык
+                # уже выбран табом — в каждой строке это лишний шум
+                self.fields[name].label = base_field.verbose_name
+
+    def require_all_languages_or_none(self, base):
+        """Необязательное переводимое поле — либо на всех языках, либо ни на одном.
+
+        «Наполовину заполненное» хуже пустого: на пустом переводе modeltranslation
+        отдаёт фолбэк, то есть русский текст на казахской странице.
+        """
+        names = get_translation_fields(base)
+        filled = [name for name in names if self.cleaned_data.get(name)]
+        if not filled or len(filled) == len(names):
+            return
+        for name in names:
+            if not self.cleaned_data.get(name):
+                self.add_error(name, 'Заполните на всех трёх языках или очистите все три — '
+                                     'иначе на других языках здесь покажется русский текст.')
+
+    # ─── Группировка для шаблона ───
+
+    def translated_groups(self):
+        """Языковые табы: по группе полей на каждый язык.
+
+        `has_errors` нужен разметке, чтобы отметить таб точкой и открыть его
+        первым: без этого ошибка в kk выглядела бы как «кнопка не работает».
+        """
+        groups = []
+        for code, label in LANGUAGES:
+            fields = [self[f'{base}_{code}'] for base in self.translated_fields]
+            groups.append({
+                'code': code,
+                'label': label,
+                'fields': fields,
+                'has_errors': any(field.errors for field in fields),
+            })
+        return groups
+
+    def error_tab(self):
+        """Язык, который открыть при ошибке валидации."""
+        for group in self.translated_groups():
+            if group['has_errors']:
+                return group['code']
+        return LANGUAGES[0][0]
+
+
+class ContactSettingsForm(LanguageTabsMixin, forms.ModelForm):
+    """Контакты компании: каналы, реквизиты, адрес офиса."""
+
+    translated_fields = TRANSLATED_FIELDS
 
     class Meta:
         model = ContactSettings
@@ -103,20 +169,6 @@ class ContactSettingsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.setdefault('class', INPUT_CLASS)
-
-        # Языковые колонки modeltranslation всегда blank=True, поэтому обязательность
-        # берём с базового поля: иначе заказчик сохранит только русский, а на /kk/ и
-        # /en/ проступит он же через фолбэк (docs/contact_settings.md §4).
-        for base in TRANSLATED_FIELDS:
-            base_field = ContactSettings._meta.get_field(base)
-            for name in get_translation_fields(base):
-                self.fields[name].required = not base_field.blank
-                # modeltranslation дописывает к подписи язык («Город [kk]»), но язык
-                # уже выбран табом — в каждой строке это лишний шум
-                self.fields[name].label = base_field.verbose_name
-
         # Колонка nullable ради load(), но обнулить координаты из формы нельзя: без
         # них нет ни карты, ни маршрутов (§3.1). Границы — чтобы опечатка «851»
         # вместо «51» не уехала на сайт молча: метка ушла бы с карты, маршруты в никуда
@@ -149,15 +201,7 @@ class ContactSettingsForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        # Часы работы необязательны, но «наполовину заполненные» хуже пустых:
-        # пустой перевод у modeltranslation отдаёт фолбэк, то есть русский текст
-        work_hours = get_translation_fields('work_hours')
-        filled = [name for name in work_hours if cleaned.get(name)]
-        if filled and len(filled) < len(work_hours):
-            for name in work_hours:
-                if not cleaned.get(name):
-                    self.add_error(name, 'Заполните часы работы на всех трёх языках '
-                                         'или очистите все три — иначе здесь покажется русский текст.')
+        self.require_all_languages_or_none('work_hours')
         return cleaned
 
     def _canonical_phone(self, name):
@@ -187,26 +231,41 @@ class ContactSettingsForm(forms.ModelForm):
     def social_fields(self):
         return [self[name] for name in SOCIAL_FIELDS]
 
-    def translated_groups(self):
-        """Языковые табы: по группе полей на каждый язык.
 
-        `has_errors` нужен разметке, чтобы отметить таб точкой и открыть его
-        первым: без этого ошибка в kk выглядела бы как «кнопка не работает».
-        """
-        groups = []
-        for code, label in LANGUAGES:
-            fields = [self[f'{base}_{code}'] for base in TRANSLATED_FIELDS]
-            groups.append({
-                'code': code,
-                'label': label,
-                'fields': fields,
-                'has_errors': any(field.errors for field in fields),
-            })
-        return groups
+class ContactsPageForm(LanguageTabsMixin, forms.ModelForm):
+    """Заголовок и мета-теги самой страницы `/contacts/`.
 
-    def error_tab(self):
-        """Язык, который открыть при ошибке валидации."""
-        for group in self.translated_groups():
-            if group['has_errors']:
-                return group['code']
-        return LANGUAGES[0][0]
+    Живут в CMS-записи `Page`: из неё резолвится URL страницы и на неё по FK
+    ссылается пункт меню, поэтому запись остаётся. А правится она здесь — в общем
+    списке страниц бэкофиса её больше нет: там из полезного был только `body`,
+    который шаблон контактов не читает (docs/contacts_page_redesign.md §8).
+    """
+
+    translated_fields = ('title', 'meta_title', 'meta_description')
+
+    class Meta:
+        model = Page
+        fields = [name for base in ('title', 'meta_title', 'meta_description')
+                  for name in get_translation_fields(base)]
+        widgets = {
+            # По умолчанию TextField даёт «простыню» на 10 строк — описание короче
+            name: forms.Textarea(attrs={'rows': 2})
+            for name in get_translation_fields('meta_description')
+        }
+        help_texts = {
+            **dict.fromkeys(get_translation_fields('title'),
+                            'Крупный заголовок на самой странице'),
+            **dict.fromkeys(get_translation_fields('meta_title'),
+                            'Заголовок вкладки браузера и ссылки в поиске. '
+                            'Пусто — «Контакты — DR.JOYS»'),
+            **dict.fromkeys(get_translation_fields('meta_description'),
+                            'Описание под ссылкой в поиске. Пусто — берётся текст из кода'),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        # Мета-теги необязательны, но заполненный только русский показал бы русский
+        # заголовок вкладки и на /kk/, и на /en/
+        self.require_all_languages_or_none('meta_title')
+        self.require_all_languages_or_none('meta_description')
+        return cleaned

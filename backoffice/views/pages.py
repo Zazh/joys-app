@@ -7,9 +7,16 @@ from django.views import View
 from django.views.generic import ListView
 
 from backoffice.mixins import BackofficeAccessMixin
+from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.models import (
     ServicePage, Page, PageCategory, BlogPost, BlogCategory,
 )
+
+# Страницы со своей вёрсткой: контент у них не в `body` (шаблон его не читает),
+# а в моделях своего раздела. В общем списке им делать нечего — редактор с TinyMCE
+# показывал бы пустое поле, правка которого ни на что не влияет. Запись при этом
+# нужна: из неё резолвится URL и на неё ссылается пункт меню.
+CUSTOM_EDITORS = {CONTACTS_PAGE_SLUG: 'backoffice:contacts'}
 
 
 # ─── Служебные страницы ───
@@ -54,7 +61,12 @@ class PageListView(BackofficeAccessMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = Page.objects.select_related('category').order_by('order', 'title')
+        qs = (
+            Page.objects
+            .exclude(slug__in=CUSTOM_EDITORS)
+            .select_related('category')
+            .order_by('order', 'title')
+        )
 
         q = self.request.GET.get('q', '').strip()
         if q:
@@ -86,6 +98,8 @@ class PageListView(BackofficeAccessMixin, ListView):
 class PageEditView(BackofficeAccessMixin, View):
     def get(self, request, pk):
         page = get_object_or_404(Page.objects.select_related('category'), pk=pk)
+        if own_section := self._own_section(request, page):
+            return own_section
         return TemplateResponse(request, 'backoffice/pages/page_form.html', {
             'page': page,
             'categories': PageCategory.objects.order_by('order', 'name'),
@@ -93,10 +107,26 @@ class PageEditView(BackofficeAccessMixin, View):
 
     def post(self, request, pk):
         page = get_object_or_404(Page, pk=pk)
+        if own_section := self._own_section(request, page):
+            return own_section
         self._fill(page, request)
         page.save()
         messages.success(request, f'Страница «{page.title_ru}» сохранена.')
         return redirect('backoffice:page_edit', pk=page.pk)
+
+    @staticmethod
+    def _own_section(request, page):
+        """Редирект в свой раздел, если страница редактируется не здесь.
+
+        Ссылку из списка мы убрали, но прямой URL остаётся у всех, кто сохранил
+        его в закладках, — а сохранение отсюда затёрло бы заголовок и мета-теги
+        пустыми полями формы.
+        """
+        url_name = CUSTOM_EDITORS.get(page.slug)
+        if not url_name:
+            return None
+        messages.info(request, f'Страница «{page.title}» редактируется в своём разделе.')
+        return redirect(url_name)
 
     def _fill(self, page, request):
         page.title_ru = request.POST.get('title_ru', '').strip()

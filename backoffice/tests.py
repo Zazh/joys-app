@@ -7,9 +7,10 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
-from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm
+from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm, ContactsPageForm
+from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
-from pages.models import ContactSettings
+from pages.models import ContactSettings, Page
 
 User = get_user_model()
 
@@ -22,6 +23,13 @@ def payload(**overrides):
         value = getattr(obj, name)
         data[name] = '' if value is None else str(value)
     data.update(overrides)
+    return data
+
+
+def seo_payload(page, **overrides):
+    """POST-данные SEO-формы страницы контактов (с префиксом seo-)."""
+    data = {f'seo-{name}': getattr(page, name) or '' for name in ContactsPageForm.base_fields}
+    data.update({f'seo-{k}': v for k, v in overrides.items()})
     return data
 
 
@@ -97,6 +105,13 @@ class ContactsEditViewTests(TestCase):
         html = self.client.get(self.url).content.decode()
         for name in ContactSettingsForm.base_fields:
             self.assertIn(f'name="{name}"', html, f'поле {name} не выводится в разметке')
+
+    def test_opens_without_cms_page(self):
+        """Записи Page может не быть (свежая база) — редактор всё равно открывается."""
+        self.assertFalse(Page.objects.filter(slug=CONTACTS_PAGE_SLUG).exists())
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['seo_form'])
 
     def test_form_covers_every_model_field(self):
         """Поле, добавленное в ContactSettings, должно доехать до редактора.
@@ -232,3 +247,89 @@ class ContactSettingsFormTests(TestCase):
         form = ContactSettingsForm(payload(legal_name_en=''), instance=ContactSettings.load())
         self.assertFalse(form.is_valid())
         self.assertEqual(form.error_tab(), 'en')
+
+
+class ContactsPageSeoTests(TestCase):
+    """Заголовок и мета-теги страницы /contacts/ правятся в разделе «Контакты».
+
+    Раньше это была строка в списке «Страницы» с редактором body, который шаблон
+    контактов не читает (docs/contacts_page_redesign.md §8).
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.url = reverse('backoffice:contacts')
+        self.page = Page.objects.create(
+            slug=CONTACTS_PAGE_SLUG, body='',
+            title_ru='Контакты', title_kk='Байланыс', title_en='Contacts',
+        )
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+
+    def test_seo_fields_rendered(self):
+        html = self.client.get(self.url).content.decode()
+        for name in ContactsPageForm.base_fields:
+            self.assertIn(f'name="seo-{name}"', html, f'поле {name} не выводится в разметке')
+
+    def test_saves_title_and_meta_for_all_languages(self):
+        response = self.client.post(self.url, {
+            **payload(),
+            **seo_payload(self.page, title_kk='Байланыстар',
+                          meta_title_ru='Контакты — DR.JOYS',
+                          meta_title_kk='Байланыс — DR.JOYS',
+                          meta_title_en='Contacts — DR.JOYS'),
+        })
+        self.assertRedirects(response, self.url)
+        self.page.refresh_from_db()
+        self.assertEqual(self.page.title_kk, 'Байланыстар')
+        self.assertEqual(self.page.meta_title_en, 'Contacts — DR.JOYS')
+
+    def test_meta_title_all_or_nothing(self):
+        """Только русский мета-тег показал бы русский заголовок вкладки и на /kk/."""
+        response = self.client.post(self.url, {
+            **payload(),
+            **seo_payload(self.page, meta_title_ru='Контакты — DR.JOYS'),
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('meta_title_kk', response.context['seo_form'].errors)
+        self.page.refresh_from_db()
+        # Языковые колонки modeltranslation приходят None, а не пустой строкой
+        self.assertFalse(self.page.meta_title_ru)
+
+    def test_contacts_not_saved_when_seo_invalid(self):
+        """Формы две, но кнопка одна: половину сохранить нельзя."""
+        response = self.client.post(self.url, {
+            **payload(phone='+7 701 124 4596'),
+            **seo_payload(self.page, title_kk=''),
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactSettings.load().phone, '+77766103836')
+
+
+class LegacyPageEditorTests(TestCase):
+    """Страницы со своим разделом не редактируются общим редактором CMS-страниц."""
+
+    def setUp(self):
+        self.page = Page.objects.create(slug=CONTACTS_PAGE_SLUG, title='Контакты', body='')
+        self.other = Page.objects.create(slug='about', title='О компании', body='текст')
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+
+    def test_hidden_from_page_list(self):
+        html = self.client.get(reverse('backoffice:page_list')).content.decode()
+        self.assertNotIn(reverse('backoffice:page_edit', args=[self.page.pk]), html)
+        self.assertIn(reverse('backoffice:page_edit', args=[self.other.pk]), html)
+
+    def test_direct_edit_url_redirects_to_own_section(self):
+        """Ссылку убрали, но закладка на редактор могла остаться."""
+        response = self.client.get(reverse('backoffice:page_edit', args=[self.page.pk]))
+        self.assertRedirects(response, reverse('backoffice:contacts'))
+
+    def test_direct_post_does_not_wipe_page(self):
+        """Сохранение из общего редактора затёрло бы заголовок пустой формой."""
+        response = self.client.post(reverse('backoffice:page_edit', args=[self.page.pk]), {})
+        self.assertRedirects(response, reverse('backoffice:contacts'))
+        self.page.refresh_from_db()
+        self.assertEqual(self.page.title, 'Контакты')
