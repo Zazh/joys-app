@@ -14,8 +14,11 @@ from quiz.models import QuizQuestion, QuizResultText
 from reviews.models import Review
 from .jsonld import (
     build_blog_list_jsonld, build_blogposting_jsonld, build_contact_page_jsonld,
+    build_offline_stores_jsonld,
 )
-from .models import PageCategory, Page, BlogPost, HeroSection, FeatureSlide, PromoBlock
+from .models import (
+    PageCategory, Page, BlogPost, HeroSection, FeatureSlide, PromoBlock, OfflineStore,
+)
 
 
 class HomeView(TemplateView):
@@ -161,6 +164,7 @@ class PageDetailView(DetailView):
     # Страницы с собственной вёрсткой вместо generic pages/page.html
     CUSTOM_TEMPLATES = {
         'contacts': 'pages/contacts.html',
+        'partners': 'pages/partners.html',
     }
 
     # Форма обращения на странице: slug страницы → slug InquiryForm
@@ -174,6 +178,9 @@ class PageDetailView(DetailView):
     FALLBACK_DESCRIPTIONS = {
         'contacts': _('Контакты DR.JOYS: телефон, WhatsApp, Telegram и почта, '
                       'адрес офиса в Алматы на карте и форма обращения.'),
+        'partners': _('Оффлайн магазины с товарами DR.JOYS: адреса точек продаж '
+                      'в Алматы, Астане и других городах Казахстана на карте — '
+                      'самовывоз и доставка.'),
     }
 
     def get_queryset(self):
@@ -215,12 +222,58 @@ class PageDetailView(DetailView):
             })
         breadcrumbs.append({'name': page.title, 'url': ''})
         ctx['breadcrumbs'] = breadcrumbs
+
+        stores = None
+        if page.slug == 'partners':
+            stores = list(OfflineStore.objects.filter(is_active=True))
+            ctx.update(self._stores_context(stores))
+
         ctx['jsonld_blocks'] = jld.serialize_jsonld(
             jld.build_breadcrumb_jsonld(self.request, breadcrumbs),
             build_contact_page_jsonld(self.request, page, description)
             if page.slug == 'contacts' else None,
+            build_offline_stores_jsonld(self.request, page, stores, description)
+            if stores is not None else None,
         )
         return ctx
+
+    @staticmethod
+    def _stores_context(stores):
+        """Группы точек по городам и данные для карты.
+
+        Порядок городов — по числу точек: он же порядок чипов и секций списка,
+        Алматы и Астана оказываются первыми сами, без ручного приоритета.
+        JSON для карты — те же точки, что в карточках: JS не ходит за данными,
+        а собирает пины из json_script.
+        """
+        counts = {}
+        for store in stores:
+            counts[store.city] = counts.get(store.city, 0) + 1
+        ordered_cities = sorted(counts, key=lambda city: -counts[city])
+        return {
+            'page_type': 'partners',
+            'city_groups': [
+                {
+                    'name': city,
+                    'count': counts[city],
+                    'stores': [s for s in stores if s.city == city],
+                }
+                for city in ordered_cities
+            ],
+            'stores_json': [
+                {
+                    'id': store.pk,
+                    'city': store.city,
+                    'name': store.name,
+                    'address': store.address,
+                    'lat': store.geo['lat'] if store.geo else None,
+                    'lng': store.geo['lng'] if store.geo else None,
+                    'url': store.map_url,
+                    'pickupOnly': store.fulfillment == OfflineStore.Fulfillment.PICKUP,
+                }
+                for store in stores
+            ],
+        }
 
 
 class BlogListView(ListView):

@@ -34,6 +34,7 @@
    (тот же слой, ниже по порядку) выигрывали без !important */
 @import "leaflet/dist/leaflet.css" layer(components);
 @import "./components/_map.css";
+@import "./components/_stores.css";
 
 /* Utilities */
 @import "./utilities/custom.css";

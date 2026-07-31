@@ -4,15 +4,19 @@
 import json
 import re
 from decimal import Decimal
+from io import StringIO
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import translation
 
 from .context_processors import CONTACTS_CACHE_KEY, contacts
-from .models import ContactSettings, Page
+from .management.commands.import_offline_stores import parse_partner_body
+from .models import ContactSettings, OfflineStore, Page
 
 
 class ContactSettingsFormatTests(TestCase):
@@ -390,3 +394,169 @@ class ContactsPageRenderTests(TestCase):
 
         location = self._jsonld(response, 'ContactPage')['mainEntity']['location']
         self.assertNotIn('geo', location)
+
+
+class OfflineStoreCoordsTests(TestCase):
+    """coords_from_2gis — единственный разбор ссылок 2ГИС: им пользуются
+    и разовый импорт, и форма бэкофиса."""
+
+    def test_point_in_path_wins_over_center(self):
+        """Пара в пути карточки — сама точка; центр карты из m= игнорируется."""
+        url = ('https://2gis.kz/almaty/branches/1/firm/2/76.898728%2C43.204689'
+               '?m=76.893175%2C43.218359%2F12')
+        self.assertEqual(OfflineStore.coords_from_2gis(url), (43.204689, 76.898728))
+
+    def test_center_taken_only_at_close_zoom(self):
+        """m= с крупным зумом центрован на точке, с мелким — это центр города."""
+        close = 'https://2gis.kz/almaty/firm/1?m=76.936323%2C43.259541%2F16'
+        self.assertEqual(OfflineStore.coords_from_2gis(close), (43.259541, 76.936323))
+        far = 'https://2gis.kz/astana/branches/1/firm/2?m=71.443112%2C51.129661%2F11'
+        self.assertIsNone(OfflineStore.coords_from_2gis(far))
+
+    def test_no_coords_in_url(self):
+        """Ссылки /geo/ и /inside/ координат не несут — None, а не выдумка."""
+        self.assertIsNone(OfflineStore.coords_from_2gis('https://2gis.kz/atyrau/geo/700000010'))
+        self.assertIsNone(OfflineStore.coords_from_2gis(''))
+
+    def test_pair_outside_region_rejected(self):
+        """Числа, не похожие на координаты наших краёв, точкой не считаются."""
+        self.assertIsNone(OfflineStore.coords_from_2gis('https://2gis.kz/x/firm/1/10.5%2C120.5'))
+
+    def test_kg_domain(self):
+        """Бишкек живёт на 2gis.kg — разбор не привязан к домену."""
+        url = 'https://2gis.kg/bishkek/firm/70000001077196217/74.599509%2C42.872003'
+        self.assertEqual(OfflineStore.coords_from_2gis(url), (42.872003, 74.599509))
+
+
+PARTNER_BODY_SAMPLE = '''
+<h3><strong>Адреса наших партнеров</strong></h3>
+<h3><strong>Алматы:</strong></h3>
+<p><strong><em>Самовывоз и доставка:</em><br></strong></p>
+<table><tbody><tr><td><strong>Flirtshop</strong></td></tr>
+<tr><td><ul>
+<li><a href="https://2gis.kz/almaty/branches/1/firm/2/76.898728%2C43.204689?m=76.893175%2C43.218359%2F12">Ермека Серкебаева, 287Б</a></li>
+</ul></td></tr></tbody></table>
+<p><br><strong><em>Только самовывоз:</em></strong><br><br><strong>EliteFuel</strong></p>
+<ul><li><a href="https://2gis.kz/almaty/firm/3?m=76.937769%2C43.218734%2F16">Зеина Шашкина, 29/1</a></li></ul>
+<h3>АКТАУ:</h3>
+<p><strong><em>Самовывоз и доставка:</em><br><br>Flirtshop<br></strong></p>
+<ul><li><strong><a href="https://2gis.kz/aktau/search/f/firm/4/51.161956%2C43.642168?m=51.168271%2C43.635705%2F11">5 мкр-н,&nbsp;дом 7</a></strong></li></ul>
+'''
+
+
+class ImportOfflineStoresTests(TestCase):
+    """Парсер body страницы partners и сама команда импорта."""
+
+    def test_parse_partner_body(self):
+        """Города по <h3> с двоеточием, режим по <em>, магазин остатком <strong>,
+        адрес ссылкой — в том числе вложенной в <strong> (случай Актау)."""
+        points = parse_partner_body(PARTNER_BODY_SAMPLE)
+        self.assertEqual(
+            [(p['city'], p['name'], p['address'], p['fulfillment']) for p in points],
+            [
+                ('Алматы', 'Flirtshop', 'Ермека Серкебаева, 287Б',
+                 OfflineStore.Fulfillment.PICKUP_DELIVERY),
+                ('Алматы', 'EliteFuel', 'Зеина Шашкина, 29/1',
+                 OfflineStore.Fulfillment.PICKUP),
+                # Новый город сбрасывает режим «только самовывоз»
+                ('Актау', 'Flirtshop', '5 мкр-н, дом 7',
+                 OfflineStore.Fulfillment.PICKUP_DELIVERY),
+            ],
+        )
+
+    def test_command_imports_with_coords(self):
+        Page.objects.create(slug='partners', title='Оффлайн магазины',
+                            body=PARTNER_BODY_SAMPLE)
+        call_command('import_offline_stores', stdout=StringIO())
+        self.assertEqual(OfflineStore.objects.count(), 3)
+        store = OfflineStore.objects.get(address='Ермека Серкебаева, 287Б')
+        self.assertEqual((float(store.lat), float(store.lng)), (43.204689, 76.898728))
+
+    def test_command_refuses_second_run_without_replace(self):
+        """Повторный запуск затёр бы правки бэкофиса — без --replace отказ."""
+        Page.objects.create(slug='partners', title='Оффлайн магазины',
+                            body=PARTNER_BODY_SAMPLE)
+        call_command('import_offline_stores', stdout=StringIO())
+        with self.assertRaises(CommandError):
+            call_command('import_offline_stores', stdout=StringIO())
+        call_command('import_offline_stores', '--replace', stdout=StringIO())
+        self.assertEqual(OfflineStore.objects.count(), 3)
+
+
+class PartnersPageTests(TestCase):
+    """Страница /partners/: свой шаблон, группировка по городам, JSON-LD."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.page = Page.objects.create(slug='partners', title='Оффлайн магазины', body='')
+        OfflineStore.objects.create(
+            city='Алматы', name='Flirtshop', address='Ермека Серкебаева, 287Б',
+            lat=Decimal('43.204689'), lng=Decimal('76.898728'),
+            map_url='https://2gis.kz/almaty/firm/2',
+        )
+        OfflineStore.objects.create(
+            city='Алматы', name='Joys Toys', address='Байтурсынова, 169',
+            lat=Decimal('43.231812'), lng=Decimal('76.933591'),
+        )
+        # Без координат: в списке есть, на карте нет, geo в JSON-LD не уходит
+        OfflineStore.objects.create(city='Атырау', name='LOVE MARKET', address='Абая, 131')
+        OfflineStore.objects.create(
+            city='Астана', name='Скрытая', address='Никуда, 1', is_active=False,
+        )
+
+    def _get(self, lang='ru'):
+        with translation.override(lang):
+            url = self.page.get_absolute_url()
+        return self.client.get(url)
+
+    def _jsonld(self, response, type_):
+        for raw in re.findall(
+            rb'<script type="application/ld\+json">(.*?)</script>',
+            response.content, re.S,
+        ):
+            data = json.loads(raw.decode('utf-8'))
+            if data.get('@type') == type_:
+                return data
+        self.fail(f'блок JSON-LD @type={type_} на странице не найден')
+
+    def test_uses_partners_template(self):
+        response = self._get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pages/partners.html')
+
+    def test_city_groups_ordered_by_count_and_skip_inactive(self):
+        """Больше точек — выше чип; выключенная точка не попадает никуда."""
+        response = self._get()
+        groups = response.context['city_groups']
+        self.assertEqual([g['name'] for g in groups], ['Алматы', 'Атырау'])
+        self.assertEqual(groups[0]['count'], 2)
+        ids = {s['id'] for s in response.context['stores_json']}
+        self.assertNotIn(
+            OfflineStore.objects.get(name='Скрытая').pk, ids,
+        )
+
+    def test_stores_json_carries_map_data(self):
+        """JS собирает карту из json_script: координаты числа, у точки без
+        координат — null, а не отсутствующий ключ."""
+        response = self._get()
+        by_name = {s['name']: s for s in response.context['stores_json']}
+        self.assertEqual(by_name['Flirtshop']['lat'], 43.204689)
+        self.assertIsNone(by_name['LOVE MARKET']['lat'])
+        self.assertContains(response, 'id="storesData"')
+
+    def test_jsonld_itemlist_of_stores(self):
+        response = self._get()
+        block = self._jsonld(response, 'WebPage')
+        items = block['mainEntity']['itemListElement']
+        self.assertEqual(block['mainEntity']['numberOfItems'], 3)
+        first = items[0]['item']
+        self.assertEqual(first['@type'], 'Store')
+        self.assertEqual(first['address']['addressLocality'], 'Алматы')
+        self.assertEqual(first['geo']['latitude'], 43.204689)
+        # Точка без координат — без geo, а не с нулями
+        no_geo = [i['item'] for i in items if i['item']['name'] == 'LOVE MARKET'][0]
+        self.assertNotIn('geo', no_geo)
+
+    def test_meta_description_fallback(self):
+        """body шаблон не читает — сниппет собирается из фолбэка вьюхи."""
+        self.assertContains(self._get(), 'Оффлайн магазины с товарами DR.JOYS')

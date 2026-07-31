@@ -1,4 +1,5 @@
 import re
+from urllib.parse import unquote, urlsplit
 
 from django.db import models
 from django.urls import reverse, NoReverseMatch
@@ -7,6 +8,11 @@ from django.urls import reverse, NoReverseMatch
 _TELEGRAM_URL_PREFIX = re.compile(r'^(?:https?://)?(?:www\.)?t(?:elegram)?\.me/', re.I)
 # Что телеграм разрешает в имени пользователя: латиница, цифры, подчёркивание, 5–32 знака
 _TELEGRAM_USERNAME = re.compile(r'^[A-Za-z0-9_]{5,32}$')
+
+# Координаты в ссылке 2ГИС (после unquote): пара «долгота,широта» в конце пути
+# карточки (…/firm/…/76.898728,43.204689) или в параметре m= — центре карты
+_GIS_PATH_POINT = re.compile(r'/(\d{1,3}\.\d+),(\d{1,3}\.\d+)/?$')
+_GIS_MAP_CENTER = re.compile(r'(?:^|&)m=(\d{1,3}\.\d+),(\d{1,3}\.\d+)(?:/(\d+(?:\.\d+)?))?')
 
 
 class PageCategory(models.Model):
@@ -599,3 +605,100 @@ class ContactSettings(models.Model):
             self.marketplace_url,
         ]
         return [link for link in links if link]
+
+
+class OfflineStore(models.Model):
+    """Оффлайн-точка продаж: магазин партнёра на странице /partners/.
+
+    Раньше точки жили HTML-таблицами в body страницы partners — карта по такой
+    вёрстке не собирается. Теперь каждая точка — запись: карта, чипы городов,
+    карточки списка и JSON-LD берут данные отсюда. Первичный перенос из body —
+    команда import_offline_stores, дальше точки правятся в бэкофисе.
+    """
+
+    class Fulfillment(models.TextChoices):
+        PICKUP_DELIVERY = 'pickup_delivery', 'Самовывоз и доставка'
+        PICKUP = 'pickup', 'Только самовывоз'
+
+    # ?m= с зумом мельче — центр города из ссылки на список филиалов, а не точка
+    MIN_CENTER_ZOOM = 14
+
+    city = models.CharField(
+        'Город', max_length=100,
+        help_text='Без приставки «г.»: Алматы. Чипы городов на странице собираются из этого поля',
+    )
+    name = models.CharField('Магазин', max_length=200)
+    address = models.CharField(
+        'Адрес', max_length=255,
+        help_text='Без города: Ермека Серкебаева, 287Б',
+    )
+    # Координаты nullable: точка без них показывается в списке, но не на карте —
+    # это штатное состояние для новых точек, пока не вставлена ссылка 2ГИС
+    lat = models.DecimalField(
+        'Широта', max_digits=9, decimal_places=6, null=True, blank=True,
+        help_text='Пусто — возьмём из ссылки 2ГИС при сохранении',
+    )
+    lng = models.DecimalField(
+        'Долгота', max_digits=9, decimal_places=6, null=True, blank=True,
+    )
+    map_url = models.URLField(
+        'Ссылка 2ГИС', max_length=500, blank=True,
+        help_text='Ссылка на карточку точки в 2ГИС — из неё же извлекаются координаты',
+    )
+    fulfillment = models.CharField(
+        'Формат', max_length=20,
+        choices=Fulfillment.choices, default=Fulfillment.PICKUP_DELIVERY,
+    )
+    is_active = models.BooleanField('Активна', default=True)
+    order = models.PositiveIntegerField('Порядок', default=0)
+    updated_at = models.DateTimeField('Обновлена', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Оффлайн точка'
+        verbose_name_plural = 'Оффлайн точки'
+        ordering = ['city', 'order', 'name', 'address']
+        indexes = [
+            models.Index(fields=['is_active', 'city']),
+        ]
+
+    def __str__(self):
+        return f'{self.name} — {self.city}, {self.address}'
+
+    @property
+    def geo(self):
+        """Пара координат для карты и JSON-LD или None — как ContactSettings.geo:
+        одна проверка на карту, попап и разметку; float, потому что Decimal
+        не переживает json.dumps и печатается с незначащими нулями."""
+        if self.lat is None or self.lng is None:
+            return None
+        return {'lat': float(self.lat), 'lng': float(self.lng)}
+
+    @classmethod
+    def coords_from_2gis(cls, url):
+        """(lat, lng) из ссылки 2ГИС или None.
+
+        Единственный разбор таких ссылок в проекте: им пользуются и разовый
+        импорт из body страницы, и форма бэкофиса (вставил ссылку — координаты
+        заполнились сами). В пути карточки координаты — сама точка, берём всегда;
+        в m= — центр карты, который годится только при крупном зуме: на мелком
+        это центр города из ссылки на список филиалов.
+        """
+        if not url:
+            return None
+        parts = urlsplit(unquote(url))
+        m = _GIS_PATH_POINT.search(parts.path)
+        if m:
+            return cls._valid_pair(m.group(2), m.group(1))
+        m = _GIS_MAP_CENTER.search(parts.query)
+        if m and float(m.group(3) or 0) >= cls.MIN_CENTER_ZOOM:
+            return cls._valid_pair(m.group(2), m.group(1))
+        return None
+
+    @staticmethod
+    def _valid_pair(lat_str, lng_str):
+        """Отсекает пары, не похожие на координаты в наших краях: регексп мог
+        зацепить в URL что-то другое, и точка уехала бы в океан."""
+        lat, lng = float(lat_str), float(lng_str)
+        if 35 <= lat <= 60 and 40 <= lng <= 95:
+            return lat, lng
+        return None

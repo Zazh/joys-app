@@ -99,6 +99,58 @@ def build_contact_page_jsonld(request, page, description=''):
     return result
 
 
+def build_offline_stores_jsonld(request, page, stores, description=''):
+    """Оффлайн-точки — ItemList из Store с адресом и координатами.
+
+    Store вместо Place: это магазины, а адрес с geo у Store те же, что у Place.
+    Список ссылок на чужие магазины — как список статей блога: ItemList на
+    странице, без попытки выдать точки за филиалы самой Organization —
+    location у DR.JOYS один, офис на странице контактов.
+    """
+    page_url = absolute_url(page.get_absolute_url())
+
+    items = []
+    for i, store in enumerate(stores, 1):
+        place = {
+            '@type': 'Store',
+            'name': store.name,
+            'address': {
+                '@type': 'PostalAddress',
+                # Единственная точка вне Казахстана — Бишкек; появится другая
+                # страна — точке нужно отдельное поле, а не третья строка тут
+                'addressCountry': 'KG' if store.city == 'Бишкек' else 'KZ',
+                'addressLocality': store.city,
+                'streetAddress': store.address,
+            },
+        }
+        if store.geo:
+            place['geo'] = {
+                '@type': 'GeoCoordinates',
+                'latitude': store.geo['lat'],
+                'longitude': store.geo['lng'],
+            }
+        if store.map_url:
+            place['hasMap'] = store.map_url
+        items.append({'@type': 'ListItem', 'position': i, 'item': place})
+
+    result = {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        '@id': page_url,
+        'url': page_url,
+        'name': page.meta_title or page.title,
+        'inLanguage': get_language(),
+        'mainEntity': {
+            '@type': 'ItemList',
+            'itemListElement': items,
+            'numberOfItems': len(items),
+        },
+    }
+    if description:
+        result['description'] = description
+    return result
+
+
 def build_blog_list_jsonld(request, posts):
     """Список статей — Blog + ItemList, по образцу каталога.
 

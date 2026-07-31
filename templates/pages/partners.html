@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+
+{% block meta %}
+{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}
+{# ItemList из Store (адрес + координаты каждой точки) и хлебные крошки — pages/jsonld.py #}
+{% for jsonld_str in jsonld_blocks %}
+<script type="application/ld+json">{{ jsonld_str|safe }}</script>
+{% endfor %}
+{% endblock %}
+
+{% block og %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ meta_title }}">
+{% if meta_description %}<meta property="og:description" content="{{ meta_description }}">{% endif %}
+<meta property="og:url" content="{{ canonical_url }}">
+{% if page.og_image %}
+<meta property="og:image" content="{{ site_url }}{{ page.og_image.url }}">
+{% else %}
+<meta property="og:image" content="{{ site_url }}{% static 'dist/images/seo/og-default.jpg' %}">
+{% endif %}
+{% endblock %}
+
+{% block twitter %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ meta_title }}">
+{% if meta_description %}<meta name="twitter:description" content="{{ meta_description }}">{% endif %}
+<meta name="twitter:image" content="{{ site_url }}{% if page.og_image %}{{ page.og_image.url }}{% else %}{% static 'dist/images/seo/og-default.jpg' %}{% endif %}">
+{% endblock %}
+
+{% block content %}
+<main>
+    <section class="main-grid">
+        {# Колонка шире контентной (списку и карте нужны обе половины), левый край совпадает с каноном внутренних страниц #}
+        <div class="col-span-full lg:col-span-14 xl:col-span-13 xl:col-start-2">
+
+            <!-- BEGIN stores-hero -->
+            <div class="pt-30 pb-8">
+                {# Крошки — как на контактах: строкой над заголовком, мобильная кнопка «назад» спрятана #}
+                <div class="pb-4">
+                    {% include 'base/components/_breadcrumbs.html' with breadcrumbs=breadcrumbs hide_back=1 nav_class="flex" %}
+                </div>
+                <h1 class="page-title text-red-500">{{ page.title }}</h1>
+                <p class="pt-4 text-gray-600 max-w-xl">
+                    {% trans "Товары DR.JOYS в магазинах-партнёрах: выберите город или найдите точку рядом с вами." %}
+                </p>
+            </div>
+            <!-- END stores-hero -->
+
+            <!-- BEGIN stores-controls -->
+            {# Чипы городов собраны из точек в БД: новый город в бэкофисе — новый чип. #}
+            {# aria-pressed вместо табов: это фильтры одного списка, а не смена панелей #}
+            <div class="stores-controls">
+                <div class="stores-chips">
+                    <button type="button" class="stores-chip is-active" data-city="all" aria-pressed="true">
+                        {% trans "Все" %}
+                    </button>
+                    {% for city in city_groups %}
+                    <button type="button" class="stores-chip" data-city="{{ city.name }}" aria-pressed="false">
+                        {{ city.name }} <span class="stores-chip__count">{{ city.count }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+                <button type="button" id="storesNearMe" class="stores-near-btn">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+                        <circle cx="12" cy="12" r="8"/>
+                    </svg>
+                    {% trans "Рядом со мной" %}
+                </button>
+            </div>
+            {# role="status": текст появляется без перевода фокуса — скринридер озвучит сам #}
+            <p id="storesGeoError" class="form-error hidden pb-4" role="status">
+                {% trans "Не удалось определить местоположение. Разрешите доступ к геолокации или выберите город вручную." %}
+            </p>
+            <!-- END stores-controls -->
+
+            <!-- BEGIN stores-layout -->
+            {# Десктоп — сплит: список слева, липкая карта справа. Мобайл — список, #}
+            {# карта включается плавающей кнопкой (класс stores-view--map на этом блоке) #}
+            <div id="storesLayout" class="stores-layout">
+                <div id="storesList" class="stores-list">
+                    {% for group in city_groups %}
+                    <section class="stores-city" data-city-group="{{ group.name }}">
+                        <h2 class="stores-city__title">
+                            {{ group.name }} <span class="stores-city__count">{{ group.count }}</span>
+                        </h2>
+                        <div class="stores-cards">
+                            {% for store in group.stores %}
+                            <article class="store-card" data-store-id="{{ store.pk }}">
+                                <span class="store-card__shop">{{ store.name }}</span>
+                                <address class="store-card__address not-italic">{{ store.address }}</address>
+                                <p class="store-card__meta">
+                                    {% if store.fulfillment == 'pickup' %}{% trans "Только самовывоз" %}{% else %}{% trans "Самовывоз и доставка" %}{% endif %}<span data-distance hidden></span>
+                                </p>
+                                <div class="store-card__actions">
+                                    {% if store.geo %}
+                                    <button type="button" class="store-card__btn" data-map-focus>{% trans "На карте" %}</button>
+                                    {% endif %}
+                                    {% if store.map_url %}
+                                    <a class="store-card__btn" href="{{ store.map_url }}" target="_blank" rel="noopener noreferrer">2ГИС</a>
+                                    {% endif %}
+                                </div>
+                            </article>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    {% empty %}
+                    <p class="text-gray-600 pb-16">{% trans "Список точек обновляется — загляните позже." %}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="stores-map-col">
+                    {# Карта инициализируется лениво из dist/js/stores.js; без JS остаётся фолбэк, #}
+                    {# а список выше и так серверный — страница работает целиком #}
+                    <div id="storesMap"
+                         class="stores-map"
+                         role="region"
+                         aria-label="{% trans 'Карта: оффлайн точки продаж DR.JOYS' %}"
+                         data-label-km="{% trans 'км' %}"
+                         data-label-m="{% trans 'м' %}">
+                        <div class="map-fallback">
+                            <p class="text-gray-600">{% trans "Карта не загрузилась — адреса точек есть в списке." %}</p>
+                        </div>
+                    </div>
+                    {# Атрибуция OSM + CARTO обязательна для бесплатных тайлов — как на контактах #}
+                    <p class="map-attribution">
+                        &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+                        &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>
+                    </p>
+                </div>
+            </div>
+            <!-- END stores-layout -->
+
+        </div>
+    </section>
+
+    {# Мобильный переключатель Карта/Список — плавающая кнопка, на десктопе не нужна: там сплит #}
+    <button type="button" id="storesViewToggle" class="stores-toggle" aria-pressed="false">
+        <svg class="stores-toggle__icon" data-icon-map viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 3l-6 2v16l6-2 6 2 6-2V3l-6 2-6-2z"/><path d="M9 3v16m6-14v16"/>
+        </svg>
+        <svg class="stores-toggle__icon hidden" data-icon-list viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+        </svg>
+        <span data-toggle-label-map>{% trans "Карта" %}</span>
+        <span data-toggle-label-list class="hidden">{% trans "Список" %}</span>
+    </button>
+
+    {# Содержимое попапа пина: JS клонирует и заполняет — иконки и переводы живут в Django #}
+    <template id="storePopupTemplate">
+        <div class="map-popup">
+            <strong class="map-popup__name" data-popup-name></strong>
+            <address class="map-popup__address not-italic" data-popup-address></address>
+            <span class="map-popup__note" data-popup-pickup hidden>{% trans "Только самовывоз" %}</span>
+            <div class="route-links pt-4">
+                <a class="route-link" data-route-2gis target="_blank" rel="noopener noreferrer"
+                   title="2ГИС" aria-label="{% trans 'Открыть точку в 2ГИС' %}">
+                    {% include 'base/components/icons/_icon_2gis.html' %}
+                </a>
+                <a class="route-link" data-route-yandex target="_blank" rel="noopener noreferrer"
+                   title="{% trans 'Яндекс Карты' %}" aria-label="{% trans 'Построить маршрут в Яндекс Картах' %}">
+                    {% include 'base/components/icons/_icon_yandex_maps.html' %}
+                </a>
+                <a class="route-link" data-route-google target="_blank" rel="noopener noreferrer"
+                   title="Google Maps" aria-label="{% trans 'Построить маршрут в Google Maps' %}">
+                    {% include 'base/components/icons/_icon_google_maps.html' %}
+                </a>
+            </div>
+        </div>
+    </template>
+
+    {{ stores_json|json_script:"storesData" }}
+</main>
+{% endblock %}
+
+{% block scripts %}
+{# Leaflet — только на этой странице, отдельным бандлом (как contacts.js) #}
+<script src="{% static 'dist/js/stores.js' %}" defer></script>
+{% endblock %}

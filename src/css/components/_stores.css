@@ -1,0 +1,142 @@
+/* Пульс точки «вы здесь»: расходящееся кольцо поверх статичного маркера */
+@keyframes map-user-pulse {
+    from { transform: scale(1); opacity: 0.6; }
+    to   { transform: scale(2.6); opacity: 0; }
+}
+
+@layer components {
+    /* --------------------------------------------
+       Страница оффлайн-точек (/partners/): чипы городов,
+       сплит список+карта, карточки, мобильный переключатель
+       -------------------------------------------- */
+
+    /* Чипы городов + кнопка геолокации одной строкой; на мобильном чипы
+       скроллятся горизонтально до краёв экрана (отрицательные поля = mx main-grid) */
+    .stores-controls {
+        @apply flex flex-col gap-3 pb-6 lg:flex-row lg:items-center lg:justify-between;
+    }
+    .stores-chips {
+        @apply flex gap-2 overflow-x-auto -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible;
+        scrollbar-width: none;
+    }
+    .stores-chips::-webkit-scrollbar { display: none; }
+
+    .stores-chip {
+        @apply shrink-0 rounded-full border border-gray-200 px-4 py-2 text-sm font-bold
+               transition-colors hover:border-black focus-brand;
+    }
+    .stores-chip.is-active {
+        @apply bg-black border-black text-white;
+    }
+    .stores-chip__count {
+        @apply font-normal text-gray-500 pl-0.5;
+    }
+    .stores-chip.is-active .stores-chip__count {
+        @apply text-white/60;
+    }
+
+    .stores-near-btn {
+        @apply flex shrink-0 items-center gap-2 self-start rounded-full border border-gray-200
+               px-4 py-2 text-sm font-bold transition-colors hover:border-red-500 hover:text-red-500
+               focus-brand lg:self-auto;
+    }
+    .stores-near-btn.is-active {
+        @apply border-red-500 text-red-500;
+    }
+
+    /* Сплит: на десктопе список и карта пополам, карта липкая на высоту вьюпорта.
+       На мобильном половины сменяют друг друга классом stores-view--map (кнопка-переключатель) */
+    .stores-layout {
+        @apply lg:grid lg:grid-cols-2 lg:items-start lg:gap-6;
+    }
+    .stores-list {
+        @apply flex flex-col gap-10 pb-16;
+    }
+    .stores-map-col {
+        @apply hidden pb-8 lg:block lg:sticky lg:top-20 lg:pb-16;
+    }
+    .stores-view--map .stores-list { @apply hidden lg:flex; }
+    .stores-view--map .stores-map-col { @apply block; }
+
+    /* isolate + z-0 — тот же контракт со шапкой, что у .map-container (_map.css) */
+    .stores-map {
+        @apply relative isolate z-0 overflow-hidden rounded-2xl bg-stone-50
+               h-[calc(100dvh-13rem)] lg:h-[calc(100vh-7.5rem)];
+    }
+
+    .stores-city__title {
+        @apply font-benzin uppercase text-xl pb-4;
+    }
+    .stores-city__count {
+        @apply text-gray-500 text-sm align-middle pl-1;
+    }
+    .stores-cards {
+        @apply grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2;
+    }
+
+    /* Карточка точки — канон .contact-card: label сверху, значение жирным.
+       Активная (пин выбран на карте) подсвечивается рамкой бренда */
+    .store-card {
+        @apply flex flex-col gap-1.5 rounded-2xl border border-transparent bg-stone-50 p-5
+               transition-colors;
+    }
+    .store-card.is-active {
+        @apply border-red-500;
+    }
+    .store-card__shop {
+        @apply text-xs font-bold uppercase tracking-wide text-gray-600;
+    }
+    .store-card__address {
+        @apply font-bold;
+    }
+    .store-card__meta {
+        @apply text-xs text-gray-600;
+    }
+    .store-card__actions {
+        @apply flex flex-wrap gap-2 pt-2.5;
+    }
+    .store-card__btn {
+        @apply rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-bold
+               transition-colors hover:border-black focus-brand;
+    }
+
+    /* Плавающий переключатель Карта/Список (мобайл): над нижним краем, по центру */
+    .stores-toggle {
+        @apply fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2
+               rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-lg
+               focus-brand lg:hidden;
+    }
+    .stores-toggle__icon {
+        @apply h-4 w-4;
+    }
+
+    /* Кластер города на дальнем зуме: круг бренда с числом точек */
+    .map-cluster {
+        @apply flex h-11 w-11 items-center justify-center rounded-full bg-red-500
+               font-benzin text-sm text-white;
+        box-shadow: 0 0 0 3px rgb(255 255 255 / 0.85), 0 4px 10px rgb(0 0 0 / 0.25);
+    }
+
+    /* Точка «вы здесь»: синяя — общепринятый цвет геолокации, бренд-красный занят пинами */
+    .map-user-dot {
+        @apply relative block h-4 w-4 rounded-full bg-[#1a73e8];
+        box-shadow: 0 0 0 3px #fff, 0 2px 6px rgb(0 0 0 / 0.35);
+    }
+    .map-user-dot::after {
+        @apply absolute inset-0 rounded-full bg-[#1a73e8] content-[''];
+        animation: map-user-pulse 2s ease-out infinite;
+    }
+
+    /* Активный пин: чуть крупнее и поверх соседей; transform-origin — остриё щита */
+    .map-pin.is-active {
+        transform: scale(1.18);
+    }
+
+    .map-popup__note {
+        @apply block pt-2 text-xs font-bold uppercase tracking-wide text-gray-600;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .map-user-dot::after { animation: none; }
+}
