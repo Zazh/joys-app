@@ -225,9 +225,9 @@
         <div class="col-span-full col-start-0 md:col-span-3 lg:col-span-7 xl:col-start-2 xl:col-span-6 flex flex-col">
             <div class="[ product-slider ] w-full h-full aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="2000">
                 {% for img in package_images %}
-                <img src="{{ img.image.url }}" class="slider-image{% if forloop.first %} active{% endif %}" alt="{{ img.alt_text|default:'Упаковка' }}" loading="lazy">
+                <img src="{{ img.image.url }}" class="slider-image{% if forloop.first %} active{% endif %}" alt="{{ img.alt_text|default:package_caption }}" loading="lazy">
                 {% empty %}
-                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="Упаковка" loading="lazy">
+                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="{{ package_caption }}" loading="lazy">
                 {% endfor %}
 
                 <!-- Круговой прогресс с кнопкой pause/play -->
@@ -253,7 +253,8 @@
                 <div class="slider-indicators"></div>
             </div>
             <div>
-                <p class="text-xs italic text-right py-2">{% trans "Упаковка презервативов DR.JOYS" %}</p>
+                {# Подпись по категории товара — считает вьюха (PHOTO_CAPTIONS) #}
+                <p class="text-xs italic text-right py-2">{{ package_caption }}</p>
             </div>
         </div>
 
@@ -261,9 +262,9 @@
         <div class="col-span-full lg:col-start-9 md:col-span-3 lg:col-span-7 xl:col-start-9 xl:col-span-6 flex flex-col">
             <div class="[ product-slider ] w-full h-full aspect-[2/3] overflow-hidden relative" data-autoplay="true" data-interval="2000">
                 {% for img in individual_images %}
-                <img src="{{ img.image.url }}" class="slider-image{% if forloop.first %} active{% endif %}" alt="{{ img.alt_text|default:'Индивидуальная упаковка' }}" loading="lazy">
+                <img src="{{ img.image.url }}" class="slider-image{% if forloop.first %} active{% endif %}" alt="{{ img.alt_text|default:individual_caption }}" loading="lazy">
                 {% empty %}
-                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="Индивидуальная упаковка" loading="lazy">
+                <img src="{{ placeholder_image_url }}" class="w-full h-full object-cover" alt="{{ individual_caption }}" loading="lazy">
                 {% endfor %}
 
                 <!-- Круговой прогресс с кнопкой pause/play -->
@@ -287,7 +288,7 @@
                 <div class="slider-indicators"></div>
             </div>
             <div>
-                <p class="text-xs italic text-right py-2">{% trans "Презерватив в индивидуальной упаковке" %}</p>
+                <p class="text-xs italic text-right py-2">{{ individual_caption }}</p>
             </div>
         </div>
     </section>

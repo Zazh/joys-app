@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DR.JOYS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-31 11:53+0500\n"
+"POT-Creation-Date: 2026-07-31 15:43+0500\n"
 "PO-Revision-Date: 2026-03-19 22:00+0500\n"
 "Last-Translator: DR.JOYS Team\n"
 "Language-Team: English\n"
@@ -66,6 +66,24 @@ msgstr "DR.JOYS Condom Catalog — classic, ribbed, ultra-thin"
 
 msgid "Каталог"
 msgstr "Catalog"
+
+msgid "Упаковка презервативов DR.JOYS"
+msgstr "DR.JOYS condom packaging"
+
+msgid "Презерватив в индивидуальной упаковке"
+msgstr "Condom in individual packaging"
+
+msgid "Упаковка лубриканта DR.JOYS"
+msgstr "DR.JOYS lubricant packaging"
+
+msgid "Лубрикант в индивидуальной упаковке"
+msgstr "Lubricant in individual packaging"
+
+msgid "Упаковка товара DR.JOYS"
+msgstr "DR.JOYS product packaging"
+
+msgid "Товар в индивидуальной упаковке"
+msgstr "Product in individual packaging"
 
 #, python-format
 msgid ""
@@ -186,7 +204,9 @@ msgstr ""
 msgid ""
 "Оффлайн магазины с товарами DR.JOYS: адреса точек продаж в Алматы, Астане и "
 "других городах Казахстана на карте — самовывоз и доставка."
-msgstr "Offline stores with DR.JOYS products: store addresses in Almaty, Astana and other cities of Kazakhstan on the map — pickup and delivery."
+msgstr ""
+"Offline stores with DR.JOYS products: store addresses in Almaty, Astana and "
+"other cities of Kazakhstan on the map — pickup and delivery."
 
 msgid "Блог"
 msgstr "Blog"
@@ -814,7 +834,8 @@ msgstr "read more"
 msgid ""
 "Товары DR.JOYS в магазинах-партнёрах: выберите город или найдите точку рядом "
 "с вами."
-msgstr "DR.JOYS products in partner stores: pick a city or find a store near you."
+msgstr ""
+"DR.JOYS products in partner stores: pick a city or find a store near you."
 
 msgid "Рядом со мной"
 msgstr "Near me"
@@ -822,7 +843,9 @@ msgstr "Near me"
 msgid ""
 "Не удалось определить местоположение. Разрешите доступ к геолокации или "
 "выберите город вручную."
-msgstr "Could not detect your location. Allow geolocation access or pick a city manually."
+msgstr ""
+"Could not detect your location. Allow geolocation access or pick a city "
+"manually."
 
 msgid "Только самовывоз"
 msgstr "Pickup only"
@@ -832,6 +855,12 @@ msgstr "Pickup and delivery"
 
 msgid "На карте"
 msgstr "On the map"
+
+# Ссылки маршрутов (base/components/_route_links.html)
+#, fuzzy
+#| msgid "Построить маршрут в 2ГИС"
+msgid "Открыть точку в 2ГИС"
+msgstr "Get directions in 2GIS"
 
 msgid "Список точек обновляется — загляните позже."
 msgstr "The store list is being updated — check back later."
@@ -855,12 +884,6 @@ msgstr "Map"
 
 msgid "Список"
 msgstr "List"
-
-# Ссылки маршрутов (base/components/_route_links.html)
-#, fuzzy
-#| msgid "Построить маршрут в 2ГИС"
-msgid "Открыть точку в 2ГИС"
-msgstr "Get directions in 2GIS"
 
 msgid "АРТИКУЛ"
 msgstr "SKU"
@@ -888,12 +911,6 @@ msgstr "contraindications"
 
 msgid "Характеристики не заполнены"
 msgstr "No specifications available"
-
-msgid "Упаковка презервативов DR.JOYS"
-msgstr "DR.JOYS condom packaging"
-
-msgid "Презерватив в индивидуальной упаковке"
-msgstr "Condom in individual packaging"
 
 msgid "Вам может быть интересно"
 msgstr "You may also like"

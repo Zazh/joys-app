@@ -578,7 +578,12 @@ function initProductSlider() {
 
         const imagesCount = images.length;
 
-        if (imagesCount <= 1) return;
+        if (imagesCount <= 1) {
+            // Одно фото: листать нечего, но кнопка play/pause с прогрессом
+            // стоит в вёрстке статически — без этого висела бы мёртвой
+            slider.querySelector('.slider-progress-wrapper')?.remove();
+            return;
+        }
 
         // Создаем индикаторы (кликабельные)
         indicatorsContainer.innerHTML = '';

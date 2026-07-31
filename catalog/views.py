@@ -1,7 +1,7 @@
 from django.db.models import Prefetch
 from django.http import Http404
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 from django.views.generic import ListView, DetailView
 
 from core import seo
@@ -116,6 +116,23 @@ class ProductDetailView(DetailView):
     context_object_name = 'product'
     slug_url_kwarg = 'product_slug'
 
+    # Подписи под слайдерами фото (упаковка, индивидуальная упаковка) по slug
+    # категории. gettext_lazy: строки переводятся в момент рендера, а не импорта
+    PHOTO_CAPTIONS = {
+        'prezervativy': (
+            gettext_lazy('Упаковка презервативов DR.JOYS'),
+            gettext_lazy('Презерватив в индивидуальной упаковке'),
+        ),
+        'smazki': (
+            gettext_lazy('Упаковка лубриканта DR.JOYS'),
+            gettext_lazy('Лубрикант в индивидуальной упаковке'),
+        ),
+    }
+    DEFAULT_PHOTO_CAPTIONS = (
+        gettext_lazy('Упаковка товара DR.JOYS'),
+        gettext_lazy('Товар в индивидуальной упаковке'),
+    )
+
     def get_queryset(self):
         region = getattr(self.request, 'region', None)
         rp_qs = RegionPrice.objects.filter(region=region) if region else RegionPrice.objects.none()
@@ -183,6 +200,12 @@ class ProductDetailView(DetailView):
         ctx['main_images'] = main_images
         ctx['package_images'] = product.package_images.all()
         ctx['individual_images'] = product.individual_images.all()
+        # Подписи под слайдерами фото — по категории: жёсткие «презервативы»
+        # из шаблона показывались и на смазках. Неизвестной категории — общий текст
+        captions = self.PHOTO_CAPTIONS.get(
+            product.category.slug, self.DEFAULT_PHOTO_CAPTIONS,
+        )
+        ctx['package_caption'], ctx['individual_caption'] = captions
         characteristics = list(
             product.characteristics.select_related('characteristic__unit').all()
         )
@@ -224,12 +247,14 @@ class ProductDetailView(DetailView):
             },
         )
 
-        # Связанные товары (из той же категории)
+        # Связанные товары: сначала соседи по категории, как и раньше. Но если
+        # их мало (у смазок всего два товара — карусель стояла из одной карточки),
+        # добираем до шести товарами остальных категорий в порядке каталога
         region = getattr(self.request, 'region', None)
         rel_rp_qs = RegionPrice.objects.filter(region=region) if region else RegionPrice.objects.none()
-        ctx['related_products'] = (
+        rel_qs = (
             Product.objects
-            .filter(is_active=True, category=product.category)
+            .filter(is_active=True)
             .exclude(pk=product.pk)
             .prefetch_related(
                 'main_images',
@@ -239,8 +264,14 @@ class ProductDetailView(DetailView):
                         Prefetch('region_prices', queryset=rel_rp_qs, to_attr='_region_prices'),
                     ),
                 ),
-            )[:6]
+            )
         )
+        related = list(rel_qs.filter(category=product.category)[:6])
+        if len(related) < 6:
+            related += list(
+                rel_qs.exclude(category=product.category)[:6 - len(related)]
+            )
+        ctx['related_products'] = related
 
         # Проверить, в избранном ли товар
         from orders.cart import Favorites
