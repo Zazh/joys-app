@@ -56,7 +56,30 @@
         @apply hidden pb-8 lg:block lg:sticky lg:top-20 lg:pb-16;
     }
     .stores-view--map .stores-list { @apply hidden lg:flex; }
-    .stores-view--map .stores-map-col { @apply block; }
+    /* Режим карты на мобильном: фиксированный слой на весь экран, без отступов
+       main-grid; шапка (z-50) остаётся поверх. max-lg — чтобы класс режима
+       не ломал сплит, если окно растянули до десктопа, не выйдя из карты */
+    .stores-view--map .stores-map-col {
+        @apply block max-lg:fixed max-lg:inset-0 max-lg:z-30 max-lg:pb-0;
+    }
+    .stores-view--map .stores-map {
+        @apply max-lg:h-dvh max-lg:rounded-none;
+    }
+    /* Пинч-зум есть, а кнопки +/- прятались бы под плашку чипов */
+    .stores-view--map .stores-map .leaflet-control-zoom {
+        @apply max-lg:hidden;
+    }
+    /* Чипы и «Рядом со мной» — плашкой поверх карты (канон шапки: white/75 + blur):
+       иначе в режиме карты не переключить город и не найти точки рядом */
+    .stores-view--map .stores-controls {
+        @apply max-lg:fixed max-lg:inset-x-0 max-lg:top-18 max-lg:z-40
+               max-lg:px-3 max-lg:py-2.5 max-lg:pb-3 max-lg:bg-white/75 max-lg:backdrop-blur-3xl;
+    }
+    /* Атрибуция OSM/CARTO обязана остаться видимой — поверх нижнего края карты */
+    .stores-view--map .map-attribution {
+        @apply max-lg:absolute max-lg:bottom-0 max-lg:right-0 max-lg:z-10 max-lg:m-0
+               max-lg:px-2 max-lg:py-1 max-lg:pt-1 max-lg:rounded-tl-lg max-lg:bg-white/75;
+    }
 
     /* isolate + z-0 — тот же контракт со шапкой, что у .map-container (_map.css) */
     .stores-map {
@@ -98,6 +121,11 @@
     .store-card__btn {
         @apply rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-bold
                transition-colors hover:border-black focus-brand;
+    }
+    /* Иконка 2ГИС без текста — зона нажатия расширена до 44px, как у .route-link */
+    .store-card__gis {
+        @apply relative block rounded-full transition-opacity hover:opacity-75
+               focus-brand after:absolute after:-inset-1.5 after:content-[''];
     }
 
     /* Плавающий переключатель Карта/Список (мобайл): над нижним краем, по центру */

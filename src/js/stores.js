@@ -299,20 +299,26 @@ function initStores() {
 
     function switchView(toMap) {
         layout.classList.toggle('stores-view--map', toMap);
+        // Карта раскрывается фиксированным слоем на весь экран — страница под
+        // ней не должна скроллиться (тот же приём, что у модалок)
+        document.body.classList.toggle('overflow-hidden', toMap);
         toggle.setAttribute('aria-pressed', String(toMap));
         toggle.querySelector('[data-icon-map]').classList.toggle('hidden', toMap);
         toggle.querySelector('[data-toggle-label-map]').classList.toggle('hidden', toMap);
         toggle.querySelector('[data-icon-list]').classList.toggle('hidden', !toMap);
         toggle.querySelector('[data-toggle-label-list]').classList.toggle('hidden', !toMap);
-        if (toMap) {
-            layout.scrollIntoView({ block: 'start' });
-            // Контейнер только что стал видимым — Leaflet о его размере не знает
-            if (map) requestAnimationFrame(() => map.invalidateSize());
-        }
+        // Контейнер только что стал видимым — Leaflet о его размере не знает
+        if (toMap && map) requestAnimationFrame(() => map.invalidateSize());
     }
 
     toggle.addEventListener('click', () => {
         switchView(!layout.classList.contains('stores-view--map'));
+    });
+
+    // Растянули окно до десктопа, не выйдя из карты, — возвращаем сплит,
+    // иначе body остался бы заблокированным, а кнопка выхода спрятана (lg:hidden)
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => {
+        if (e.matches) switchView(false);
     });
 
     // --------------------------------------------

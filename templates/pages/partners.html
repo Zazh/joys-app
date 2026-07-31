@@ -101,7 +101,11 @@
                                     <button type="button" class="store-card__btn" data-map-focus>{% trans "На карте" %}</button>
                                     {% endif %}
                                     {% if store.map_url %}
-                                    <a class="store-card__btn" href="{{ store.map_url }}" target="_blank" rel="noopener noreferrer">2ГИС</a>
+                                    {# Иконка вместо текста — подпись остаётся скринридеру, как в _route_links #}
+                                    <a class="store-card__gis" href="{{ store.map_url }}" target="_blank" rel="noopener noreferrer"
+                                       title="2ГИС" aria-label="{% trans 'Открыть точку в 2ГИС' %}">
+                                        {% include 'base/components/icons/_icon_2gis.html' %}
+                                    </a>
                                     {% endif %}
                                 </div>
                             </article>
