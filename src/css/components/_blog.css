@@ -13,6 +13,11 @@
 .blog-content ul {
     @apply list-disc pl-4 w-full md:w-[90%] lg:w-[80%];
 }
+/* Нумерованный список из редактора: preflight Tailwind гасит list-style,
+   и без своего правила ol рендерился без цифр */
+.blog-content ol {
+    @apply list-decimal pl-5 w-full md:w-[90%] lg:w-[80%];
+}
 .blog-content li {
     @apply text-base py-3 pl-3 hyphens-auto;
 }
