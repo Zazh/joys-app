@@ -10,7 +10,7 @@ from django.urls import reverse
 from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm, ContactsPageForm
 from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
-from pages.models import ContactSettings, Page
+from pages.models import ContactSettings, OfflineStore, Page
 
 User = get_user_model()
 
@@ -333,3 +333,64 @@ class LegacyPageEditorTests(TestCase):
         self.assertRedirects(response, reverse('backoffice:contacts'))
         self.page.refresh_from_db()
         self.assertEqual(self.page.title, 'Контакты')
+
+
+class OfflineStoreCrudTests(TestCase):
+    """CRUD оффлайн-точек: доступ и автозаполнение координат из ссылки 2ГИС."""
+
+    def setUp(self):
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+
+    @staticmethod
+    def payload(**overrides):
+        data = {
+            'city': 'Алматы', 'name': 'Flirtshop', 'address': 'Ермека Серкебаева, 287Б',
+            'map_url': '', 'lat': '', 'lng': '',
+            'fulfillment': 'pickup_delivery', 'is_active': 'on', 'order': '0',
+        }
+        data.update(overrides)
+        return data
+
+    def test_anonymous_redirected_to_login(self):
+        self.client.logout()
+        url = reverse('backoffice:store_list')
+        response = self.client.get(url)
+        self.assertRedirects(response, f'/backoffice/login/?next={url}',
+                             fetch_redirect_response=False)
+
+    def test_create_takes_coords_from_2gis_url(self):
+        """Пустые координаты заполняются из вставленной ссылки — тем же
+        разбором, что и разовый импорт."""
+        self.client.post(reverse('backoffice:store_create'), self.payload(
+            map_url='https://2gis.kz/almaty/branches/1/firm/2/76.898728%2C43.204689',
+        ))
+        store = OfflineStore.objects.get()
+        self.assertEqual((float(store.lat), float(store.lng)), (43.204689, 76.898728))
+
+    def test_manual_coords_win_over_url(self):
+        """Ручной ввод важнее ссылки: она может вести на список филиалов.
+        Запятая в дроби — не ошибка, у заказчика русская раскладка."""
+        self.client.post(reverse('backoffice:store_create'), self.payload(
+            lat='43,5', lng='76,5',
+            map_url='https://2gis.kz/almaty/firm/2/76.898728%2C43.204689',
+        ))
+        store = OfflineStore.objects.get()
+        self.assertEqual((float(store.lat), float(store.lng)), (43.5, 76.5))
+
+    def test_required_fields_validated(self):
+        response = self.client.post(reverse('backoffice:store_create'),
+                                    self.payload(city=''))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(OfflineStore.objects.count(), 0)
+
+    def test_edit_and_delete(self):
+        store = OfflineStore.objects.create(city='Алматы', name='Shhh',
+                                            address='Жамбыла, 180е')
+        self.client.post(reverse('backoffice:store_edit', args=[store.pk]),
+                         self.payload(name='Shhh!', address='Жамбыла, 180е'))
+        store.refresh_from_db()
+        self.assertEqual(store.name, 'Shhh!')
+        self.client.post(reverse('backoffice:store_delete', args=[store.pk]))
+        self.assertEqual(OfflineStore.objects.count(), 0)

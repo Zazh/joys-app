@@ -26,6 +26,10 @@ from .views.pages import (
 from .views.redirects import (
     RedirectListView, RedirectCreateView, RedirectEditView, RedirectDeleteView,
 )
+from .views.stores import (
+    OfflineStoreListView, OfflineStoreCreateView,
+    OfflineStoreEditView, OfflineStoreDeleteView,
+)
 from .views.upload import ImageUploadView
 from .views.users import (
     UserListView, UserDetailView, UserCreateView, UserEditView, UserToggleActiveView,
@@ -90,6 +94,10 @@ urlpatterns = [
     path('blog/create/', BlogPostCreateView.as_view(), name='blog_create'),
     path('blog/<int:pk>/', BlogPostEditView.as_view(), name='blog_edit'),
     # Редиректы
+    path('stores/', OfflineStoreListView.as_view(), name='store_list'),
+    path('stores/create/', OfflineStoreCreateView.as_view(), name='store_create'),
+    path('stores/<int:pk>/', OfflineStoreEditView.as_view(), name='store_edit'),
+    path('stores/<int:pk>/delete/', OfflineStoreDeleteView.as_view(), name='store_delete'),
     path('redirects/', RedirectListView.as_view(), name='redirect_list'),
     path('redirects/create/', RedirectCreateView.as_view(), name='redirect_create'),
     path('redirects/<int:pk>/', RedirectEditView.as_view(), name='redirect_edit'),

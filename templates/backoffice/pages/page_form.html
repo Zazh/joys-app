@@ -17,6 +17,14 @@
     {% csrf_token %}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 space-y-4">
+            {% if page.slug == 'partners' %}
+            {# У страницы своя вёрстка: точки берутся из раздела «Оффлайн точки», body не читается #}
+            <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl px-4 py-3">
+                Точки на этой странице редактируются в разделе
+                <a href="{% url 'backoffice:store_list' %}" class="underline font-medium">«Оффлайн точки»</a> —
+                поле «Содержимое» на сайте не отображается. Заголовок и мета-теги работают как обычно.
+            </div>
+            {% endif %}
             <!-- Content -->
             <div class="bg-white rounded-xl border border-stone-200" x-data="{ tab: 'ru' }">
                 <div class="px-4 py-3 border-b border-stone-100 flex items-center gap-4">
