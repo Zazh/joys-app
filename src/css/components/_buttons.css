@@ -26,7 +26,7 @@
         @apply w-12 h-6 lg:w-16 lg:h-8 lg:my-4 relative cursor-pointer z-100;
     }
     .btn-menu > .line-item {
-        @apply w-full h-[1.5px] bg-black absolute transition-all duration-300;
+        @apply w-full h-[2px] bg-black absolute transition-all duration-300;
     }
 
     /* whitespace-nowrap: длинные названия («Презервативы») рвались посреди слова, */
