@@ -20,8 +20,8 @@
     <link rel="alternate" hreflang="{{ link.lang }}" href="{{ link.url }}">
     {% endfor %}
 
-    {# Иконки. SVG — для браузеров, ICO — для тех, кто по традиции дёргает
-       /favicon.ico, PNG 96px — для Google: он требует размер, кратный 48. #}
+    {# Иконки. SVG — для браузеров, ICO — для тех, кто по традиции дёргает #}
+    {# /favicon.ico, PNG 96px — для Google: он требует размер, кратный 48. #}
     <link rel="icon" href="{% static 'dist/images/svgs/logo.svg' %}" type="image/svg+xml">
     <link rel="icon" href="{% static 'dist/images/favicon/favicon.ico' %}" sizes="16x16 32x32 48x48">
     <link rel="icon" href="{% static 'dist/images/favicon/favicon-96.png' %}" type="image/png" sizes="96x96">
@@ -29,8 +29,8 @@
     <link rel="manifest" href="{% static 'dist/images/favicon/site.webmanifest' %}">
     <meta name="theme-color" content="#e42521">
 
-    {# og:image по умолчанию — растр 1200×630. SVG-логотип, который стоял здесь
-       раньше, ни Facebook, ни WhatsApp, ни VK в превью не рендерят. #}
+    {# og:image по умолчанию — растр 1200×630. SVG-логотип, который стоял здесь #}
+    {# раньше, ни Facebook, ни WhatsApp, ни VK в превью не рендерят. #}
     <!-- Open Graph -->
     <meta property="og:site_name" content="DR.JOYS">
     <meta property="og:locale" content="{% if LANGUAGE_CODE == 'en' %}en_US{% elif LANGUAGE_CODE == 'kk' %}kk_KZ{% else %}ru_RU{% endif %}">
