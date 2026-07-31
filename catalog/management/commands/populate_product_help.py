@@ -47,22 +47,10 @@ PAGES = [
             '</ul>'
         ),
     },
-    {
-        'slug': 'protivopokazaniya',
-        'title': 'Противопоказания',
-        'body': (
-            '<ul>'
-            '<li>Индивидуальная непереносимость латекса или компонентов состава.</li>'
-            '<li>При появлении раздражения, зуда или дискомфорта прекратите '
-            'использование и обратитесь к врачу.</li>'
-            '<li>Не используйте изделия с повреждённой упаковкой или истёкшим '
-            'сроком годности.</li>'
-            '<li>При хронических заболеваниях кожи и слизистых предварительно '
-            'проконсультируйтесь со специалистом.</li>'
-            '</ul>'
-        ),
-    },
 ]
+# «Противопоказания» команда не создаёт: у владельца своя страница
+# (slug=contraindications), а созданный было дубль protivopokazaniya
+# удалён 31.07.2026. Существующую страницу только привязываем.
 
 
 class Command(BaseCommand):
@@ -79,6 +67,7 @@ class Command(BaseCommand):
             self.stdout.write(f'{"создана" if created else "уже есть"}: /{page.slug}/')
 
         size_modal = InteractiveModal.objects.filter(slug='tattoo', is_active=True).first()
+        contra_page = Page.objects.filter(slug='contraindications', is_published=True).first()
 
         for category in Category.objects.all():
             changed = []
@@ -91,8 +80,8 @@ class Command(BaseCommand):
             if not category.usage_page_id:
                 category.usage_page = pages['instrukciya-po-primeneniyu']
                 changed.append('инструкция')
-            if not category.contraindications_page_id:
-                category.contraindications_page = pages['protivopokazaniya']
+            if contra_page and not category.contraindications_page_id:
+                category.contraindications_page = contra_page
                 changed.append('противопоказания')
             if changed:
                 category.save()
