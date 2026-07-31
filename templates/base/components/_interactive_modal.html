@@ -36,7 +36,12 @@
                 </figure>
                 {% endif %}
                 {% if step.text %}<div class="modal-text">{{ step.text|sanitize }}</div>{% endif %}
+                {% if forloop.last %}
+                {# Контентный шаг оказался последним (модалка без формы) — «Далее» вело бы в никуда #}
+                <button type="button" class="btn-macro small danger w-full text-center mt-auto modal-close-interactive">{% trans "Закрыть" %}</button>
+                {% else %}
                 <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-next-step="{{ forloop.counter|add:'1' }}">{{ step.button_text }}</button>
+                {% endif %}
 
             {% elif step.step_type == 'form' %}
                 {% if step.text %}<div class="modal-text">{{ step.text|sanitize }}</div>{% endif %}

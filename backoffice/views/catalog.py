@@ -498,12 +498,24 @@ class CategoryListView(BackofficeAccessMixin, ListView):
         ).order_by('order', 'name')
 
 
+def _category_form_context(category):
+    """Списки для селектов «Справка на странице товара»."""
+    from modals.models import InteractiveModal
+    from pages.models import Page
+    return {
+        'category': category,
+        'help_modals': InteractiveModal.objects.filter(is_active=True).order_by('title'),
+        'help_pages': Page.objects.filter(is_published=True).order_by('title'),
+    }
+
+
 class CategoryEditView(BackofficeAccessMixin, View):
     def get(self, request, pk):
         category = get_object_or_404(Category, pk=pk)
-        return TemplateResponse(request, 'backoffice/catalog/category_form.html', {
-            'category': category,
-        })
+        return TemplateResponse(
+            request, 'backoffice/catalog/category_form.html',
+            _category_form_context(category),
+        )
 
     def post(self, request, pk):
         category = get_object_or_404(Category, pk=pk)
@@ -524,6 +536,12 @@ class CategoryEditView(BackofficeAccessMixin, View):
         category.meta_description_kk = request.POST.get('meta_description_kk', '').strip()
         category.meta_description_en = request.POST.get('meta_description_en', '').strip()
 
+        # Справка на странице товара: пустое значение селекта = ссылки нет
+        category.size_guide_modal_id = request.POST.get('size_guide_modal') or None
+        category.size_guide_page_id = request.POST.get('size_guide_page') or None
+        category.usage_page_id = request.POST.get('usage_page') or None
+        category.contraindications_page_id = request.POST.get('contraindications_page') or None
+
         if 'image' in request.FILES:
             category.image = request.FILES['image']
 
@@ -534,9 +552,10 @@ class CategoryEditView(BackofficeAccessMixin, View):
 
 class CategoryCreateView(BackofficeAccessMixin, View):
     def get(self, request):
-        return TemplateResponse(request, 'backoffice/catalog/category_form.html', {
-            'category': None,
-        })
+        return TemplateResponse(
+            request, 'backoffice/catalog/category_form.html',
+            _category_form_context(None),
+        )
 
     def post(self, request):
         category = Category(
@@ -555,6 +574,10 @@ class CategoryCreateView(BackofficeAccessMixin, View):
             meta_description_ru=request.POST.get('meta_description_ru', '').strip(),
             meta_description_kk=request.POST.get('meta_description_kk', '').strip(),
             meta_description_en=request.POST.get('meta_description_en', '').strip(),
+            size_guide_modal_id=request.POST.get('size_guide_modal') or None,
+            size_guide_page_id=request.POST.get('size_guide_page') or None,
+            usage_page_id=request.POST.get('usage_page') or None,
+            contraindications_page_id=request.POST.get('contraindications_page') or None,
         )
 
         if 'image' in request.FILES:
@@ -563,7 +586,7 @@ class CategoryCreateView(BackofficeAccessMixin, View):
         if not category.slug or not category.name_ru:
             messages.error(request, 'Название (RU) и slug обязательны.')
             return TemplateResponse(request, 'backoffice/catalog/category_form.html', {
-                'category': None,
+                **_category_form_context(None),
                 'post_data': request.POST,
             })
 

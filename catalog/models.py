@@ -19,6 +19,32 @@ class Category(models.Model):
     meta_title = models.CharField('META Title', max_length=200, blank=True)
     meta_description = models.TextField('META Description', blank=True)
 
+    # Справочные материалы на странице товара — свои у каждой категории,
+    # правятся в бэкофисе. «Как выбрать размер»: модалка в приоритете
+    # (у презервативов это промо с шагами), нет модалки — ссылка на страницу;
+    # нет ни того, ни другого — ссылки на товаре просто нет
+    size_guide_modal = models.ForeignKey(
+        'modals.InteractiveModal', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+',
+        verbose_name='Модалка «Как выбрать размер»',
+    )
+    size_guide_page = models.ForeignKey(
+        'pages.Page', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+',
+        verbose_name='Страница «Как выбрать размер»',
+        help_text='Открывается по ссылке, если модалка не выбрана',
+    )
+    usage_page = models.ForeignKey(
+        'pages.Page', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+',
+        verbose_name='Страница «Инструкция по применению»',
+    )
+    contraindications_page = models.ForeignKey(
+        'pages.Page', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+',
+        verbose_name='Страница «Противопоказания»',
+    )
+
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'

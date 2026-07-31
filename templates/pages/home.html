@@ -410,7 +410,9 @@
                 <p class="text-sm lg:text-xl leading-tight pt-5 lg:pt-10">{% if tattoo_promo %}{{ tattoo_promo.text|sanitize|linebreaksbr }}{% else %}DR.JOYS для смелых. Наша миссия - ломать стереотипы и выйти за пределы стандартов и рамок, навязанных обществом.{% endif %}</p>
             </div>
             <div class="w-full text-center absolute lg:static bottom-16">
-                <button type="button" class="btn-macro danger hover:bg-white hover:text-red-500" data-open-modal="tattoo">{% if tattoo_promo %}{{ tattoo_promo.button_text }}{% else %}Прочитать условие{% endif %}</button>
+                {# Текст кнопки: «Текст кнопки-триггера» модалки в приоритете — именно его правят #}
+                {# в разделе «Модалки»; раньше поле нигде не читалось и правка «не применялась» #}
+                <button type="button" class="btn-macro danger hover:bg-white hover:text-red-500" data-open-modal="tattoo">{% firstof tattoo_modal.trigger_text tattoo_promo.button_text _("Подробнее") %}</button>
             </div>
         </div>
     </div>
@@ -1356,35 +1358,9 @@
             });
         }
 
-        // --- Interactive modals (tattoo, etc.) ---
-        document.querySelectorAll('[data-modal-slug]').forEach(overlay => {
-            const slug = overlay.dataset.modalSlug;
-
-            // Open button: data-open-modal="slug"
-            document.querySelectorAll(`[data-open-modal="${slug}"]`).forEach(btn => {
-                btn.addEventListener('click', () => openModal(overlay));
-            });
-
-            // Close
-            overlay.querySelectorAll('.modal-close-interactive').forEach(btn => {
-                btn.addEventListener('click', () => closeModal(overlay));
-            });
-
-            // Steps
-            overlay.querySelectorAll('[data-next-step]').forEach(btn => {
-                btn.addEventListener('click', () => goToStep(overlay, btn.dataset.nextStep));
-            });
-            overlay.querySelectorAll('[data-prev-step]').forEach(btn => {
-                btn.addEventListener('click', () => goToStep(overlay, btn.dataset.prevStep));
-            });
-
-            // Click outside
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) closeModal(overlay);
-            });
-        });
-
-        {# Отправка форм заявок живёт в main.js (initInteractiveModalForms) — общая с формой на странице контактов #}
+        {# Обвязка интерактивных модалок (открытие/шаги/закрытие) и отправка их форм #}
+        {# живут в main.js (initInteractiveModals, initInteractiveModalForms): #}
+        {# та же модалка открывается и на странице товара («Как выбрать размер») #}
 
         // --- Partner modal (dynamic InteractiveModal) ---
         const partnerOverlay = document.getElementById('modal-partner');

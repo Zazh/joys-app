@@ -51,3 +51,54 @@ class BuyStateTests(TestCase):
         response = self.client.get(self.product.get_absolute_url())
         self.assertEqual(response.context['buy_state'], 'out_of_stock')
         self.assertIn('btn-cat--out', response.content.decode())
+
+
+class ProductHelpLinksTests(TestCase):
+    """Справка на странице товара: настройки категории из бэкофиса."""
+
+    def setUp(self):
+        self.category = Category.objects.create(name='Тест', slug='help-cat')
+        self.product = Product.objects.create(
+            name='Товар', slug='help-product', category=self.category, is_active=True,
+        )
+        ProductSize.objects.create(product=self.product, name='M', sku='H-M',
+                                   price=Decimal('1000'))
+
+    def test_no_settings_no_links(self):
+        """Пустые поля категории — ни гида по размеру, ни мёртвых href."""
+        html = self.client.get(self.product.get_absolute_url()).content.decode()
+        self.assertNotIn('Как выбрать размер?', html)
+        self.assertNotIn('href=""', html)
+
+    def test_size_guide_modal_wins_over_page(self):
+        from modals.models import InteractiveModal, ModalStep
+        from pages.models import Page
+        modal = InteractiveModal.objects.create(slug='size-guide', title='Размер')
+        ModalStep.objects.create(modal=modal, order=1, step_type='content', text='Шаг')
+        page = Page.objects.create(slug='size-page', title='Размеры', body='т')
+        self.category.size_guide_modal = modal
+        self.category.size_guide_page = page
+        self.category.save()
+
+        html = self.client.get(self.product.get_absolute_url()).content.decode()
+        self.assertIn('data-open-modal="size-guide"', html)
+        self.assertIn('id="modal-size-guide"', html)
+        self.assertNotIn('/size-page/', html)
+        # Единственный контентный шаг — он же последний: кнопка закрытия, а не «Далее»
+        self.assertIn('modal-close-interactive">Закрыть', html.replace('\n', ''))
+
+    def test_help_pages_linked_by_category(self):
+        from pages.models import Page
+        self.category.size_guide_page = Page.objects.create(
+            slug='size-page', title='Размеры', body='т')
+        self.category.usage_page = Page.objects.create(
+            slug='usage', title='Инструкция', body='т')
+        self.category.contraindications_page = Page.objects.create(
+            slug='contra', title='Противопоказания', body='т', is_published=False)
+        self.category.save()
+
+        html = self.client.get(self.product.get_absolute_url()).content.decode()
+        self.assertIn('/size-page/', html)
+        self.assertIn('/usage/', html)
+        # Неопубликованная страница — как пустое поле
+        self.assertNotIn('/contra/', html)

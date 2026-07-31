@@ -6,6 +6,8 @@ from django.views.generic import ListView, DetailView
 
 from core import seo
 
+from modals.models import InteractiveModal
+
 from .models import Category, Product, ProductSize, FAQ, RegionPrice, Stock
 from . import jsonld as jld
 
@@ -140,7 +142,10 @@ class ProductDetailView(DetailView):
         return (
             Product.objects
             .filter(is_active=True)
-            .select_related('category')
+            .select_related(
+                'category', 'category__size_guide_page',
+                'category__usage_page', 'category__contraindications_page',
+            )
             .prefetch_related(
                 Prefetch(
                     'sizes',
@@ -206,6 +211,23 @@ class ProductDetailView(DetailView):
             product.category.slug, self.DEFAULT_PHOTO_CAPTIONS,
         )
         ctx['package_caption'], ctx['individual_caption'] = captions
+
+        # Справочные материалы категории (правятся в бэкофисе). Модалка размера
+        # в приоритете над страницей; неопубликованная страница — как пустое поле
+        category = product.category
+        ctx['size_guide_modal'] = None
+        if category.size_guide_modal_id:
+            ctx['size_guide_modal'] = (
+                InteractiveModal.objects
+                .filter(pk=category.size_guide_modal_id, is_active=True)
+                .prefetch_related('steps', 'steps__inquiry_form', 'steps__inquiry_form__fields')
+                .first()
+            )
+        for key in ('size_guide_page', 'usage_page', 'contraindications_page'):
+            linked = getattr(category, key)
+            ctx[key] = linked if linked and linked.is_published else None
+        if ctx['size_guide_modal']:
+            ctx['size_guide_page'] = None
         characteristics = list(
             product.characteristics.select_related('characteristic__unit').all()
         )

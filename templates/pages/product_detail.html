@@ -122,9 +122,17 @@
                                     </button>
                                 </li>
                                 {% endfor %}
+                                {# Гид по размеру — настройка категории в бэкофисе: модалка (презервативы), #}
+                                {# страница (смазки и будущие категории) или ничего #}
+                                {% if size_guide_modal or size_guide_page %}
                                 <li class="size-dropdown__footer">
-                                    <a href="#" class="size-dropdown__help">{% trans "Как выбрать размер?" %}</a>
+                                    {% if size_guide_modal %}
+                                    <button type="button" class="size-dropdown__help" data-open-modal="{{ size_guide_modal.slug }}">{% trans "Как выбрать размер?" %}</button>
+                                    {% else %}
+                                    <a href="{{ size_guide_page.get_absolute_url }}" class="size-dropdown__help">{% trans "Как выбрать размер?" %}</a>
+                                    {% endif %}
                                 </li>
+                                {% endif %}
                             </ul>
                         </div>
                         <!-- END Size -->
@@ -169,8 +177,13 @@
                 <div class="lg:mt-auto mt-4 pt-8 lg:pb-4">
                     <ul class="flex flex-col gap-3">
                         <li class="product_links-item"><a href="#characters" class="w-full block">{% trans "СОСТАВ И ХАРАКТЕРИСТИКИ" %}</a></li>
-                        <li class="product_links-item"><a href="" class="w-full block">{% trans "Инструкция по применению" %}</a></li>
-                        <li class="product_links-item"><a href="" class="w-full block">{% trans "противопоказания" %}</a></li>
+                        {# Страницы категории из бэкофиса; поле пустое — пункта нет (раньше висели мёртвые href="") #}
+                        {% if usage_page %}
+                        <li class="product_links-item"><a href="{{ usage_page.get_absolute_url }}" class="w-full block">{% trans "Инструкция по применению" %}</a></li>
+                        {% endif %}
+                        {% if contraindications_page %}
+                        <li class="product_links-item"><a href="{{ contraindications_page.get_absolute_url }}" class="w-full block">{% trans "противопоказания" %}</a></li>
+                        {% endif %}
                     </ul>
                 </div>
                 <!-- прижать книзу на lg экранах -->
@@ -361,6 +374,9 @@
 {% include 'base/components/_modal_order_quantity.html' %}
 {% include 'base/components/_modal_delivery.html' %}
 {% include 'base/components/_modal_success.html' %}
+{# Гид по размеру категории (если это модалка): открывается из выпадашки размеров, #}
+{# обработчики — initInteractiveModals() в main.js #}
+{% include 'base/components/_interactive_modal.html' with modal=size_guide_modal %}
 {% endblock %}
 
 {% block scripts %}
