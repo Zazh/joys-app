@@ -205,6 +205,11 @@ VTB_USERNAME = os.environ.get('VTB_USERNAME', '')
 VTB_PASSWORD = os.environ.get('VTB_PASSWORD', '')
 
 # Halyk ePay (Казахстан)
+# Выключатель эквайринга: боевого токена у Халыка ещё нет, а дефолтные URL ниже —
+# тестовый контур, и без флага покупатель улетал бы «оплачивать» в песочницу.
+# Пока false — заказ КЗ падает менеджеру заявкой без онлайн-оплаты (get_gateway
+# отдаёт None). Появится токен: боевые креды в .env + HALYK_ENABLED=true.
+HALYK_ENABLED = os.environ.get('HALYK_ENABLED', '').lower() == 'true'
 HALYK_OAUTH_URL = os.environ.get('HALYK_OAUTH_URL', 'https://test-epay-oauth.epayment.kz/oauth2/token')
 HALYK_PAYMENT_URL = os.environ.get('HALYK_PAYMENT_URL', 'https://test-epay.epayment.kz/')
 HALYK_CLIENT_ID = os.environ.get('HALYK_CLIENT_ID', '')

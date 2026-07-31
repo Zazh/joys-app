@@ -70,7 +70,9 @@ class Order(models.Model):
 
     # Даты
     expires_at = models.DateTimeField('Истекает',
-        help_text='Срок действия счёта на оплату',
+        null=True, blank=True,
+        help_text='Срок действия счёта на оплату. Пусто — заказ без онлайн-оплаты, '
+                  'обрабатывается менеджером и не истекает',
     )
     created_at = models.DateTimeField('Создан', auto_now_add=True)
     paid_at = models.DateTimeField('Оплачен', null=True, blank=True)

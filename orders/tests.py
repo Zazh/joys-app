@@ -212,8 +212,11 @@ class HalykGatewayTest(PaymentTestBase):
         self.assertEqual(gw.code, 'halyk')
 
     def test_get_gateway_for_region_kz(self):
-        gw = get_gateway(self.region_kz)
-        self.assertIsInstance(gw, HalykGateway)
+        """Халык живёт за флагом: без боевого токена регион ведёт себя как
+        регион без эквайринга — заказ уходит менеджеру, а не в тестовый контур."""
+        self.assertIsNone(get_gateway(self.region_kz))
+        with override_settings(HALYK_ENABLED=True):
+            self.assertIsInstance(get_gateway(self.region_kz), HalykGateway)
 
     @patch.object(HalykGateway, '_get_token')
     def test_create_payment_success(self, mock_token):
@@ -743,3 +746,58 @@ class GatewayRegistryTest(TestCase):
 def order_number_to_invoice(name):
     """Хелпер — не используется напрямую, нужен для генерации invoice_id."""
     return ''
+
+
+# ─── Заказ без онлайн-оплаты (Халык выключен флагом) ───
+
+class ManualOrderFallbackTest(PaymentTestBase):
+    """Пока HALYK_ENABLED=False, заказ КЗ — заявка менеджеру: без редиректа
+    на оплату, без срока истечения, крон его не отменяет."""
+
+    def test_manual_order_survives_release_command(self):
+        from io import StringIO
+        from django.core.management import call_command
+
+        order = self._create_order(region=self.region_kz)
+        order.expires_at = None
+        order.save(update_fields=['expires_at'])
+        expired = self._create_order(region=self.region_kz)
+        expired.expires_at = timezone.now() - timedelta(minutes=1)
+        expired.save(update_fields=['expires_at'])
+
+        call_command('release_expired_orders', stdout=StringIO())
+
+        order.refresh_from_db()
+        expired.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+        self.assertEqual(expired.status, Order.Status.EXPIRED)
+
+    def test_checkout_json_returns_thanks_without_payment_url(self):
+        """Полный путь чекаута: заказ создан, payment_url нет (JS покажет
+        «Спасибо»), expires_at пуст — заявка не истечёт."""
+        from orders.models import CartItem
+        self.client.login(email='test@example.com', password='test12345')
+        # Авторизованный пользователь — корзина в БД, не в сессии
+        CartItem.objects.create(user=self.user, size=self.size_m, qty=2)
+        Stock.objects.get_or_create(
+            size=self.size_m, region=self.region_kz,
+            defaults={'quantity': 100, 'reserved': 0},
+        )
+
+        response = self.client.post(
+            '/orders/checkout/',
+            data=json.dumps({
+                'first_name': 'Тест', 'last_name': 'Тестов',
+                'phone': '+77001234567', 'email': 'test@example.com',
+                'city': 'Алматы', 'address': 'ул. Абая 1',
+            }),
+            content_type='application/json',
+        )
+        data = response.json()
+        self.assertTrue(data['ok'], data)
+        self.assertNotIn('payment_url', data)
+
+        order = Order.objects.get(number=data['order_number'])
+        self.assertEqual(order.status, Order.Status.PENDING)
+        self.assertIsNone(order.expires_at)
+        self.assertEqual(order.payment_gateway, '')

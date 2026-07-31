@@ -515,6 +515,11 @@ class CheckoutView(View):
         region = order.region
         gateway = get_gateway(region)
         if not gateway:
+            # Без онлайн-оплаты счёта нет — заказу нечему истекать. Иначе
+            # release_expired_orders через 30 минут отменил бы живую заявку,
+            # которую менеджер обрабатывает вручную
+            order.expires_at = None
+            order.save(update_fields=['expires_at'])
             return ''
 
         base = settings.PAYMENT_BASE_URL or ''
