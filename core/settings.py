@@ -250,6 +250,12 @@ GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '')
 # подтверждения; тег выводится в <head> только если значение задано
 GOOGLE_SITE_VERIFICATION = os.environ.get('GOOGLE_SITE_VERIFICATION', '')
 
+# Яндекс.Метрика — номера счётчиков через запятую; пусто = не подключается
+YM_COUNTER_IDS = [
+    c.strip() for c in os.environ.get('YM_COUNTER_IDS', '').split(',')
+    if c.strip().isdigit()
+]
+
 # CSP: пока только собираем нарушения в консоль браузера. После проверки,
 # что ничего не ломается, поставить CSP_REPORT_ONLY=false — политика
 # начнёт реально блокировать посторонние скрипты.

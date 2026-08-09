@@ -81,13 +81,20 @@ class ContentSecurityPolicyMiddleware:
             'https://cdnjs.cloudflare.com',
             'https://cdn.jsdelivr.net',
             'https://www.googletagmanager.com',
+            'https://mc.yandex.ru',
+            'https://mc.yandex.com',
         ]
         frames = [
             "'self'",
             'https://www.youtube.com',
             'https://player.vimeo.com',
         ]
-        connects = ["'self'", 'https://www.google-analytics.com']
+        connects = [
+            "'self'",
+            'https://www.google-analytics.com',
+            'https://mc.yandex.ru',
+            'https://mc.yandex.com',
+        ]
         if halyk:
             scripts.append(halyk)
             frames.append(halyk)

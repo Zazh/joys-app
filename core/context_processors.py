@@ -8,7 +8,10 @@ from core.seo import site_base_url
 
 
 def analytics(request):
-    return {'GA_MEASUREMENT_ID': settings.GA_MEASUREMENT_ID}
+    return {
+        'GA_MEASUREMENT_ID': settings.GA_MEASUREMENT_ID,
+        'YM_COUNTER_IDS': settings.YM_COUNTER_IDS,
+    }
 
 
 def seo(request):
