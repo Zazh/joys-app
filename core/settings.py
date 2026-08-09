@@ -15,6 +15,11 @@ CSRF_TRUSTED_ORIGINS = [
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Дефолтный 'same-origin' рвёт связь SSO-popup ↔ главное окно, как только
+# popup уходит на accounts.google.com: window.opener в popup обнуляется,
+# а ssoPopup.closed в главном окне начинает возвращать true раньше времени.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
 # Прод отдаётся только по HTTPS (redirect 80→443 в nginx), поэтому куки
 # помечаем Secure и включаем HSTS. В DEBUG не трогаем — иначе локальный
 # http://localhost:8009 перестанет логинить.

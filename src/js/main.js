@@ -1792,8 +1792,24 @@ function initAuthModal() {
     }
 
     // --- SSO POPUP ---
+    // ssoPopup.closed и window.opener ненадёжны: COOP рвёт связь окон,
+    // как только popup уходит на страницу провайдера. Поэтому основной
+    // канал — поллинг профиля до успеха или таймаута, а postMessage и
+    // BroadcastChannel из sso_callback.html лишь ускоряют реакцию.
+    function stopSSOWait() {
+        clearInterval(ssoPopupTimer);
+        ssoPopupTimer = null;
+        ssoPopup = null;
+    }
+
+    function handleSSOComplete(success) {
+        stopSSOWait();
+        if (success) handleAuthSuccess();
+    }
+
     authOverlay.querySelectorAll('[data-sso-provider]').forEach(btn => {
         btn.addEventListener('click', () => {
+            stopSSOWait();
             const provider = btn.dataset.ssoProvider;
             const w = 500, h = 600;
             const left = (screen.width - w) / 2;
@@ -1803,33 +1819,32 @@ function initAuthModal() {
                 'drjoys_sso',
                 'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',toolbar=no,menubar=no,scrollbars=yes'
             );
-            // Fallback: poll for popup close
-            clearInterval(ssoPopupTimer);
-            ssoPopupTimer = setInterval(() => {
-                if (!ssoPopup || ssoPopup.closed) {
-                    clearInterval(ssoPopupTimer);
-                    ssoPopup = null;
-                    checkAuthAfterSSO();
-                }
-            }, 500);
+            let attempts = 0;
+            ssoPopupTimer = setInterval(async () => {
+                if (++attempts > 90) { stopSSOWait(); return; } // ~3 мин на вход
+                try {
+                    const resp = await fetch(`/${window.DRJOYS.lang}/accounts/profile/`);
+                    const data = await resp.json();
+                    if (data.ok) handleSSOComplete(true);
+                } catch (e) { /* ещё не авторизован — ждём дальше */ }
+            }, 2000);
         });
     });
 
-    async function checkAuthAfterSSO() {
-        try {
-            const resp = await fetch(`/${window.DRJOYS.lang}/accounts/profile/`);
-            const data = await resp.json();
-            if (data.ok) handleAuthSuccess();
-        } catch (e) { /* not authenticated */ }
+    // Мгновенный сигнал из sso_callback.html — переживает COOP
+    if (typeof BroadcastChannel !== 'undefined') {
+        const ssoChannel = new BroadcastChannel('drjoys_sso');
+        ssoChannel.addEventListener('message', (event) => {
+            if (!event.data || event.data.type !== 'sso_complete') return;
+            handleSSOComplete(event.data.success);
+        });
     }
 
     // Listen for postMessage from SSO popup
     window.addEventListener('message', (event) => {
         if (event.origin !== window.location.origin) return;
         if (!event.data || event.data.type !== 'sso_complete') return;
-        clearInterval(ssoPopupTimer);
-        ssoPopup = null;
-        if (event.data.success) handleAuthSuccess();
+        handleSSOComplete(event.data.success);
     });
 
     // --- Close handlers ---

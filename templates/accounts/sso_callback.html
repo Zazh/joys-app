@@ -16,24 +16,35 @@
         var success = {{ sso_success|yesno:"true,false" }};
         var payload = { type: 'sso_complete', success: success };
 
-        // Попытка 1: postMessage (если opener жив)
+        // Канал 1: BroadcastChannel — не зависит от window.opener,
+        // который COOP обнуляет после захода на страницу Google
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                var ch = new BroadcastChannel('drjoys_sso');
+                ch.postMessage(payload);
+                ch.close();
+            }
+        } catch(e) {}
+
+        // Канал 2: postMessage (если opener пережил COOP)
         if (window.opener && !window.opener.closed) {
             try {
                 window.opener.postMessage(payload, window.location.origin);
             } catch(e) {}
-            window.close();
-            return;
         }
 
-        // Попытка 2: popup закроется, и fallback polling в main.js подхватит
-        // Просто закрываем окно — если это popup, main.js увидит ssoPopup.closed
-        try { window.close(); } catch(e) {}
+        // Канал 3: main.js в любом случае поллит /accounts/profile/
+
+        // Пауза перед close — даём BroadcastChannel доставить сообщение
+        setTimeout(function() {
+            try { window.close(); } catch(e) {}
+        }, 100);
 
         // Если window.close() не сработал (не popup, а основное окно) —
         // редирект на каталог
         setTimeout(function() {
             window.location.href = '/ru/catalog/';
-        }, 300);
+        }, 500);
     })();
     </script>
 </body>
