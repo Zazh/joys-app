@@ -97,11 +97,34 @@
 }
 
 .features-pause {
-    @apply w-12 h-12 rounded-full flex items-center justify-center bg-black/10 backdrop-blur-xl;
+    @apply w-12 h-12 rounded-full flex items-center justify-center bg-black/10 backdrop-blur-xl relative;
 }
 
 .features-pause .hidden {
     display: none;
+}
+
+/* Кольцо-таймер до переключения слайда.
+   Канон — .slider-progress-circle на странице товара; фон подложки
+   здесь не нужен: его роль играет сама кнопка с блюром. */
+.features-progress-circle {
+    @apply absolute inset-0 w-full h-full -rotate-90 pointer-events-none;
+}
+
+.features-progress-circle .progress-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.3);
+    stroke-width: 2;
+}
+
+.features-progress-circle .progress-bar {
+    fill: none;
+    stroke: white;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    transition: stroke-dashoffset 0.1s linear;
 }
 
 /* Mobile */

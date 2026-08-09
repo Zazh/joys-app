@@ -204,6 +204,10 @@
                 {% endfor %}
             </div>
             <button class="features-pause">
+                <svg class="features-progress-circle" viewBox="0 0 36 36" aria-hidden="true">
+                    <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
+                    <circle class="progress-bar" cx="18" cy="18" r="16"></circle>
+                </svg>
                 <svg class="pause-icon" width="14" height="16" viewBox="0 0 14 16" fill="none">
                     <rect width="4" height="16" rx="1" fill="white"/>
                     <rect x="10" width="4" height="16" rx="1" fill="white"/>
@@ -663,10 +667,12 @@
         const pauseBtn = document.querySelector('.features-pause');
         const pauseIcon = pauseBtn?.querySelector('.pause-icon');
         const playIcon = pauseBtn?.querySelector('.play-icon');
+        const progressBar = pauseBtn?.querySelector('.progress-bar');
 
         if (!carousel || !section) return;
 
         const cards = carousel.querySelectorAll('.features-card');
+        const AUTOPLAY_MS = 4000;
         let currentIndex = 0;
         let isPlaying = true;
         let isVisible = false;
@@ -733,22 +739,35 @@
             currentIndex = index;
         };
 
-        // Autoplay
+        // Autoplay: один интервал 100 мс и ведёт кольцо-таймер на кнопке паузы,
+        // и переключает слайд, когда кольцо замкнулось (канон — слайдер товара)
         const startAutoplay = () => {
             if (autoplayInterval) clearInterval(autoplayInterval);
             if (!isPlaying || !isVisible) return;
 
+            let progress = 0;
+            const step = 100 / (AUTOPLAY_MS / 100);
+            if (progressBar) progressBar.style.strokeDashoffset = 100;
+
             autoplayInterval = setInterval(() => {
-                if (!isDragging && isPlaying && isVisible) {
+                if (isDragging || !isPlaying || !isVisible) return;
+
+                progress += step;
+                if (progressBar) progressBar.style.strokeDashoffset = Math.max(100 - progress, 0);
+
+                if (progress >= 100) {
                     const nextIndex = (currentIndex + 1) % cards.length;
                     scrollToCard(nextIndex);
                     updateDots(nextIndex);
+                    progress = 0;
+                    if (progressBar) progressBar.style.strokeDashoffset = 100;
                 }
-            }, 4000);
+            }, 100);
         };
 
         const stopAutoplay = () => {
             clearInterval(autoplayInterval);
+            if (progressBar) progressBar.style.strokeDashoffset = 100;
         };
 
         // Intersection Observer
