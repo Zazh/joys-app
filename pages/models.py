@@ -256,6 +256,10 @@ class FeatureSlide(models.Model):
         BLACK = 'black', 'Чёрный (на светлом фоне)'
         WHITE = 'white', 'Белый (на тёмном фоне)'
 
+    class ButtonColor(models.TextChoices):
+        WHITE = 'white', 'Белая'
+        RED = 'red', 'Красная'
+
     title = models.CharField('Заголовок', max_length=300)
     text = models.TextField(
         'Текст',
@@ -265,6 +269,15 @@ class FeatureSlide(models.Model):
         'Цвет текста', max_length=10,
         choices=TextColor.choices, default=TextColor.BLACK,
         help_text='Цвет заголовка и текста. На светлом фоне — чёрный, на тёмном — белый.',
+    )
+    button_text = models.CharField(
+        'Текст кнопки', max_length=100, blank=True,
+        help_text='Кнопка выводится, только если заполнены и текст, и ссылка',
+    )
+    button_url = models.CharField('Ссылка кнопки', max_length=500, blank=True)
+    button_color = models.CharField(
+        'Цвет кнопки', max_length=10,
+        choices=ButtonColor.choices, default=ButtonColor.WHITE,
     )
     media_type = models.CharField(
         'Тип контента', max_length=5,
@@ -302,6 +315,10 @@ class FeatureSlide(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def button_is_external(self):
+        return self.button_url.startswith('http')
 
 
 class PromoBlock(models.Model):

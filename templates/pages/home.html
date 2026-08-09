@@ -176,6 +176,11 @@
                 <div class="features-card-content">
                     {{ slide.text|sanitize|linebreaksbr }}
                 </div>
+                {% if slide.button_text and slide.button_url %}
+                <div>
+                    <a href="{{ slide.button_url }}" class="features-card-btn features-card-btn--{{ slide.button_color }}"{% if slide.button_is_external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ slide.button_text }}</a>
+                </div>
+                {% endif %}
             </div>
             <div class="absolute inset-0 z-0">
                 {% if slide.media_type == 'video' and slide.video %}

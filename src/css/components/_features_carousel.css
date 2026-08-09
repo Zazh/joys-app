@@ -11,6 +11,7 @@
    Язык для словаря переносов берётся из <html lang> */
 .features-card-title {
     @apply hyphens-auto text-balance break-words;
+    line-height: 1;
 }
 
 /* Размер задаём на контейнере: текст из бэкофиса приходит и голыми
@@ -24,6 +25,17 @@
 }
 .features-card-container {
     @apply flex flex-col gap-5 mx-0 px-5 my-8 lg:px-0 lg:mx-[5rem] lg:my-[3.75rem] w-full max-w-105 relative z-10;
+}
+
+/* Кнопка слайда: текст и цвет (белая/красная) задаются в бэкофисе */
+.features-card-btn {
+    @apply inline-block font-benzin text-xs lg:text-sm px-6 py-4 lg:px-7 lg:py-5 rounded-full leading-tight focus-brand transition-colors;
+}
+.features-card-btn--white {
+    @apply bg-white text-black hover:bg-red-500 hover:text-white;
+}
+.features-card-btn--red {
+    @apply bg-red-500 text-white hover:bg-white hover:text-black;
 }
 .features-bg-picture {
     @apply block w-full h-full;

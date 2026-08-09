@@ -35,7 +35,7 @@ class HeroSectionTO(TranslationOptions):
 
 @register(FeatureSlide)
 class FeatureSlideTO(TranslationOptions):
-    fields = ('title', 'text')
+    fields = ('title', 'text', 'button_text')
 
 
 @register(PromoBlock)

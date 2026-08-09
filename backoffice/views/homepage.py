@@ -150,6 +150,11 @@ class FeatureSlideEditView(BackofficeAccessMixin, View):
         slide.text_kk = request.POST.get('text_kk', '').strip()
         slide.text_en = request.POST.get('text_en', '').strip()
         slide.text_color = request.POST.get('text_color', 'black')
+        slide.button_text_ru = request.POST.get('button_text_ru', '').strip()
+        slide.button_text_kk = request.POST.get('button_text_kk', '').strip()
+        slide.button_text_en = request.POST.get('button_text_en', '').strip()
+        slide.button_url = request.POST.get('button_url', '').strip()
+        slide.button_color = request.POST.get('button_color', 'white')
         slide.media_type = request.POST.get('media_type', 'image')
         slide.order = int(request.POST.get('order', 0) or 0)
         slide.is_active = request.POST.get('is_active') == 'on'
