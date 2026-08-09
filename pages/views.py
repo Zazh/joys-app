@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView, TemplateView
 
-from django.db.models import Avg, Count, Q, Value
+from django.db.models import Avg, Count, Prefetch, Q, Value
 from django.db.models.functions import Coalesce, Length
 
 from catalog import jsonld as jld
@@ -17,7 +17,8 @@ from .jsonld import (
     build_offline_stores_jsonld,
 )
 from .models import (
-    PageCategory, Page, BlogPost, HeroSection, FeatureSlide, PromoBlock, OfflineStore,
+    PageCategory, Page, BlogPost, HeroSection, HeroCard, FeatureSlide, PromoBlock,
+    OfflineStore,
 )
 
 
@@ -30,7 +31,10 @@ class HomeView(TemplateView):
         hero = (
             HeroSection.objects
             .filter(is_active=True)
-            .prefetch_related('cards')
+            .prefetch_related(Prefetch(
+                'cards',
+                HeroCard.objects.select_related('product__category'),
+            ))
             .first()
         )
         if hero:

@@ -35,10 +35,13 @@ class HomepageOverviewView(BackofficeAccessMixin, View):
 
 class HeroEditView(BackofficeAccessMixin, View):
     def get(self, request):
-        hero = HeroSection.objects.prefetch_related('cards').first()
+        hero = HeroSection.objects.prefetch_related('cards__product').first()
         if not hero:
             hero = HeroSection.objects.create(title='', is_active=True)
-        return TemplateResponse(request, 'backoffice/homepage/hero_form.html', {'hero': hero})
+        return TemplateResponse(request, 'backoffice/homepage/hero_form.html', {
+            'hero': hero,
+            'products': Product.objects.filter(is_active=True).order_by('name_ru'),
+        })
 
     def post(self, request):
         hero = HeroSection.objects.first()
@@ -79,6 +82,7 @@ class HeroCardUploadView(BackofficeAccessMixin, View):
             card = HeroCard(hero=hero, image=image, order=order)
             if count_image:
                 card.count_image = count_image
+            card.product_id = request.POST.get('product') or None
             card.save()
             messages.success(request, 'Карточка добавлена.')
         return redirect('backoffice:homepage_hero')
@@ -94,6 +98,8 @@ class HeroCardUpdateView(BackofficeAccessMixin, View):
             card.count_image = request.FILES['count_image']
         if request.POST.get('clear_count_image') == 'on':
             card.count_image = ''
+        if 'product' in request.POST:
+            card.product_id = request.POST.get('product') or None
         order = request.POST.get('order')
         if order is not None:
             card.order = int(order or 0)

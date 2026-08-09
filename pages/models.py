@@ -227,6 +227,13 @@ class HeroCard(models.Model):
         help_text='SVG-картинка с числом (5.svg, 17.svg, 30.svg)',
         blank=True,
     )
+    product = models.ForeignKey(
+        'catalog.Product', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='hero_cards',
+        verbose_name='Товар',
+        help_text='Страница товара, куда ведёт карточка '
+                  '(и кнопка «Купить» на мобильных, пока карточка активна)',
+    )
     order = models.PositiveIntegerField('Порядок', default=0)
 
     class Meta:

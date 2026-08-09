@@ -35,7 +35,7 @@
 
     <div class="hero-carousel-container gap-2 lg:gap-0 flex justify-center items-center relative pb-6 pt-12 h-[23rem] max-lg:px-[30%] max-lg:justify-start">
             <!-- Card 1 -->
-            <div class="w-[240px]">
+            <a href="{% if card1 and card1.product %}{{ card1.product.get_absolute_url }}{% else %}{% url 'catalog:catalog' %}{% endif %}" data-hero-card class="w-[240px] block focus-brand rounded-3xl">
                 <div class="hero-carousel-card bg-white" data-parallax>
                     <!-- background -->
                     <div class="hero-carousel-card_layer [ rotate-[4deg] ] [ flex items-center justify-center ]" data-depth="0.2">
@@ -66,10 +66,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Card 2 -->
-            <div class="w-[240px]">
+            <a href="{% if card2 and card2.product %}{{ card2.product.get_absolute_url }}{% else %}{% url 'catalog:catalog' %}{% endif %}" data-hero-card class="w-[240px] block focus-brand rounded-3xl">
                 <div class="hero-carousel-card bg-white [ active ]" data-parallax>
                     <!-- background -->
                     <div class="hero-carousel-card_layer [ rotate-[1deg] ] [ flex items-center justify-center ]" data-depth="0.2">
@@ -114,10 +114,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Card 3 -->
-            <div class="w-[240px]">
+            <a href="{% if card3 and card3.product %}{{ card3.product.get_absolute_url }}{% else %}{% url 'catalog:catalog' %}{% endif %}" data-hero-card class="w-[240px] block focus-brand rounded-3xl">
                 <div class="hero-carousel-card bg-white " data-parallax>
                     <!-- background -->
                     <div class="hero-carousel-card_layer [ -rotate-[4deg] ] [ flex items-center justify-center ]" data-depth="0.2">
@@ -147,14 +147,18 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
     <div class="flex justify-center items-center gap-2 pb-10">
         {% if hero %}
-        <a href="{{ hero.get_catalog_url }}" class="btn-macro danger">{{ hero.button_catalog_text }}</a>
+        <a href="{{ hero.get_catalog_url }}" class="btn-macro default lg:hidden">{{ hero.button_catalog_text }}</a>
+        <a id="heroBuyBtn" href="{% if card2 and card2.product %}{{ card2.product.get_absolute_url }}{% else %}{{ hero.get_catalog_url }}{% endif %}" class="btn-macro danger lg:hidden">{{ hero.button_buy_text }}</a>
+        <a href="{{ hero.get_catalog_url }}" class="btn-macro danger hidden lg:inline-block">{{ hero.button_catalog_text }}</a>
         {% else %}
-        <button class="btn-macro danger">В каталог</button>
+        <a href="{% url 'catalog:catalog' %}" class="btn-macro default lg:hidden">{% trans "В каталог" %}</a>
+        <a id="heroBuyBtn" href="{% url 'catalog:catalog' %}" class="btn-macro danger lg:hidden">{% trans "Купить" %}</a>
+        <a href="{% url 'catalog:catalog' %}" class="btn-macro danger hidden lg:inline-block">{% trans "В каталог" %}</a>
         {% endif %}
     </div>
 </section>
@@ -600,6 +604,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const container = document.querySelector('.hero-carousel-container');
         const cards = document.querySelectorAll('.hero-carousel-card');
+        const buyBtn = document.getElementById('heroBuyBtn');
 
         if (window.innerWidth >= 1024) return; // Только mobile
 
@@ -622,14 +627,19 @@
             });
 
             cards.forEach(card => card.classList.remove('active'));
-            if (closestCard) closestCard.classList.add('active');
+            if (closestCard) {
+                closestCard.classList.add('active');
+                // Красная кнопка ведёт на товар активной карточки
+                const link = closestCard.closest('[data-hero-card]');
+                if (buyBtn && link) buyBtn.href = link.href;
+            }
         };
 
         // Прокрутка ко второй карточке при загрузке
         const scrollToCenter = () => {
             const centerCard = cards[1]; // Вторая карточка
             if (centerCard) {
-                const wrapper = centerCard.closest('.hero-carousel-container > div');
+                const wrapper = centerCard.closest('[data-hero-card]');
                 const scrollLeft = wrapper.offsetLeft - (container.offsetWidth - wrapper.offsetWidth) / 2;
                 container.scrollLeft = scrollLeft;
             }

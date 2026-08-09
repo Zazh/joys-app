@@ -64,7 +64,8 @@
         display: none; /* Chrome, Safari */
     }
 
-    .hero-carousel-container > div {
+    /* Обёртки карточек — ссылки на товар (<a data-hero-card>) */
+    .hero-carousel-container > * {
         scroll-snap-align: center;
         flex-shrink: 0;
     }
