@@ -9,9 +9,11 @@
 
 {% block content %}
 <main>
-    <section class="main-grid">
-        <div class="col-span-full lg:col-span-13 xl:col-span-9 xl:col-start-2">
-            <div class="blog-container pt-30 pb-20 text-center">
+    {# min-h-svh + pt-18 (высота fixed-шапки) + content-center: блок стоит #}
+    {# по центру видимой области на любом экране, сетка растянута на весь вьюпорт #}
+    <section class="main-grid min-h-svh pt-18 content-center">
+        <div class="col-span-full text-center py-16">
+            <div>
                 <p class="display-1 font-benzin text-red-500">404</p>
                 <h1 class="page-title pt-4">{% trans "Такой страницы нет" %}</h1>
                 <p class="pt-4 text-stone-500">
