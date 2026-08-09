@@ -2061,6 +2061,29 @@ function initRegionDropdown() {
     if (regionModal && !regionModal.classList.contains('hidden')) {
         openModal(regionModal);
     }
+
+    // Шаги модалки: «Выбрать другой» → список регионов, «Назад» → шаг 1
+    if (regionModal) {
+        const showListBtn = document.getElementById('regionShowList');
+        const regionBackBtn = document.getElementById('regionBackBtn');
+        if (showListBtn) {
+            showListBtn.addEventListener('click', () => {
+                goToStep(regionModal, '2');
+                if (regionBackBtn) regionBackBtn.classList.remove('hidden');
+            });
+        }
+        if (regionBackBtn) {
+            regionBackBtn.addEventListener('click', () => {
+                goToStep(regionModal, '1');
+                regionBackBtn.classList.add('hidden');
+            });
+        }
+        // closeModal сбрасывает шаги на первый — прячем «Назад» и при закрытии
+        const regionCloseBtn = regionModal.querySelector('.modal-close');
+        if (regionCloseBtn && regionBackBtn) {
+            regionCloseBtn.addEventListener('click', () => regionBackBtn.classList.add('hidden'));
+        }
+    }
 }
 
 // --------------------------------------------
