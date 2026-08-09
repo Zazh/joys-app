@@ -246,6 +246,10 @@ WB_API_TOKEN = os.environ.get('WB_API_TOKEN', '')
 # Google Analytics 4 — счётчик подключается в base.html только если ID задан
 GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '')
 
+# Подтверждение владения в Google Search Console — content из HTML-тега
+# подтверждения; тег выводится в <head> только если значение задано
+GOOGLE_SITE_VERIFICATION = os.environ.get('GOOGLE_SITE_VERIFICATION', '')
+
 # CSP: пока только собираем нарушения в консоль браузера. После проверки,
 # что ничего не ломается, поставить CSP_REPORT_ONLY=false — политика
 # начнёт реально блокировать посторонние скрипты.

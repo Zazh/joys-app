@@ -12,6 +12,9 @@
     {# SITE_INDEXABLE=False (staging, превью) — страницы не должны попасть в индекс #}
     {% if not site_indexable %}<meta name="robots" content="noindex, nofollow">{% endif %}
 
+    {# Подтверждение владения в Search Console — значение из .env #}
+    {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
+
     <!-- Canonical: боевой домен из SITE_URL, без utm/gclid — см. core.context_processors -->
     <link rel="canonical" href="{{ canonical_url }}">
 

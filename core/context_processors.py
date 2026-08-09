@@ -25,6 +25,7 @@ def seo(request):
         'canonical_url': _canonical_url(request),
         'hreflang_links': _hreflang_links(request),
         'site_indexable': settings.SITE_INDEXABLE,
+        'google_site_verification': settings.GOOGLE_SITE_VERIFICATION,
     }
 
 
