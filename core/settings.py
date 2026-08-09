@@ -184,9 +184,16 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Все загружаемые файлы получают латинские имена (core/storage.py)
+# Прод: ManifestStaticFilesStorage — collectstatic хэширует имена
+# (main.abc123.js), {% static %} отдаёт хэшированный URL. Каждый деплой
+# статики сам сбрасывает кэш у пользователей, версии руками не бампаем.
 STORAGES = {
     'default': {'BACKEND': 'core.storage.TranslitFileSystemStorage'},
-    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+        if DEBUG else
+        'core.staticfiles.LenientManifestStaticFilesStorage',
+    },
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
