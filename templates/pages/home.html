@@ -803,6 +803,10 @@
 
             if (closestIndex !== currentIndex) {
                 updateDots(closestIndex);
+                // Свайп/драг — отсчёт до автопереключения заново.
+                // Собственный плавный скролл автоплея сюда не попадает:
+                // updateDots уже вызван, индексы совпадают
+                startAutoplay();
             }
         };
 
