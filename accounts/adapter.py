@@ -14,6 +14,12 @@ class AccountAdapter(DefaultAccountAdapter):
     def get_login_redirect_url(self, request):
         return '/accounts/sso-callback/'
 
+    def get_signup_redirect_url(self, request):
+        # Новый пользователь через SSO идёт по signup-пути; без перекрытия
+        # allauth редиректил бы на дефолтный /accounts/profile/ — а это
+        # DRF-эндпоинт, попап показывал голый JSON профиля
+        return '/accounts/sso-callback/'
+
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
     """
