@@ -1176,7 +1176,18 @@ function initOrderQuantity() {
     // Go to checkout page
     const goToDeliveryBtn = document.getElementById('goToDeliveryBtn');
     if (goToDeliveryBtn) {
-        goToDeliveryBtn.addEventListener('click', () => {
+        goToDeliveryBtn.addEventListener('click', async () => {
+            // Сначала кладём выбранный размер в корзину — иначе checkout
+            // увидит пустую корзину и средиректит обратно в каталог
+            const sizeId = addToCartBtn ? addToCartBtn.dataset.sizeId : '';
+            if (sizeId) {
+                const qty = parseInt(qtyValue.textContent) || 1;
+                goToDeliveryBtn.disabled = true;
+                const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
+                goToDeliveryBtn.disabled = false;
+                if (!result.ok) return;
+                updateBadges(result.cart_count, null);
+            }
             closeModal(document.getElementById('modalOrderQuantity'));
             window.location.href = '/orders/checkout/';
         });
