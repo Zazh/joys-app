@@ -122,7 +122,9 @@
     stroke: white;
     stroke-width: 2;
     stroke-linecap: round;
-    stroke-dasharray: 100;
+    /* Второе число > длины окружности (~100.5): паттерн не повторяется,
+       иначе при сброшенном кольце наверху торчал кончик следующего штриха */
+    stroke-dasharray: 100 101;
     stroke-dashoffset: 100;
     transition: stroke-dashoffset 0.1s linear;
 }
