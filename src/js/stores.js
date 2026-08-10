@@ -6,6 +6,7 @@
 // ============================================
 import L from 'leaflet';
 import { addBrandTiles, brandPinIcon } from './lib/brand-map.js';
+import { onReady } from './lib/on-ready.js';
 
 // На этом зуме и мельче вместо пинов — кластеры городов: полсотни пинов
 // на карте всей страны слипаются в кашу над Алматы
@@ -15,14 +16,6 @@ const CITY_FOCUS_MAX_ZOOM = 14;
 // Ближайшая точка не дальше этого — считаем, что юзер в её городе,
 // и включаем чип города вместо «Все»
 const NEAR_CITY_KM = 30;
-
-function onReady(fn) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fn);
-    } else {
-        fn();
-    }
-}
 
 const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches;
 

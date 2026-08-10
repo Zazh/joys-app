@@ -5,14 +5,7 @@
 import L from 'leaflet';
 import { addBrandTiles, brandPinIcon } from './lib/brand-map.js';
 import { initInquiryForm } from './lib/inquiry-form.js';
-
-function onReady(fn) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fn);
-    } else {
-        fn();
-    }
-}
+import { onReady } from './lib/on-ready.js';
 
 // Содержимое попапа лежит в <template> шаблона: адрес, часы и иконки маршрутов
 // остаются в Django (переводы, {% include %} иконок), JS их только клонирует
