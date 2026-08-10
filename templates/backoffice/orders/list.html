@@ -76,7 +76,8 @@
                     <td class="px-4 py-2.5">{{ order.customer_name|default:"—" }}</td>
                     <td class="px-4 py-2.5 text-stone-500">{{ order.customer_phone|default:"—" }}</td>
                     <td class="px-4 py-2.5 text-stone-500">{{ order.region.name|default:"—" }}</td>
-                    <td class="px-4 py-2.5 font-medium">{{ order.display_amount|floatformat:0 }} {{ order.region.currency_symbol|default:"₸" }}</td>
+                    {# display_amount есть только у заказов с конвертацией валюты; у KZ сумма лежит в total_amount #}
+                    <td class="px-4 py-2.5 font-medium">{{ order.display_amount|default_if_none:order.total_amount|floatformat:0 }} {{ order.region.currency_symbol|default:"₸" }}</td>
                     <td class="px-4 py-2.5 text-stone-500">{{ order.items_count }}</td>
                     <td class="px-4 py-2.5 text-stone-500">{{ order.created_at|date:"d.m.Y H:i" }}</td>
                 </tr>

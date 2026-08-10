@@ -57,7 +57,8 @@
                         <tr class="bg-stone-50">
                             <td colspan="4" class="px-4 py-2.5 text-right font-bold">Итого:</td>
                             <td class="px-4 py-2.5 text-right font-bold">
-                                {{ order.display_amount|floatformat:0 }} {{ order.region.currency_symbol|default:"₸" }}
+                                {# display_amount заполняется только при конвертации (регион с оплатой в другой валюте); для KZ его нет — там сумма сразу в total_amount #}
+                                {{ order.display_amount|default_if_none:order.total_amount|floatformat:0 }} {{ order.region.currency_symbol|default:"₸" }}
                             </td>
                         </tr>
                     </tfoot>
