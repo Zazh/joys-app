@@ -3,142 +3,16 @@
 // ============================================
 import { apiPost } from './lib/api.js';
 import { initInquiryForm } from './lib/inquiry-form.js';
-
-// Инициализация после построения DOM — не ждём загрузки картинок и шрифтов
-// (window 'load' оставлен только там, где меряются размеры картинок)
-function onReady(fn) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fn);
-    } else {
-        fn();
-    }
-}
-
-// --------------------------------------------
-// 0. УНИВЕРСАЛЬНЫЕ УТИЛИТЫ МОДАЛОК
-// --------------------------------------------
-function openModal(overlay) {
-    if (!overlay) return;
-    overlay.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    // Close burger menu if open
-    if (window._closeMenu) window._closeMenu();
-    // Dispatch custom event for modals that need to load data
-    overlay.dispatchEvent(new CustomEvent('modal:open'));
-}
-
-function closeModal(overlay) {
-    if (!overlay) return;
-    overlay.classList.add('hidden');
-    document.body.style.overflow = '';
-    // Reset to step 1
-    const steps = overlay.querySelectorAll('.modal-step');
-    steps.forEach((step, i) => {
-        step.classList.toggle('hidden', i !== 0);
-    });
-}
-
-function goToStep(overlay, stepNum) {
-    if (!overlay) return;
-    overlay.querySelectorAll('.modal-step').forEach(step => {
-        step.classList.toggle('hidden', step.dataset.step !== String(stepNum));
-    });
-}
+import { onReady } from './lib/on-ready.js';
+import { openModal, closeModal, goToStep } from './lib/modal-core.js';
+import { updateBadges } from './lib/badges.js';
+import { initPhoneMasks } from './lib/phone-mask.js';
 
 // Глобальный доступ для inline-скриптов в шаблонах
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.goToStep = goToStep;
 window.apiPost = apiPost;
-
-// Обновить бейджи корзины и избранного в навигации
-function updateBadges(cartCount, favCount) {
-    if (cartCount !== null && cartCount !== undefined) {
-        document.querySelectorAll('[data-cart-count]').forEach(el => {
-            el.textContent = cartCount;
-            el.classList.toggle('hidden', cartCount === 0);
-        });
-    }
-    if (favCount !== null && favCount !== undefined) {
-        document.querySelectorAll('[data-fav-count]').forEach(el => {
-            el.textContent = favCount;
-            el.classList.toggle('hidden', favCount === 0);
-        });
-    }
-}
-
-// Phone mask — автоопределение длины кода страны
-function initPhoneMasks() {
-    document.querySelectorAll('input[type="tel"]').forEach(phoneInput => {
-        if (phoneInput.dataset.maskInit) return;
-        phoneInput.dataset.maskInit = '1';
-
-        function formatPhone(digits) {
-            if (!digits.length) return '';
-
-            let codeLen = 1;
-            if (digits.startsWith('7') || digits.startsWith('1')) codeLen = 1;
-            else if (digits.startsWith('99')) codeLen = 3;
-            else codeLen = 2;
-
-            const code = digits.slice(0, codeLen);
-            const rest = digits.slice(codeLen);
-
-            let formatted = '+' + code;
-            if (rest.length > 0) formatted += ' (' + rest.slice(0, 3);
-            if (rest.length >= 3) formatted += ')';
-            if (rest.length > 3) formatted += ' ' + rest.slice(3, 6);
-            if (rest.length > 6) formatted += '-' + rest.slice(6, 8);
-            if (rest.length > 8) formatted += '-' + rest.slice(8, 10);
-
-            return formatted;
-        }
-
-        phoneInput.addEventListener('input', (e) => {
-            let digits = e.target.value.replace(/\D/g, '');
-            if (digits.length > 15) digits = digits.slice(0, 15);
-            e.target.value = formatPhone(digits);
-        });
-
-        phoneInput.addEventListener('focus', () => {
-            if (!phoneInput.value) phoneInput.value = '+';
-        });
-
-        phoneInput.addEventListener('blur', () => {
-            if (phoneInput.value === '+') phoneInput.value = '';
-        });
-
-        phoneInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && phoneInput.value.length <= 1) {
-                phoneInput.value = '';
-                e.preventDefault();
-            }
-        });
-    });
-}
-
-// Escape key — закрывает все видимые модалки
-document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(overlay => {
-        closeModal(overlay);
-    });
-});
-
-// Click on overlay background — закрывает модалку
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal-overlay')) {
-        closeModal(e.target);
-    }
-});
-
-// Click on .modal-close — закрывает ближайшую модалку
-document.addEventListener('click', (e) => {
-    const closeBtn = e.target.closest('.modal-close');
-    if (!closeBtn) return;
-    const overlay = closeBtn.closest('.modal-overlay');
-    if (overlay) closeModal(overlay);
-});
 
 // Инициализация масок телефона при загрузке
 onReady(initPhoneMasks);
@@ -2142,4 +2016,3 @@ function initHeroTitleFit() {
 onReady(initRegionDropdown);
 onReady(initLangDropdown);
 onReady(initHeroTitleFit);
-
