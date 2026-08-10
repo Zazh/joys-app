@@ -506,61 +506,6 @@ function initFAQ() {
 onReady(initFAQ);
 
 // --------------------------------------------
-// 6. ДОБАВИТЬ В КОРЗИНУ - ВЫПАДАЮЩИЙ СПИСОК
-// --------------------------------------------
-function initAddToCart() {
-    const addToCartBlocks = document.querySelectorAll('.add-to-cart');
-
-    if (addToCartBlocks.length === 0) return;
-
-    addToCartBlocks.forEach(block => {
-        const button = block.querySelector('.btn-cat');
-        const buttonWrapper = block.querySelector('.cart-button-wrapper');
-        const linksWrapper = block.querySelector('.cart-links-wrapper');
-
-        if (!button || !buttonWrapper || !linksWrapper) return;
-
-        // Клик на кнопку - открываем список
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-
-            // Закрываем все другие открытые блоки
-            addToCartBlocks.forEach(otherBlock => {
-                if (otherBlock !== block) {
-                    const otherButtonWrapper = otherBlock.querySelector('.cart-button-wrapper');
-                    const otherLinksWrapper = otherBlock.querySelector('.cart-links-wrapper');
-
-                    otherBlock.classList.remove('active');
-                    otherButtonWrapper.classList.remove('hidden');
-                    otherLinksWrapper.classList.add('hidden');
-                }
-            });
-
-            // Открываем текущий блок
-            block.classList.add('active');
-            buttonWrapper.classList.add('hidden');
-            linksWrapper.classList.remove('hidden');
-        });
-
-        // Клик вне блока - закрываем
-        document.addEventListener('click', (e) => {
-            if (!block.contains(e.target)) {
-                block.classList.remove('active');
-                buttonWrapper.classList.remove('hidden');
-                linksWrapper.classList.add('hidden');
-            }
-        });
-
-        // Останавливаем всплытие при клике внутри блока
-        block.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    });
-}
-
-onReady(initAddToCart);
-
-// --------------------------------------------
 // 8. СЛАЙДЕР ПРОДУКТА С АВТОПРОКРУТКОЙ
 // --------------------------------------------
 function initProductSlider() {
