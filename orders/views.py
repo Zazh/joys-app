@@ -273,16 +273,17 @@ class CheckoutView(View):
             (i['old_price'] or i['price']) * i['qty'] for i in cart_items
         )
 
-        initial = {}
+        # Страна — не поле профиля, а зеркало региона из cookie: селект должен
+        # показывать текущий регион всем, а не только авторизованным
+        initial = {'country': request.region.code if request.region else ''}
         if request.user.is_authenticated:
             user = request.user
-            initial = {
+            initial.update({
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'phone': getattr(user, 'phone', ''),
                 'email': user.email,
-                'country': request.region.code if request.region else '',
-            }
+            })
 
         form = CheckoutForm(initial=initial)
 
@@ -311,14 +312,19 @@ class CheckoutView(View):
         )
 
         def _render_with_error(form, error_message=None):
-            return render(request, 'orders/checkout.html', {
+            ctx = {
                 'form': form,
                 'cart_items': cart_items,
                 'cart_total': cart_total,
                 'cart_old_total': cart_old_total,
                 'is_authenticated': request.user.is_authenticated,
                 'error_message': error_message,
-            })
+            }
+            # Как и на GET: без этого страница ошибки для региона с конвертацией
+            # теряла строку пересчёта — «проверьте цены» проверять было нечем
+            if request.region and request.region.needs_conversion:
+                ctx['payment_total'] = cart.get_payment_total(cart_total)
+            return render(request, 'orders/checkout.html', ctx)
 
         if not request.user.is_authenticated:
             return redirect('/orders/checkout/')
@@ -333,6 +339,20 @@ class CheckoutView(View):
         region = request.region
         if not region:
             return _render_with_error(form, _('Регион не определён'))
+
+        # Регион заказа берётся ТОЛЬКО из cookie (request.region) — страна из
+        # формы её не задаёт, а лишь сверяется. Иначе корзина, посчитанная по
+        # ценам одного региона, ушла бы в заказ с конвертацией другого.
+        # Расходятся они только в устаревшей вкладке или при выключенном JS.
+        if form.cleaned_data['country'] != region.code:
+            # Селект возвращаем к реальному региону, остальные поля оставляем
+            # заполненными: иначе повторная отправка давала бы ту же ошибку
+            actual = request.POST.copy()
+            actual['country'] = region.code
+            return _render_with_error(
+                CheckoutForm(actual),
+                _('Регион изменился — проверьте цены и повторите оформление'),
+            )
 
         if not cart_items:
             return _render_with_error(form, _('Товары в корзине не найдены'))

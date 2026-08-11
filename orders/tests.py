@@ -3,17 +3,18 @@ from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
+from django.core.cache import cache
 from django.test import TestCase, RequestFactory, override_settings
 from django.utils import timezone
 
 from accounts.models import User
-from catalog.models import Category, Product, ProductSize, Stock
+from catalog.models import Category, Product, ProductSize, RegionPrice, Stock
 from orders.gateways import get_gateway, get_gateway_by_code
 from orders.gateways.base import CallbackRejected, PaymentResult, PaymentStatus
 from orders.gateways.halyk import HalykGateway
 from orders.gateways.vtb import VTBGateway
 from orders.models import Order, OrderItem
-from regions.models import Region
+from regions.models import ExchangeRate, Region
 
 
 class PaymentTestBase(TestCase):
@@ -801,3 +802,136 @@ class ManualOrderFallbackTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PENDING)
         self.assertIsNone(order.expires_at)
         self.assertEqual(order.payment_gateway, '')
+
+
+# ─── Оформление заказа: регион берётся из cookie ───
+
+class CheckoutRegionTest(PaymentTestBase):
+    """Регион заказа — только `request.region` (cookie). Поле «Страна» в форме
+    его не задаёт, а сверяется с ним: иначе корзина, посчитанная по ценам
+    одного региона, ушла бы в заказ с конвертацией другого.
+
+    Тесты `SetRegionView` живут здесь же (ТЗ PAY-01): в блоке 1 эта вьюха
+    стала штатным механизмом переключения региона на оформлении.
+    """
+
+    def setUp(self):
+        from orders.models import CartItem
+
+        # all_regions контекст-процессор кеширует на 10 минут, а локальный кеш
+        # в прогоне общий для всех тестов — иначе селект соберётся по чужим
+        # регионам
+        cache.clear()
+        self.client.login(email='test@example.com', password='test12345')
+        CartItem.objects.create(user=self.user, size=self.size_m, qty=2)
+        for region in (self.region_kz, self.region_ru):
+            Stock.objects.get_or_create(
+                size=self.size_m, region=region,
+                defaults={'quantity': 100, 'reserved': 0},
+            )
+        # Своя цена в рублях — иначе корзина ru взяла бы базовую (тенговую)
+        RegionPrice.objects.create(
+            size=self.size_m, region=self.region_ru, price=Decimal('500'),
+        )
+        ExchangeRate.objects.create(
+            currency_code='RUB', rate=Decimal('5.5'), quant=1,
+            fetched_at=timezone.now(),
+        )
+
+    def _set_region_cookie(self, code):
+        self.client.cookies['drjoys_region'] = code
+
+    def _post_checkout(self, country):
+        return self.client.post('/orders/checkout/', {
+            'country': country,
+            'city': 'Алматы',
+            'street': 'Абая',
+            'house': '1',
+            'apt': '',
+            'first_name': 'Тест',
+            'last_name': 'Тестов',
+            'phone': '+77001234567',
+            'email': 'test@example.com',
+        })
+
+    # ─── Префилл селекта ───
+
+    def test_get_preselects_region_from_cookie_ru(self):
+        self._set_region_cookie('ru')
+        response = self.client.get('/orders/checkout/')
+        self.assertContains(response, 'value="ru" selected')
+        self.assertNotContains(response, 'value="kz" selected')
+
+    def test_get_preselects_region_from_cookie_kz(self):
+        self._set_region_cookie('kz')
+        response = self.client.get('/orders/checkout/')
+        self.assertContains(response, 'value="kz" selected')
+        self.assertNotContains(response, 'value="ru" selected')
+
+    # ─── Guard страны ───
+
+    def test_mismatched_country_does_not_create_order(self):
+        """Устаревшая вкладка: в форме «Россия», в cookie — Казахстан."""
+        self._set_region_cookie('kz')
+        response = self._post_checkout('ru')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Order.objects.count(), 0)
+        self.assertContains(response, 'Регион изменился')
+
+    def test_mismatched_country_resets_select_to_actual_region(self):
+        """Селект на странице ошибки возвращается к реальному региону —
+        иначе повторная отправка давала бы ту же ошибку бесконечно."""
+        self._set_region_cookie('kz')
+        response = self._post_checkout('ru')
+
+        self.assertContains(response, 'value="kz" selected')
+        self.assertNotContains(response, 'value="ru" selected')
+
+    def test_matching_country_kz_creates_order_without_conversion(self):
+        self._set_region_cookie('kz')
+        response = self._post_checkout('kz')
+
+        self.assertEqual(response.status_code, 302)
+        order = Order.objects.get()
+        self.assertEqual(order.region.code, 'kz')
+        self.assertEqual(order.total_amount, Decimal('5000'))
+        self.assertIsNone(order.display_amount)
+
+    @patch.object(VTBGateway, '_post')
+    def test_matching_country_ru_creates_order_with_conversion(self, mock_post):
+        """Мина ×7.3: сумма заказа считается по ценам ru (1000 ₽) и
+        конвертируется в ₸ — а не берётся тенговая цена другого региона."""
+        mock_post.return_value = {
+            'orderId': 'vtb-order-777',
+            'formUrl': 'https://vtb.test/payment/form/777',
+        }
+        self._set_region_cookie('ru')
+        response = self._post_checkout('ru')
+
+        self.assertEqual(response.status_code, 302)
+        order = Order.objects.get()
+        self.assertEqual(order.region.code, 'ru')
+        self.assertEqual(order.display_amount, Decimal('1000'))
+        self.assertEqual(order.display_currency_code, 'RUB')
+        self.assertEqual(order.total_amount, Decimal('5500'))
+
+    # ─── SetRegionView ───
+
+    def test_set_region_switches_cookie_and_returns_to_checkout(self):
+        response = self.client.post('/region/set/', {
+            'region': 'ru', 'next': '/orders/checkout/',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/orders/checkout/')
+        self.assertEqual(response.cookies['drjoys_region'].value, 'ru')
+
+    def test_set_region_rejects_external_next(self):
+        response = self.client.post('/region/set/', {
+            'region': 'ru', 'next': 'https://evil.example/',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/')
+        self.assertEqual(response.cookies['drjoys_region'].value, 'ru')
