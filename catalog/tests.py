@@ -84,8 +84,11 @@ class ProductHelpLinksTests(TestCase):
         self.assertIn('data-open-modal="size-guide"', html)
         self.assertIn('id="modal-size-guide"', html)
         self.assertNotIn('/size-page/', html)
-        # Единственный контентный шаг — он же последний: кнопка закрытия, а не «Далее»
-        self.assertIn('modal-close-interactive">Закрыть', html.replace('\n', ''))
+        # Единственный контентный шаг — он же последний: кнопка закрытия, а не «Далее».
+        # Закрытие висит на [data-modal-close] — его ловит делегированный слушатель
+        # lib/modal-core.js (класс .modal-close сюда нельзя: он несёт стили крестика)
+        self.assertIn('data-modal-close>Закрыть', html.replace('\n', ''))
+        self.assertNotIn('data-next-step', html)
 
     def test_help_pages_linked_by_category(self):
         from pages.models import Page

@@ -15,10 +15,6 @@ export function initInteractiveModals() {
             btn.addEventListener('click', () => openModal(overlay));
         });
 
-        overlay.querySelectorAll('.modal-close-interactive').forEach(btn => {
-            btn.addEventListener('click', () => closeModal(overlay));
-        });
-
         overlay.querySelectorAll('[data-next-step]').forEach(btn => {
             btn.addEventListener('click', () => goToStep(overlay, btn.dataset.nextStep));
         });
@@ -26,9 +22,10 @@ export function initInteractiveModals() {
             btn.addEventListener('click', () => goToStep(overlay, btn.dataset.prevStep));
         });
 
-        // Клик по фону не вешаем: его уже ловит делегированный слушатель
-        // lib/modal-core.js (`.modal-overlay` как e.target) — именно этот
-        // локальный дубль и прятал форму заявки до JR-12
+        // Закрытие здесь не вешаем вообще: крестик (.modal-close), кнопка
+        // «Закрыть» ([data-modal-close]), клик по фону и Escape — на
+        // делегированных слушателях lib/modal-core.js. Свои копии заводить
+        // нельзя: локальный дубль клика по фону и прятал форму заявки (JR-12)
     });
 }
 

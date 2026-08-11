@@ -44,9 +44,11 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Click on .modal-close — закрывает ближайшую модалку
+// Click on .modal-close (крестик) или [data-modal-close] (кнопка-CTA «Закрыть»)
+// — закрывает ближайшую модалку. Атрибут нужен там, где класс .modal-close
+// портит вид: он несёт стили крестика (серый текст, во всех вариантах модалок)
 document.addEventListener('click', (e) => {
-    const closeBtn = e.target.closest('.modal-close');
+    const closeBtn = e.target.closest('.modal-close, [data-modal-close]');
     if (!closeBtn) return;
     const overlay = closeBtn.closest('.modal-overlay');
     if (overlay) closeModal(overlay);

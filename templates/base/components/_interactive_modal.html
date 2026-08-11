@@ -16,7 +16,7 @@
                 {% else %}
                 <div></div>
                 {% endif %}
-                <button class="modal-close modal-close-interactive" type="button" aria-label="{% trans 'Закрыть' %}">
+                <button class="modal-close" type="button" aria-label="{% trans 'Закрыть' %}">
                     {% include 'base/components/icons/_icon_close.html' %}
                 </button>
             </div>
@@ -38,7 +38,7 @@
                 {% if step.text %}<div class="modal-text">{{ step.text|sanitize }}</div>{% endif %}
                 {% if forloop.last %}
                 {# Контентный шаг оказался последним (модалка без формы) — «Далее» вело бы в никуда #}
-                <button type="button" class="btn-macro small danger w-full text-center mt-auto modal-close-interactive">{% trans "Закрыть" %}</button>
+                <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-modal-close>{% trans "Закрыть" %}</button>
                 {% else %}
                 <button type="button" class="btn-macro small danger w-full text-center mt-auto" data-next-step="{{ forloop.counter|add:'1' }}">{{ step.button_text }}</button>
                 {% endif %}
