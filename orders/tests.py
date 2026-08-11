@@ -868,6 +868,14 @@ class CheckoutRegionTest(PaymentTestBase):
         self.assertContains(response, 'value="kz" selected')
         self.assertNotContains(response, 'value="ru" selected')
 
+    def test_get_renders_region_switch_form(self):
+        """Селект «Страна» отправляет POST-форму на /region/set/ — механизм
+        переключения не должен потеряться при правках шаблона."""
+        self._set_region_cookie('kz')
+        response = self.client.get('/orders/checkout/')
+        self.assertContains(response, 'action="/region/set/"')
+        self.assertContains(response, 'name="next" value="/orders/checkout/"')
+
     # ─── Guard страны ───
 
     def test_mismatched_country_does_not_create_order(self):

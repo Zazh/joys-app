@@ -36,6 +36,15 @@
                 <div class="flex-1 lg:max-w-lg">
                     <h2 class="font-bold text-lg mb-6">{% trans "Доставка" %}</h2>
 
+                    <!-- Смена региона селектом «Страна» (обработчик в block scripts).
+                         Отдельная форма, а не поле #checkoutForm: вложенные формы
+                         невалидны, а регион ставится cookie на /region/set/ -->
+                    <form method="post" action="{% url 'regions:set_region' %}" id="regionSwitchForm" class="hidden">
+                        {% csrf_token %}
+                        <input type="hidden" name="region" id="regionSwitchCode">
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                    </form>
+
                     <form method="post" class="flex flex-col gap-4" id="checkoutForm" novalidate>
                         {% csrf_token %}
 
@@ -165,6 +174,19 @@
             if (authModal && typeof openModal === 'function') {
                 openModal(authModal);
             }
+        });
+    }
+
+    // Селект "Страна" — переключатель региона целиком: ставим cookie через
+    // /region/set/ и перезагружаем страницу. Считать цены на клиенте нельзя —
+    // регион задаёт и валюту, и конвертацию, и платёжный шлюз
+    const countrySelect = document.getElementById('id_country');
+    const regionForm = document.getElementById('regionSwitchForm');
+    const regionCode = document.getElementById('regionSwitchCode');
+    if (countrySelect && regionForm && regionCode) {
+        countrySelect.addEventListener('change', () => {
+            regionCode.value = countrySelect.value;
+            regionForm.submit();
         });
     }
 })();
