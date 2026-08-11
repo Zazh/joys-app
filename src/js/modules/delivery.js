@@ -99,8 +99,6 @@ export function initDeliveryModal() {
         });
     }
 
-    // Close on overlay click
-    deliveryOverlay.addEventListener('click', (e) => {
-        if (e.target === deliveryOverlay) closeModal(deliveryOverlay);
-    });
+    // Закрытие по клику на фон — на делегированном слушателе lib/modal-core.js,
+    // своего обработчика здесь нет (дубль такого рода был причиной бага JR-12)
 }
