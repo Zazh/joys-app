@@ -126,6 +126,9 @@ export function initProductBuy() {
             const qtyEl = document.getElementById('qtyValue');
             const addBtn = document.getElementById('addToCartBtn');
 
+            // Пишем DOM-контракт модалки количества: #orderUnitPrice[data-price]
+            // (нормализованное число) и #addToCartBtn[data-size-id] — их читает
+            // modules/order-quantity.js, импорта между модулями нет
             if (nameEl) nameEl.textContent = productName;
             if (sizeEl) sizeEl.textContent = sizeName;
             if (unitEl) {

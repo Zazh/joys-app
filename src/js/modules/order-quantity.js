@@ -69,6 +69,9 @@ export function initOrderQuantity() {
     }
 }
 
+// data-price заполняет modules/product-buy.js (выбор размера), туда же пишется
+// #addToCartBtn[data-size-id]. Повторная нормализация ниже сегодня холостая —
+// оставлена страховкой на случай второго писателя атрибута
 function updateOrderTotal() {
     const qtyValue = document.getElementById('qtyValue');
     const totalEl = document.getElementById('orderTotalPrice');
