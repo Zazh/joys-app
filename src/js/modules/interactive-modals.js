@@ -8,7 +8,7 @@ import { openModal, closeModal, goToStep } from '../lib/modal-core.js';
 // (гид «Как выбрать размер» у категории)
 // --------------------------------------------
 export function initInteractiveModals() {
-    document.querySelectorAll('[data-modal-slug]').forEach(overlay => {
+    document.querySelectorAll('.modal-overlay[data-modal-slug]').forEach(overlay => {
         const slug = overlay.dataset.modalSlug;
 
         document.querySelectorAll(`[data-open-modal="${slug}"]`).forEach(btn => {
