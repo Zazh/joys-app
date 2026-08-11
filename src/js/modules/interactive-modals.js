@@ -26,9 +26,9 @@ export function initInteractiveModals() {
             btn.addEventListener('click', () => goToStep(overlay, btn.dataset.prevStep));
         });
 
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeModal(overlay);
-        });
+        // Клик по фону не вешаем: его уже ловит делегированный слушатель
+        // lib/modal-core.js (`.modal-overlay` как e.target) — именно этот
+        // локальный дубль и прятал форму заявки до JR-12
     });
 }
 
