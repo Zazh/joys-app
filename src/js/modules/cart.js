@@ -147,7 +147,6 @@ export function initCartModal() {
         applyCart(await apiPost('/orders/cart/update/', { size_id: sizeId, qty }));
     });
 
-    // Checkout → auth check → delivery
     // Checkout → страница оформления заказа
     const checkoutBtn = document.getElementById('cartCheckoutBtn');
     if (checkoutBtn) {

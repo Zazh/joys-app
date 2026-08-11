@@ -61,7 +61,7 @@ export function initDeliveryModal() {
                 updateBadges(0, null);
 
                 if (result.payment_url) {
-                    // Редирект на платёжную страницу VTB
+                    // Редирект на платёжную страницу шлюза региона (vtb / halyk)
                     window.location.href = result.payment_url;
                 } else {
                     // Fallback — показать модалку успеха
