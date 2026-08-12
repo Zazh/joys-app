@@ -193,7 +193,12 @@ class VTBGateway(BaseGateway):
         # Регистр входящей суммы не фиксируем: банк шлёт верхний, но принять
         # нижний дешевле, чем отклонить настоящую оплату. Сравнение всё равно
         # постоянное по времени.
-        if not hmac.compare_digest(_callback_checksum(params, token), checksum.upper()):
+        # Сравниваем БАЙТЫ, а не строки: `compare_digest` на двух `str` требует
+        # ASCII и на любой другой подписи бросает TypeError — а он пролетел бы
+        # мимо `CallbackRejected` во вьюхе и превратил бы отказ в 500-ку
+        # (`?checksum=ПОДПИСЬ` роняло обработчик, находка критика блока 2).
+        expected = _callback_checksum(params, token).encode('utf-8')
+        if not hmac.compare_digest(expected, checksum.upper().encode('utf-8')):
             logger.error(
                 'VTB callback ОТКЛОНЁН (подпись не сошлась): mdOrder=%s',
                 params.get('mdOrder', ''),

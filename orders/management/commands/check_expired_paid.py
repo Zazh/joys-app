@@ -63,7 +63,17 @@ class Command(BaseCommand):
                 'деньги списаны, заказ истёк, нужен ручной разбор',
                 order.number, order.payment_gateway, order.payment_id,
             )
-            send_expired_paid_alert(order)
+            # Отметку ставим ТОЛЬКО за доставленный сигнал: иначе сбой
+            # SendPulse навсегда прячет единственное письмо про пропавшие
+            # деньги — заказ больше не попадёт в выборку, а в логе останется
+            # одинокая строка, которую никто не читает. Пустой адрес считаем
+            # доставкой: канал не настроен сознательно (Р-10).
+            if not send_expired_paid_alert(order):
+                self.stdout.write(self.style.ERROR(
+                    '  ⚠ Банк подтверждает оплату, но письмо не ушло — '
+                    'повторим следующим прогоном.'
+                ))
+                continue
 
             order.expired_paid_alerted_at = timezone.now()
             order.save(update_fields=['expired_paid_alerted_at'])

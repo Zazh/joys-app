@@ -465,10 +465,17 @@ def send_expired_paid_alert(order):
     PAYMENT_ALERT_EMAIL, а не ORDER_NOTIFY_EMAIL: тот означает «письмо о
     каждой оплате» и выключен сознательным решением владельца, а это —
     редкий инцидент с деньгами. Пусто = алерт остаётся только в логе.
+
+    Возвращает True, если сигнал доставлен по всем настроенным каналам
+    (пустой адрес — тоже True: канал не настроен, разбор идёт по логу).
+    False = письмо не ушло; крон по этому ответу НЕ отмечает заказ
+    отправленным и попробует на следующем прогоне. Здесь, в отличие от
+    писем покупателю, нет очереди `EmailLog`/`retry_emails` — повтор
+    обеспечивает только крон.
     """
     to = getattr(settings, 'PAYMENT_ALERT_EMAIL', '')
     if not to:
-        return
+        return True
 
     region = order.region
     total, total_line = _owner_total_lines(order)
@@ -502,3 +509,4 @@ def send_expired_paid_alert(order):
     ok, error = _send_via_api(to, subject, body)
     if not ok:
         logger.error('Expired-paid alert failed: %s — %s', to, error)
+    return ok

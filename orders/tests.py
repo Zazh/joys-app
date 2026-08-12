@@ -594,6 +594,42 @@ class ConfirmPaymentTest(PaymentTestBase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
 
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_expired_order_cannot_be_confirmed(self, mock_email, mock_api):
+        """Истёкший заказ подтвердить нельзя — ни кодом, ни кнопкой бэкофиса.
+
+        Держит сразу три вещи, которые больше ничем не закреплены:
+        · Р-1 бэклога payments-hardening — автоподтверждение EXPIRED запрещено:
+          на бою `expire()` уже вернул резерв, и повторное списание вычло бы
+          товар второй раз. Тест держит выход целиком — ни `quantity`, ни
+          `reserved` не двигаются;
+        · обещание алерта PH-05 владельцу — «кнопка „Подтвердить оплату" НЕ
+          сработает»: письмо станет враньём, если guard ослабить;
+        · саму мутацию из критериев PH-05 («добавить `confirm_payment`
+          в команду»). Она НЕ ловится тестами детектора: guard делает вызов
+          пустой операцией, поэтому детектор и остаётся безопасным
+          (сверено критиком блока 2 — мутация зелёная, в Handoff записана
+          красной).
+        """
+        order = self._create_order(
+            gateway='vtb', payment_id='exp-confirm-1',
+            status=Order.Status.EXPIRED,
+        )
+        stock = Stock.objects.get(size=self.size_m, region=self.region_kz)
+        qty_before, reserved_before = stock.quantity, stock.reserved
+
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
+
+        order.refresh_from_db()
+        stock.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.EXPIRED)
+        self.assertIsNone(order.paid_at)
+        self.assertEqual(stock.quantity, qty_before)
+        self.assertEqual(stock.reserved, reserved_before)
+        mock_email.assert_not_called()
+
 
 # ─── Тесты PaymentCallbackView (integration) ───
 
@@ -870,6 +906,57 @@ class PaymentCallbackViewTest(PaymentTestBase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PAID)
 
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    def test_vtb_callback_non_ascii_checksum_is_rejected(self, mock_post):
+        """Подпись из не-ASCII символов = отказ, а не 500.
+
+        `hmac.compare_digest` на двух `str` требует ASCII и на кириллице
+        бросает TypeError. Вьюха ловит только `CallbackRejected`, поэтому до
+        правки критика запрос `?checksum=ПОДПИСЬ` роняли обработчик оплаты
+        в 500 — на боевом URL, который открыт наружу для банка.
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-utf8',
+        )
+
+        response = self.client.get(
+            '/orders/payment/callback/vtb/',
+            data={'mdOrder': 'vtb-sig-utf8', 'checksum': 'ПОДПИСЬ'},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+        mock_post.assert_not_called()
+
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    def test_vtb_callback_extra_param_breaks_signature(self, mock_post):
+        """Подпись считается по ВСЕМ пришедшим параметрам — fail-closed.
+
+        Отсюда следствие, которое стоит помнить при разборе боевого callback-а:
+        дописанный кем угодно лишний параметр (в том числе безобидный
+        `?utm_source=…` в настройке URL в ЛК банка) попадёт в строку подписи
+        и уронит проверку — 403, заказ не подтверждён.
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-extra',
+        )
+
+        params = self._callback_query(
+            'vtb-sig-extra', order.number, self.CALLBACK_TOKEN,
+        )
+        params['utm_source'] = 'дописано-со-стороны'
+
+        response = self.client.get('/orders/payment/callback/vtb/', data=params)
+
+        self.assertEqual(response.status_code, 403)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+
 
 # ─── Тесты PaymentReturnView ───
 
@@ -1133,6 +1220,8 @@ class ExpiredPaidDetectorTest(PaymentTestBase):
             region=self.region_ru, gateway='vtb', payment_id='vtb-exp-pending',
         )
         self._expired_order(payment_id='', minutes_ago=5)  # заявка без оплаты
+        # Шлюза нет — спрашивать статус не у кого (get_gateway_by_code → KeyError)
+        self._expired_order(payment_id='ghost-1', gateway='', minutes_ago=5)
 
         output = self._run()
 
@@ -1181,6 +1270,58 @@ class ExpiredPaidDetectorTest(PaymentTestBase):
         self.assertIsNone(order.expired_paid_alerted_at)
         mock_api.assert_not_called()
 
+    @patch('emails.service._send_via_api')
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_failed_alert_is_retried_next_run(self, mock_status, mock_api):
+        """Сбой SendPulse не должен прятать инцидент навсегда.
+
+        У писем владельцу нет очереди `EmailLog`/`retry_emails` — единственный
+        повтор даёт сам крон. Если отметить заказ отправленным при неудачной
+        отправке, он выпадет из выборки и письмо про списанные деньги не
+        придёт уже никогда (находка критика блока 2).
+        """
+        order = self._expired_order()
+
+        mock_api.return_value = (False, 'SendPulse 500')
+        with self.assertLogs(self.LOGGER, level='ERROR'):
+            output = self._run()
+
+        order.refresh_from_db()
+        self.assertIn('письмо не ушло', output)
+        self.assertIsNone(order.expired_paid_alerted_at)
+
+        # Следующий прогон — SendPulse ожил, письмо ушло, отметка встала
+        mock_api.return_value = (True, '')
+        with self.assertLogs(self.LOGGER, level='ERROR'):
+            self._run()
+
+        order.refresh_from_db()
+        self.assertEqual(mock_api.call_count, 2)
+        self.assertIsNotNone(order.expired_paid_alerted_at)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_alert_shows_both_amounts(self, mock_status, mock_api):
+        """Регион с конверсией: списано в ₸, покупатель видел ₽ — в письме
+        обе суммы.
+
+        Тот же расчёт, что в уведомлении об оплате (общий
+        `_owner_total_lines`): именно расхождение этих двух сумм и было
+        багом PAY-07, ушедшим живому покупателю.
+        """
+        order = self._expired_order()
+        order.display_amount = Decimal('525')
+        order.display_currency_code = 'RUB'
+        order.save(update_fields=['display_amount', 'display_currency_code'])
+
+        with self.assertLogs(self.LOGGER, level='ERROR'):
+            self._run()
+
+        _, subject, body = mock_api.call_args[0]
+        self.assertIn('5000 ₸', subject)
+        self.assertIn('5000 ₸', body)
+        self.assertIn('525 ₽', body)
+
 
 # ─── Тесты уведомления владельцу об оплате ───
 
@@ -1228,7 +1369,12 @@ class PaymentNotificationTest(PaymentTestBase):
     def test_no_notification_without_address(self, mock_api, mock_email):
         order = self._create_order(gateway='halyk', payment_id='notify-2')
 
-        order.confirm_payment()
+        # Без обёртки этот тест был бы пустым: on_commit в TestCase не
+        # выполняется сам, и `assert_not_called` проходил бы, даже если
+        # выкинуть guard `if not to`. На проде ORDER_NOTIFY_EMAIL пуст
+        # сознательно — эту ветку кроме этого теста не проверяет никто.
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
 
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PAID)
@@ -1256,8 +1402,12 @@ class PaymentNotificationTest(PaymentTestBase):
         stock = Stock.objects.get(size=self.size_m, region=self.region_kz)
         qty_before = stock.quantity
 
-        order.confirm_payment()
+        # Обёртка обязательна: без неё падающая отправка вообще не вызывается
+        # и тест проверяет не то, что написано в его имени.
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
 
+        mock_api.assert_called_once()  # отправку действительно попробовали
         order.refresh_from_db()
         stock.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PAID)
