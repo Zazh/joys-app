@@ -287,16 +287,9 @@ class CheckoutView(View):
 
         form = CheckoutForm(initial=initial)
 
-        ctx = {
-            'form': form,
-            'cart_items': cart_items,
-            'cart_total': cart_total,
-            'cart_old_total': cart_old_total,
-            'is_authenticated': request.user.is_authenticated,
-        }
-        if request.region and request.region.needs_conversion:
-            ctx['payment_total'] = cart.get_payment_total(cart_total)
-        return render(request, 'orders/checkout.html', ctx)
+        return render(request, 'orders/checkout.html', self._checkout_context(
+            request, cart, form, cart_items, cart_total, cart_old_total,
+        ))
 
     def post(self, request):
         if 'application/json' in (request.content_type or ''):
@@ -312,19 +305,10 @@ class CheckoutView(View):
         )
 
         def _render_with_error(form, error_message=None):
-            ctx = {
-                'form': form,
-                'cart_items': cart_items,
-                'cart_total': cart_total,
-                'cart_old_total': cart_old_total,
-                'is_authenticated': request.user.is_authenticated,
-                'error_message': error_message,
-            }
-            # Как и на GET: без этого страница ошибки для региона с конвертацией
-            # теряла строку пересчёта — «проверьте цены» проверять было нечем
-            if request.region and request.region.needs_conversion:
-                ctx['payment_total'] = cart.get_payment_total(cart_total)
-            return render(request, 'orders/checkout.html', ctx)
+            return render(request, 'orders/checkout.html', self._checkout_context(
+                request, cart, form, cart_items, cart_total, cart_old_total,
+                error_message,
+            ))
 
         if not request.user.is_authenticated:
             return redirect('/orders/checkout/')
@@ -461,6 +445,28 @@ class CheckoutView(View):
             })
 
     # ─── Общие helpers ───
+
+    def _checkout_context(self, request, cart, form, cart_items,
+                          cart_total, cart_old_total, error_message=None):
+        """Контекст checkout.html — один на GET и на страницу ошибки.
+
+        Суммы принимает готовыми: считать их внутри значило бы второй
+        cart.get_items() (запрос в БД) на каждый рендер ошибки.
+        payment_total нужен обеим веткам — без него страница ошибки у
+        региона с конвертацией теряла строку пересчёта, и текст guard-а
+        «проверьте цены» проверять было нечем.
+        """
+        ctx = {
+            'form': form,
+            'cart_items': cart_items,
+            'cart_total': cart_total,
+            'cart_old_total': cart_old_total,
+            'is_authenticated': request.user.is_authenticated,
+            'error_message': error_message,
+        }
+        if request.region and request.region.needs_conversion:
+            ctx['payment_total'] = cart.get_payment_total(cart_total)
+        return ctx
 
     def _create_order(self, request, region, first_name, last_name,
                       phone, email, city, address, total, cart_items):
