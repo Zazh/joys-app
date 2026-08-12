@@ -238,6 +238,41 @@ def send_welcome_email(user):
     )
 
 
+def _order_total_context(order):
+    """Ключи `{order_total}` и `{currency}` для писем покупателю.
+
+    Печатаем сумму СПИСАНИЯ: для региона с конверсией заказ уходит в банк в
+    тенге, и именно эта сумма уйдёт с карты. Витринные рубли остаются в
+    скобках, иначе «Итого» не сходится с составом заказа — позиции печатаются
+    из `item.subtotal`, то есть в валюте витрины.
+
+    Скобка приклеена к `{currency}`, а не отдельным ключом, потому что тела
+    писем лежат в БД бэкофиса со строкой `Итого: {order_total} {currency}`:
+    новый плейсхолдер туда из кода не добавить (`_SafeDict` его просто не
+    подставит), а править боевой контент задача не должна.
+    """
+    region = order.region
+    total = f'{order.total_amount:.0f}'
+
+    if not region.needs_conversion:
+        return {'order_total': total, 'currency': region.currency_symbol}
+
+    # Валюту берём по признаку региона, а не по наличию `display_amount`:
+    # у заказов до блока 1 его нет, и подстановка витринного символа вернула бы
+    # ровно ту ошибку, ради которой задача и заведена — тенге под знаком рубля.
+    pay_symbol = region.payment_currency_symbol or region.currency_symbol
+    if not order.display_amount:
+        return {'order_total': total, 'currency': pay_symbol}
+
+    return {
+        'order_total': total,
+        'currency': (
+            f'{pay_symbol} '
+            f'({order.display_amount:.0f} {region.currency_symbol})'
+        ),
+    }
+
+
 def send_order_created_email(order):
     """Письмо о создании заказа."""
     items = order.items.all()
@@ -252,8 +287,7 @@ def send_order_created_email(order):
         context={
             'order_number': order.number,
             'order_date': order.created_at.strftime('%d.%m.%Y %H:%M'),
-            'order_total': f'{order.total_amount:.0f}',
-            'currency': order.region.currency_symbol,
+            **_order_total_context(order),
             'customer_name': order.customer_name,
             'items_text': items_text,
             'delivery_address': f'{order.city}, {order.address}',
@@ -277,8 +311,7 @@ def send_payment_confirmed_email(order):
         context={
             'order_number': order.number,
             'order_date': order.created_at.strftime('%d.%m.%Y %H:%M'),
-            'order_total': f'{order.total_amount:.0f}',
-            'currency': order.region.currency_symbol,
+            **_order_total_context(order),
             'customer_name': order.customer_name,
             'items_text': items_text,
             'delivery_address': f'{order.city}, {order.address}',

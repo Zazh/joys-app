@@ -401,6 +401,79 @@ class SendOrderEmailsTest(EmailTestBase):
         self.assertEqual(log.to_email, 'test@example.com')
 
 
+# ─── «Итого» в письмах: сумма списания, а не чужая валюта ───
+
+class OrderEmailTotalTest(EmailTestBase):
+    """PAY-07. `total_amount` — сумма ОПЛАТЫ (для ru тенге), а
+    `region.currency_symbol` — символ ВИТРИНЫ (₽). До правки письмо печатало
+    одно под знаком другого: живому покупателю ушло «Итого: 2950 ₽» вместо
+    525 ₽ (боевой EmailLog#65, 12.08.2026).
+    """
+
+    TOTAL_LINE = 'Итого: {order_total} {currency}'
+
+    def _region_ru(self):
+        return Region.objects.create(
+            code='ru', name='Россия',
+            currency_code='RUB', currency_symbol='₽',
+            payment_currency_code='KZT', payment_currency_symbol='₸',
+            payment_gateway='vtb',
+        )
+
+    def _ru_order(self, display_amount=Decimal('525')):
+        return self._create_order(
+            region=self._region_ru(),
+            total_amount=Decimal('2950'),
+            display_amount=display_amount,
+            display_currency_code='RUB',
+        )
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_converted_region_shows_charged_amount_with_display_in_brackets(self, mock_api):
+        self._create_template('order_paid', subject='#{order_number}', body=self.TOTAL_LINE)
+
+        from emails.service import send_payment_confirmed_email
+        send_payment_confirmed_email(self._ru_order())
+
+        body = EmailLog.objects.get(template_slug='order_paid').body
+        self.assertEqual(body, 'Итого: 2950 ₸ (525 ₽)')
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_order_created_email_too(self, mock_api):
+        """Врали оба письма, чинить надо оба."""
+        self._create_template('order_created', subject='#{order_number}', body=self.TOTAL_LINE)
+
+        from emails.service import send_order_created_email
+        send_order_created_email(self._ru_order())
+
+        body = EmailLog.objects.get(template_slug='order_created').body
+        self.assertEqual(body, 'Итого: 2950 ₸ (525 ₽)')
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_plain_region_unchanged(self, mock_api):
+        """КЗ платит в своей валюте — скобкам там взяться неоткуда."""
+        self._create_template('order_paid', subject='#{order_number}', body=self.TOTAL_LINE)
+        order = self._create_order(total_amount=Decimal('8990'))
+
+        from emails.service import send_payment_confirmed_email
+        send_payment_confirmed_email(order)
+
+        body = EmailLog.objects.get(template_slug='order_paid').body
+        self.assertEqual(body, 'Итого: 8990 ₸')
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_legacy_order_without_display_amount(self, mock_api):
+        """Заказы до блока 1 идут без `display_amount` — печатаем сумму
+        списания без скобок, падать нельзя."""
+        self._create_template('order_paid', subject='#{order_number}', body=self.TOTAL_LINE)
+
+        from emails.service import send_payment_confirmed_email
+        send_payment_confirmed_email(self._ru_order(display_amount=None))
+
+        body = EmailLog.objects.get(template_slug='order_paid').body
+        self.assertEqual(body, 'Итого: 2950 ₸')
+
+
 # ─── Публичные функции отправки (accounts) ───
 
 class SendAccountEmailsTest(EmailTestBase):
