@@ -432,6 +432,9 @@ msgstr "CREATE ACCOUNT"
 msgid "Уже есть аккаунт? Войти"
 msgstr "Already have an account? Sign in"
 
+msgid "Онлайн-оплата — только картой «Мир»"
+msgstr "Online payment — Mir cards only"
+
 msgid "ОФОРМИТЬ ЗАКАЗ"
 msgstr "CHECKOUT"
 

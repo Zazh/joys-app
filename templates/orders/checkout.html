@@ -108,9 +108,19 @@
                             {% if form.email.errors %}<p class="text-xs text-red-500 mt-1">{{ form.email.errors.0 }}</p>{% endif %}
                         </div>
 
-                        <button type="submit" class="btn-macro black w-full text-center text-xs mt-4">
-                            {% trans "ОФОРМИТЬ ЗАКАЗ" %}
-                        </button>
+                        <div class="flex flex-col gap-2 mt-4">
+                            {% comment %}
+                            Подсказка только для региона с ВТБ: узнать про «Мир»
+                            лучше до ухода на форму оплаты, а не отказом эмитента.
+                            Регионам без шлюза не показываем ничего (Р-6).
+                            {% endcomment %}
+                            {% if current_region.payment_gateway == 'vtb' %}
+                            <p class="text-xs text-stone-400 text-center">{% trans "Онлайн-оплата — только картой «Мир»" %}</p>
+                            {% endif %}
+                            <button type="submit" class="btn-macro black w-full text-center text-xs">
+                                {% trans "ОФОРМИТЬ ЗАКАЗ" %}
+                            </button>
+                        </div>
                     </form>
                 </div>
                 <!-- END delivery form -->

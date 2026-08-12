@@ -1258,3 +1258,42 @@ class CheckoutRegionTest(PaymentTestBase):
                     'region': 'ru', 'next': sneaky,
                 })
                 self.assertEqual(response['Location'], '/')
+
+
+class CheckoutMirHintTest(CheckoutRegionTest):
+    """Подсказка «Онлайн-оплата — только картой „Мир“» (PAY-05).
+
+    Фикстуры и хелперы берём у CheckoutRegionTest: там уже собраны корзина,
+    цены ru, курс и `_set_region_cookie`.
+    """
+
+    HINT = 'Онлайн-оплата — только картой «Мир»'
+
+    def test_hint_shown_for_vtb_region(self):
+        self._set_region_cookie('ru')
+        response = self.client.get('/orders/checkout/')
+        self.assertContains(response, self.HINT)
+
+    def test_hint_hidden_for_region_without_gateway(self):
+        """КЗ живёт заявками (HALYK_ENABLED=False) — предупреждать не о чем,
+        Р-6 запрещает любые сообщения об отсутствии онлайн-оплаты."""
+        self._set_region_cookie('kz')
+        response = self.client.get('/orders/checkout/')
+        self.assertNotContains(response, self.HINT)
+
+    def test_hint_follows_region_switch(self):
+        """Смена региона селектом = cookie + перезагрузка: подсказка обязана
+        появиться и исчезнуть вместе с ней."""
+        self._set_region_cookie('kz')
+        self.assertNotContains(self.client.get('/orders/checkout/'), self.HINT)
+
+        self.client.post('/region/set/', {'region': 'ru', 'next': '/orders/checkout/'})
+        self.assertContains(self.client.get('/orders/checkout/'), self.HINT)
+
+    def test_template_comment_does_not_leak_into_html(self):
+        """`{# … #}` в Django однострочный (tag_re без DOTALL), многострочный
+        уезжает в HTML текстом. Поймано владельцем на ревью PAY-05."""
+        self._set_region_cookie('ru')
+        response = self.client.get('/orders/checkout/')
+        self.assertNotContains(response, 'Подсказка только для региона')
+        self.assertNotContains(response, 'Р-6')
