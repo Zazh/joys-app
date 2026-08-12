@@ -876,6 +876,20 @@ class CheckoutRegionTest(PaymentTestBase):
         self.assertContains(response, 'action="/region/set/"')
         self.assertContains(response, 'name="next" value="/orders/checkout/"')
 
+    def test_get_preselects_region_for_anonymous(self):
+        """Префилл страны — не поле профиля, а зеркало региона: он должен
+        стоять и у анонима (ТЗ PAY-01 п.1). Форму аноним пока не видит, но
+        ветвление по is_authenticated возвращаться не должно."""
+        self.client.logout()  # чистит сессию — корзину кладём после
+        session = self.client.session
+        session['cart'] = {str(self.size_m.pk): 2}
+        session.save()
+        self._set_region_cookie('ru')
+
+        response = self.client.get('/orders/checkout/')
+
+        self.assertEqual(response.context['form'].initial['country'], 'ru')
+
     # ─── Guard страны ───
 
     def test_mismatched_country_does_not_create_order(self):
@@ -896,7 +910,29 @@ class CheckoutRegionTest(PaymentTestBase):
         self.assertContains(response, 'value="kz" selected')
         self.assertNotContains(response, 'value="ru" selected')
 
+    def test_mismatched_country_keeps_entered_fields(self):
+        """Страница ошибки перепривязывает форму к POST — введённый адрес и
+        контакты не должны обнуляться, иначе покупатель набирает всё заново."""
+        self._set_region_cookie('kz')
+        response = self._post_checkout('ru')
+
+        self.assertContains(response, 'value="Алматы"')
+        self.assertContains(response, 'value="Абая"')
+        self.assertContains(response, 'value="+77001234567"')
+
+    def test_mismatched_country_keeps_payment_total_line(self):
+        """У региона с конвертацией строка пересчёта в ₸ есть и на странице
+        ошибки: её текст просит «проверьте цены», а проверять надо обе суммы."""
+        self._set_region_cookie('ru')
+        response = self._post_checkout('kz')
+
+        self.assertContains(response, 'Регион изменился')
+        self.assertContains(response, '(5500 ₸)')
+
+    @override_settings(HALYK_ENABLED=False)
     def test_matching_country_kz_creates_order_without_conversion(self):
+        """Флаг закреплён явно: у фикстурного kz `payment_gateway='halyk'`, и
+        когда Халык включат (Р-7), тест иначе ушёл бы в сеть к банку."""
         self._set_region_cookie('kz')
         response = self._post_checkout('kz')
 
@@ -943,3 +979,13 @@ class CheckoutRegionTest(PaymentTestBase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'], '/')
         self.assertEqual(response.cookies['drjoys_region'].value, 'ru')
+
+    def test_set_region_rejects_sneaky_next(self):
+        """Классические обходы проверки редиректа: схема-относительный адрес,
+        обратный слэш и javascript: — все должны уводить на «/»."""
+        for sneaky in ('//evil.example/', '/\\evil.example', 'javascript:alert(1)'):
+            with self.subTest(next=sneaky):
+                response = self.client.post('/region/set/', {
+                    'region': 'ru', 'next': sneaky,
+                })
+                self.assertEqual(response['Location'], '/')
