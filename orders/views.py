@@ -311,7 +311,7 @@ class CheckoutView(View):
             ))
 
         if not request.user.is_authenticated:
-            return redirect('/orders/checkout/')
+            return redirect(reverse('orders:checkout'))
 
         if not cart:
             return redirect(reverse('catalog:catalog'))
