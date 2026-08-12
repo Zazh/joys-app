@@ -870,11 +870,34 @@ class CheckoutRegionTest(PaymentTestBase):
 
     def test_get_renders_region_switch_form(self):
         """Селект «Страна» отправляет POST-форму на /region/set/ — механизм
-        переключения не должен потеряться при правках шаблона."""
+        переключения не должен потеряться при правках шаблона.
+
+        Проверяем именно `#regionSwitchForm`, а не `action="/region/set/"`:
+        такую же форму печатают на КАЖДОЙ странице переключатель региона в
+        шапке (`base.html`) и `_modal_region.html`, поэтому ассерт по action
+        оставался зелёным даже при полностью удалённом механизме PAY-02."""
         self._set_region_cookie('kz')
         response = self.client.get('/orders/checkout/')
-        self.assertContains(response, 'action="/region/set/"')
-        self.assertContains(response, 'name="next" value="/orders/checkout/"')
+        html = response.content.decode()
+
+        self.assertIn('id="regionSwitchForm"', html)
+        form = next(
+            chunk for chunk in html.split('<form')
+            if 'id="regionSwitchForm"' in chunk
+        ).split('</form>')[0]
+        self.assertIn('action="/region/set/"', form)
+        self.assertIn('id="regionSwitchCode"', form)
+        self.assertIn('name="region"', form)
+        self.assertIn('name="next" value="/orders/checkout/"', form)
+        # обработчик, который её сабмитит, — на месте
+        self.assertIn("getElementById('regionSwitchForm')", html)
+        self.assertIn("getElementById('id_country')", html)
+        # и она стоит ДО #checkoutForm: вложенные формы невалидны, браузер
+        # выбросил бы внутреннюю и смена страны ушла бы не туда
+        self.assertLess(
+            html.index('id="regionSwitchForm"'),
+            html.index('id="checkoutForm"'),
+        )
 
     def test_get_preselects_region_for_anonymous(self):
         """Префилл страны — не поле профиля, а зеркало региона: он должен
