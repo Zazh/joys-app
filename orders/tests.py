@@ -875,10 +875,22 @@ class CheckoutRegionTest(PaymentTestBase):
         Проверяем именно `#regionSwitchForm`, а не `action="/region/set/"`:
         такую же форму печатают на КАЖДОЙ странице переключатель региона в
         шапке (`base.html`) и `_modal_region.html`, поэтому ассерт по action
-        оставался зелёным даже при полностью удалённом механизме PAY-02."""
+        оставался зелёным даже при полностью удалённом механизме PAY-02.
+
+        Сам `<select>` тоже под ассертами: `value="ru" selected` из соседних
+        тестов живёт в `<option>` и переименование селекта переживает, а
+        переименование рвёт разом обработчик PAY-02 (селект снова инертен) и
+        отправку поля `country` формой (заказ не оформляется вовсе)."""
         self._set_region_cookie('kz')
         response = self.client.get('/orders/checkout/')
         html = response.content.decode()
+
+        self.assertIn('id="id_country"', html)      # его ищет обработчик PAY-02
+        select = next(
+            chunk for chunk in html.split('<select')
+            if 'id="id_country"' in chunk
+        ).split('</select>')[0]
+        self.assertIn('name="country"', select)     # его сверяет guard PAY-01
 
         self.assertIn('id="regionSwitchForm"', html)
         form = next(
