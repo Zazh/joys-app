@@ -684,6 +684,119 @@ class PaymentReturnViewTest(PaymentTestBase):
         self.assertEqual(response.status_code, 200)
 
 
+# ─── Тесты крона check_payments ───
+
+class CheckPaymentsCommandTest(PaymentTestBase):
+    """Крон `check_payments` — страховка от потерянного callback-а.
+
+    На боевом контуре банк ВТБ ни разу не позвал `dynamicCallbackUrl` (аудит
+    PAY-03), поэтому этот путь подтверждения — не запасной, а рабочий.
+    """
+
+    def _run(self, *args):
+        from io import StringIO
+        from django.core.management import call_command
+
+        out = StringIO()
+        call_command('check_payments', *args, stdout=out)
+        return out.getvalue()
+
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_confirms_paid_order(self, mock_email, mock_post):
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-cron-1',
+        )
+        stock = Stock.objects.get(size=self.size_m, region=self.region_ru)
+        qty_before = stock.quantity
+
+        self._run()
+
+        order.refresh_from_db()
+        stock.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+        self.assertIsNotNone(order.paid_at)
+        self.assertEqual(stock.quantity, qty_before - 2)
+        self.assertEqual(mock_email.call_count, 1)
+
+    @patch.object(VTBGateway, '_post')
+    def test_unpaid_order_stays_pending(self, mock_post):
+        mock_post.return_value = {'orderStatus': 6}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-cron-2',
+        )
+
+        self._run()
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+
+    @patch.object(VTBGateway, '_post')
+    def test_manual_order_without_gateway_is_not_touched(self, mock_post):
+        """Заявка КЗ (шлюза нет) в выборку крона не попадает.
+
+        Ассерт по выводу, а не по статусу: без фильтра `payment_gateway__gt=''`
+        заявка попадает в цикл, `get_gateway_by_code('')` кидает KeyError, его
+        глотает `except Exception` — и заказ остаётся PENDING точно так же.
+        Отличает эти две картины только вывод команды.
+        """
+        order = self._create_order(region=self.region_kz)
+
+        output = self._run()
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+        self.assertNotIn(order.number, output)
+        self.assertIn('Нет pending заказов с оплатой', output)
+        mock_post.assert_not_called()
+
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_order_option_targets_single_order(self, mock_email, mock_post):
+        mock_post.return_value = {'orderStatus': 2}
+        target = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-cron-3',
+        )
+        other = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-cron-4',
+        )
+
+        self._run('--order', target.number)
+
+        target.refresh_from_db()
+        other.refresh_from_db()
+        self.assertEqual(target.status, Order.Status.PAID)
+        self.assertEqual(other.status, Order.Status.PENDING)
+
+    @patch.object(VTBGateway, 'check_status')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_gateway_error_does_not_stop_the_rest(self, mock_email, mock_status):
+        """Обрыв связи с банком на одном заказе не должен ронять весь прогон:
+        иначе один битый заказ держал бы неподтверждёнными все следующие."""
+        broken = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-cron-err',
+        )
+        good = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-cron-ok',
+        )
+
+        def by_payment_id(payment_id):
+            if payment_id == 'vtb-cron-err':
+                raise RuntimeError('связь с банком оборвалась')
+            return PaymentStatus(paid=True, raw_status='2')
+
+        mock_status.side_effect = by_payment_id
+
+        output = self._run()
+
+        broken.refresh_from_db()
+        good.refresh_from_db()
+        self.assertEqual(broken.status, Order.Status.PENDING)
+        self.assertEqual(good.status, Order.Status.PAID)
+        self.assertIn('Ошибка проверки', output)
+
+
 # ─── Тесты Order lifecycle ───
 
 class OrderLifecycleTest(PaymentTestBase):
