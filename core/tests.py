@@ -5,6 +5,7 @@ SITE_URL, а не из хоста запроса. Это условие пере
 dr-joys.com одной правкой .env, и без теста оно тихо ломается при любом
 рефакторинге.
 """
+import io
 import json
 import logging
 import re
@@ -310,10 +311,31 @@ class LoggingConfigTests(SimpleTestCase):
 
     Без секции LOGGING в settings эффективный уровень этих логгеров —
     WARNING от root, и logger.info в vtb.py / emails/service.py молчит:
-    инцидент с деньгами разбирать нечем. Мутацию (убрать логгер из LOGGING)
-    ловят проверки isEnabledFor; assertLogs-смоук ниже — про то, что запись
-    вообще доходит до логгера-предка, уровень он ставит себе сам.
+    инцидент с деньгами разбирать нечем.
+
+    assertLogs здесь не помощник: он сам подменяет уровень, handlers и
+    propagate у запрошенного логгера, поэтому зелёный и с пустым LOGGING.
+    Поэтому пишем в настоящий консольный хендлер, подменив ему поток, —
+    и читаем ровно то, что ушло бы в `docker compose logs backend`.
     """
+
+    def console_output(self, logger_name):
+        """Что напечатает консольный хендлер на logger.info из этого модуля.
+
+        Хендлер `console` в LOGGING один на всех, и `orders`/`emails`
+        держат его же — значит лишний emit от propagate попадёт в тот же
+        буфер и будет виден как вторая строка.
+        """
+        handlers = logging.getLogger(logger_name.partition('.')[0]).handlers
+        self.assertEqual(len(handlers), 1, 'ожидался один консольный хендлер')
+        handler = handlers[0]
+        buffer = io.StringIO()
+        original, handler.stream = handler.stream, buffer
+        try:
+            logging.getLogger(logger_name).info('PH-01 probe')
+        finally:
+            handler.stream = original
+        return buffer.getvalue()
 
     def test_orders_logger_passes_info(self):
         self.assertTrue(
@@ -325,7 +347,16 @@ class LoggingConfigTests(SimpleTestCase):
             logging.getLogger('emails.service').isEnabledFor(logging.INFO)
         )
 
-    def test_info_record_reaches_orders_logger(self):
-        with self.assertLogs('orders', level='INFO') as captured:
-            logging.getLogger('orders.gateways.vtb').info('probe')
-        self.assertIn('probe', captured.output[0])
+    def test_orders_info_printed_once_with_timestamp(self):
+        output = self.console_output('orders.gateways.vtb')
+        self.assertEqual(output.count('PH-01 probe'), 1, 'строка задвоилась')
+        self.assertRegex(
+            output,
+            r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} '
+            r'INFO orders\.gateways\.vtb: PH-01 probe\n$',
+        )
+
+    def test_emails_info_printed_once(self):
+        output = self.console_output('emails.service')
+        self.assertEqual(output.count('PH-01 probe'), 1, 'строка задвоилась')
+        self.assertIn('INFO emails.service: PH-01 probe', output)
