@@ -412,17 +412,18 @@ class OrderEmailTotalTest(EmailTestBase):
 
     TOTAL_LINE = 'Итого: {order_total} {currency}'
 
-    def _region_ru(self):
+    def _region_ru(self, payment_currency_symbol='₸'):
         return Region.objects.create(
             code='ru', name='Россия',
             currency_code='RUB', currency_symbol='₽',
-            payment_currency_code='KZT', payment_currency_symbol='₸',
+            payment_currency_code='KZT',
+            payment_currency_symbol=payment_currency_symbol,
             payment_gateway='vtb',
         )
 
-    def _ru_order(self, display_amount=Decimal('525')):
+    def _ru_order(self, display_amount=Decimal('525'), region=None):
         return self._create_order(
-            region=self._region_ru(),
+            region=region or self._region_ru(),
             total_amount=Decimal('2950'),
             display_amount=display_amount,
             display_currency_code='RUB',
@@ -472,6 +473,24 @@ class OrderEmailTotalTest(EmailTestBase):
 
         body = EmailLog.objects.get(template_slug='order_paid').body
         self.assertEqual(body, 'Итого: 2950 ₸')
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_symbol_never_falls_back_to_display_currency(self, mock_api):
+        """Символ валюты оплаты в бэкофисе можно не заполнить (`blank=True`).
+
+        Фолбэком тогда нельзя брать символ витрины: получилось бы
+        `Итого: 2950 ₽ (525 ₽)` — ровно тот баг, ради которого заведён PAY-07,
+        только тихий. Печатаем код валюты оплаты.
+        """
+        self._create_template('order_paid', subject='#{order_number}', body=self.TOTAL_LINE)
+        order = self._ru_order(region=self._region_ru(payment_currency_symbol=''))
+
+        from emails.service import send_payment_confirmed_email
+        send_payment_confirmed_email(order)
+
+        body = EmailLog.objects.get(template_slug='order_paid').body
+        self.assertEqual(body, 'Итого: 2950 KZT (525 ₽)')
+        self.assertNotIn('2950 ₽', body)
 
 
 # ─── Публичные функции отправки (accounts) ───

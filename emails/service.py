@@ -238,6 +238,24 @@ def send_welcome_email(user):
     )
 
 
+def _pay_symbol(region):
+    """Символ валюты, в которой деньги реально спишутся с карты.
+
+    Фолбэк — КОД валюты оплаты, а не символ витрины. У региона с конверсией это
+    разные валюты, и подстановка витринного символа вернула бы ровно ту ошибку,
+    ради которой заведён PAY-07: тенге под знаком рубля. Пустой
+    `payment_currency_symbol` при заданном `payment_currency_code` — это
+    недозаполненный бэкофис (поле `blank=True`), и честное `2950 KZT` лучше
+    неверного `2950 ₽`. У региона без конверсии оба поля пусты — остаётся
+    символ витрины, как и было.
+    """
+    return (
+        region.payment_currency_symbol
+        or region.payment_currency_code
+        or region.currency_symbol
+    )
+
+
 def _order_total_context(order):
     """Ключи `{order_total}` и `{currency}` для писем покупателю.
 
@@ -260,7 +278,7 @@ def _order_total_context(order):
     # Валюту берём по признаку региона, а не по наличию `display_amount`:
     # у заказов до блока 1 его нет, и подстановка витринного символа вернула бы
     # ровно ту ошибку, ради которой задача и заведена — тенге под знаком рубля.
-    pay_symbol = region.payment_currency_symbol or region.currency_symbol
+    pay_symbol = _pay_symbol(region)
     if not order.display_amount:
         return {'order_total': total, 'currency': pay_symbol}
 
@@ -387,8 +405,7 @@ def send_payment_received_notification(order):
         return
 
     region = order.region
-    pay_symbol = region.payment_currency_symbol or region.currency_symbol
-    total = f'{order.total_amount:.0f} {pay_symbol}'
+    total = f'{order.total_amount:.0f} {_pay_symbol(region)}'
 
     # Для региона с конверсией сумма оплаты и цена для покупателя — разные
     # валюты: списано в ₸, а в корзине человек видел ₽. Показываем обе, иначе
