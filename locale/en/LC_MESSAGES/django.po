@@ -168,6 +168,9 @@ msgstr "Out of stock"
 msgid "Регион не определён"
 msgstr "Region not detected"
 
+msgid "Регион изменился — проверьте цены и повторите оформление"
+msgstr "Your region has changed — check the prices and place the order again"
+
 msgid "Товары в корзине не найдены"
 msgstr "No items found in cart"
 
