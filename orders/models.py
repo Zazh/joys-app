@@ -172,15 +172,21 @@ class Order(models.Model):
         self.status = locked.status
         self.paid_at = locked.paid_at
 
-        # Отправить email о подтверждении оплаты
+        # Отправить email о подтверждении оплаты — после коммита, а не здесь.
+        # Обе отправки ходят по HTTP в SendPulse (в худшем случае ~55 секунд:
+        # две попытки по 15 с, токен, уведомление), а метод держит
+        # select_for_update на заказе и строках Stock. Внутри транзакции это
+        # время ждали бы и браузер покупателя на return-странице, и чужие
+        # оформления, которым нужен тот же Stock. Бонус: если транзакция
+        # откатится, письмо об оплате не уйдёт.
         from emails.service import (
             send_payment_confirmed_email, send_payment_received_notification,
         )
-        send_payment_confirmed_email(locked)
+        transaction.on_commit(lambda: send_payment_confirmed_email(locked))
         # Уведомление владельцу — здесь, а не в callback-вьюхе: подтверждение
         # приходит тремя путями (callback, return, крон), и только этот метод
         # общий для всех трёх. Гард выше делает его однократным.
-        send_payment_received_notification(locked)
+        transaction.on_commit(lambda: send_payment_received_notification(locked))
 
     @transaction.atomic
     def cancel(self):

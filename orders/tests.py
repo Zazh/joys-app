@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
 from django.core.cache import cache
+from django.db import transaction
 from django.test import TestCase, RequestFactory, override_settings
 from django.utils import timezone
 
@@ -527,7 +528,10 @@ class ConfirmPaymentTest(PaymentTestBase):
     def test_confirm_payment_sends_email(self, mock_email):
         order = self._create_order(gateway='halyk', payment_id='test-inv-3')
 
-        order.confirm_payment()
+        # Письма уходят через transaction.on_commit, а TestCase держит тест
+        # в транзакции — без этой обёртки колбэки не выполнятся никогда.
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
 
         mock_email.assert_called_once()
         called_order = mock_email.call_args[0][0]
@@ -537,18 +541,58 @@ class ConfirmPaymentTest(PaymentTestBase):
     def test_confirm_payment_idempotent(self, mock_email):
         """Повторный вызов confirm_payment не меняет статус (идемпотентность)."""
         order = self._create_order(gateway='halyk', payment_id='test-inv-4')
-        order.confirm_payment()
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
         first_paid_at = Order.objects.get(pk=order.pk).paid_at
 
         # Вызываем второй раз
         order.refresh_from_db()
-        order.confirm_payment()
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
         order.refresh_from_db()
 
         self.assertEqual(order.status, Order.Status.PAID)
         self.assertEqual(order.paid_at, first_paid_at)
         # Email отправлен только 1 раз
         self.assertEqual(mock_email.call_count, 1)
+
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_emails_wait_for_commit(self, mock_email):
+        """Письмо не должно уходить из-под блокировок.
+
+        `confirm_payment` держит select_for_update на заказе и строках Stock;
+        HTTP в SendPulse внутри этой транзакции — до ~55 секунд, которые ждут
+        и покупатель на return-странице, и чужие оформления того же товара.
+        """
+        order = self._create_order(gateway='halyk', payment_id='commit-1')
+
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
+            mock_email.assert_not_called()  # транзакция ещё открыта
+
+        mock_email.assert_called_once()  # ушло после коммита
+
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_no_email_when_transaction_rolls_back(self, mock_email):
+        """Откат транзакции вокруг подтверждения — письма нет.
+
+        Прямой вызов отправил бы письмо об оплате по заказу, который остался
+        неоплаченным.
+        """
+        order = self._create_order(gateway='halyk', payment_id='commit-2')
+
+        class Rollback(Exception):
+            pass
+
+        with self.captureOnCommitCallbacks(execute=True):
+            with self.assertRaises(Rollback):
+                with transaction.atomic():
+                    order.confirm_payment()
+                    raise Rollback
+
+        mock_email.assert_not_called()
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
 
 
 # ─── Тесты PaymentCallbackView (integration) ───
@@ -568,10 +612,11 @@ class PaymentCallbackViewTest(PaymentTestBase):
             region=self.region_ru, gateway='vtb', payment_id='vtb-cb-test-1',
         )
 
-        response = self.client.post(
-            '/orders/payment/callback/vtb/',
-            data={'orderId': 'vtb-cb-test-1'},
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                '/orders/payment/callback/vtb/',
+                data={'orderId': 'vtb-cb-test-1'},
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'OK')
@@ -603,15 +648,16 @@ class PaymentCallbackViewTest(PaymentTestBase):
             region=self.region_kz, gateway='halyk', payment_id='223456789012345',
         )
 
-        response = self.client.post(
-            '/orders/payment/callback/halyk/',
-            data=json.dumps({
-                'invoiceId': '223456789012345',
-                'code': 'ok',
-                'reasonCode': 0,
-            }),
-            content_type='application/json',
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                '/orders/payment/callback/halyk/',
+                data=json.dumps({
+                    'invoiceId': '223456789012345',
+                    'code': 'ok',
+                    'reasonCode': 0,
+                }),
+                content_type='application/json',
+            )
 
         self.assertEqual(response.status_code, 200)
         order.refresh_from_db()
@@ -708,10 +754,11 @@ class PaymentCallbackViewTest(PaymentTestBase):
         stock = Stock.objects.get(size=self.size_m, region=self.region_ru)
         qty_before = stock.quantity
 
-        # Первый callback
-        self.client.post('/orders/payment/callback/vtb/', data={'orderId': 'vtb-double-1'})
-        # Второй callback (дубль)
-        self.client.post('/orders/payment/callback/vtb/', data={'orderId': 'vtb-double-1'})
+        with self.captureOnCommitCallbacks(execute=True):
+            # Первый callback
+            self.client.post('/orders/payment/callback/vtb/', data={'orderId': 'vtb-double-1'})
+            # Второй callback (дубль)
+            self.client.post('/orders/payment/callback/vtb/', data={'orderId': 'vtb-double-1'})
 
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PAID)
@@ -906,7 +953,8 @@ class CheckPaymentsCommandTest(PaymentTestBase):
         stock = Stock.objects.get(size=self.size_m, region=self.region_ru)
         qty_before = stock.quantity
 
-        self._run()
+        with self.captureOnCommitCallbacks(execute=True):
+            self._run()
 
         order.refresh_from_db()
         stock.refresh_from_db()
@@ -1160,7 +1208,9 @@ class PaymentNotificationTest(PaymentTestBase):
     def test_owner_notified_on_confirm(self, mock_api, mock_email):
         order = self._create_order(gateway='halyk', payment_id='notify-1')
 
-        order.confirm_payment()
+        # Уведомление уходит через on_commit — см. ConfirmPaymentTest
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
 
         mock_api.assert_called_once()
         to, subject, body = mock_api.call_args[0]
@@ -1189,9 +1239,11 @@ class PaymentNotificationTest(PaymentTestBase):
     def test_notification_not_duplicated(self, mock_api, mock_email):
         order = self._create_order(gateway='halyk', payment_id='notify-3')
 
-        order.confirm_payment()
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
         order.refresh_from_db()
-        order.confirm_payment()
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
 
         self.assertEqual(mock_api.call_count, 1)
 
@@ -1218,9 +1270,10 @@ class PaymentNotificationTest(PaymentTestBase):
         mock_post.return_value = {'orderStatus': 2}
         order = self._paid_ru_order('notify-cb')
 
-        self.client.post(
-            '/orders/payment/callback/vtb/', data={'orderId': 'notify-cb'},
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                '/orders/payment/callback/vtb/', data={'orderId': 'notify-cb'},
+            )
 
         mock_api.assert_called_once()
         self.assertIn(order.number, mock_api.call_args[0][1])
@@ -1238,7 +1291,8 @@ class PaymentNotificationTest(PaymentTestBase):
         mock_post.return_value = {'orderStatus': 2}
         order = self._paid_ru_order('notify-ret')
 
-        self.client.get('/orders/payment/return/?orderId=notify-ret')
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.get('/orders/payment/return/?orderId=notify-ret')
 
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PAID)
@@ -1257,7 +1311,8 @@ class PaymentNotificationTest(PaymentTestBase):
         mock_post.return_value = {'orderStatus': 2}
         order = self._paid_ru_order('notify-cron')
 
-        call_command('check_payments', stdout=StringIO())
+        with self.captureOnCommitCallbacks(execute=True):
+            call_command('check_payments', stdout=StringIO())
 
         mock_api.assert_called_once()
         self.assertIn(order.number, mock_api.call_args[0][1])
@@ -1270,7 +1325,8 @@ class PaymentNotificationTest(PaymentTestBase):
         ошибка живёт в письме покупателю, хвост Н-1 аудита PAY-03)."""
         order = self._paid_ru_order('notify-conv')
 
-        order.confirm_payment()
+        with self.captureOnCommitCallbacks(execute=True):
+            order.confirm_payment()
 
         _, subject, body = mock_api.call_args[0]
         self.assertIn('5000 ₸', subject)
