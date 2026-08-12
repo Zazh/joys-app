@@ -242,6 +242,11 @@ DEFAULT_FROM_NAME = 'DR.JOYS'
 # Куда слать уведомление о подтверждённой оплате. Пусто = уведомления выключены.
 ORDER_NOTIFY_EMAIL = os.environ.get('ORDER_NOTIFY_EMAIL', '')
 
+# Куда слать алерт «заказ истёк, а деньги списаны» (крон check_expired_paid).
+# Отдельно от ORDER_NOTIFY_EMAIL: тот выключен сознательно и означает письмо
+# о каждой оплате, а это — редкий инцидент с деньгами. Пусто = только лог.
+PAYMENT_ALERT_EMAIL = os.environ.get('PAYMENT_ALERT_EMAIL', '')
+
 # VTB Payment Gateway (Россия)
 VTB_PAYMENT_URL = os.environ.get('VTB_PAYMENT_URL', 'https://vtbkz.rbsuat.com/payment/rest/')
 VTB_USERNAME = os.environ.get('VTB_USERNAME', '')

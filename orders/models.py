@@ -76,6 +76,12 @@ class Order(models.Model):
     )
     created_at = models.DateTimeField('Создан', auto_now_add=True)
     paid_at = models.DateTimeField('Оплачен', null=True, blank=True)
+    expired_paid_alerted_at = models.DateTimeField(
+        'Алерт «истёк, но оплачен»',
+        null=True, blank=True, editable=False,
+        help_text='Когда владельцу ушёл алерт о деньгах по истёкшему заказу '
+                  '(крон check_expired_paid). Пусто — алерта не было',
+    )
 
     class Meta:
         verbose_name = 'Заказ'

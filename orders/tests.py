@@ -992,6 +992,148 @@ class CheckPaymentsCommandTest(PaymentTestBase):
         self.assertIn('Ошибка проверки', output)
 
 
+# ─── Тесты детектора «EXPIRED с деньгами» ───
+
+@override_settings(PAYMENT_ALERT_EMAIL='alert@dr-joys.com')
+class ExpiredPaidDetectorTest(PaymentTestBase):
+    """Крон `check_expired_paid` — вторая половина Р-1.
+
+    Первая (sessionTimeoutSecs, PH-03) закрывает окно конструктивно; этот крон
+    ловит то, что всё же проскочило: банк списал деньги по заказу, который мы
+    уже отменили. Автоподтверждать такое нельзя — резерв снят, склад ушёл бы
+    в минус, — поэтому команда только сигналит.
+    """
+
+    ALERT = 'alert@dr-joys.com'
+    LOGGER = 'orders.management.commands.check_expired_paid'
+
+    def _run(self):
+        from io import StringIO
+        from django.core.management import call_command
+
+        out = StringIO()
+        call_command('check_expired_paid', stdout=out)
+        return out.getvalue()
+
+    def _expired_order(self, payment_id='vtb-exp-1', gateway='vtb', minutes_ago=10):
+        order = self._create_order(
+            region=self.region_ru, gateway=gateway, payment_id=payment_id,
+            status=Order.Status.EXPIRED,
+        )
+        order.expires_at = timezone.now() - timedelta(minutes=minutes_ago)
+        order.save(update_fields=['expires_at'])
+        return order
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_alerts_and_leaves_order_untouched(self, mock_status, mock_api):
+        order = self._expired_order()
+        stock = Stock.objects.get(size=self.size_m, region=self.region_ru)
+        qty_before, reserved_before = stock.quantity, stock.reserved
+
+        with self.assertLogs(self.LOGGER, level='ERROR') as logs:
+            self._run()
+
+        # Сигнал ушёл: лог + письмо на отдельный адрес
+        self.assertIn(order.number, '\n'.join(logs.output))
+        mock_api.assert_called_once()
+        to, subject, body = mock_api.call_args[0]
+        self.assertEqual(to, self.ALERT)
+        self.assertIn(order.number, subject)
+        self.assertIn('+77001234567', body)
+        self.assertIn(f'/backoffice/orders/{order.number}/', body)
+        # Инструкция честная: кнопка бэкофиса для EXPIRED бессильна
+        self.assertIn('НЕ сработает', body)
+
+        # Ни статуса, ни склада — Р-1 запрещает автоподтверждение
+        order.refresh_from_db()
+        stock.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.EXPIRED)
+        self.assertEqual(stock.quantity, qty_before)
+        self.assertEqual(stock.reserved, reserved_before)
+        self.assertIsNotNone(order.expired_paid_alerted_at)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_alert_is_not_repeated(self, mock_status, mock_api):
+        """Крон ходит каждые полчаса — второй раз владельца не будим."""
+        self._expired_order()
+
+        with self.assertLogs(self.LOGGER, level='ERROR'):
+            self._run()
+        self._run()
+
+        self.assertEqual(mock_api.call_count, 1)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=False, raw_status='6'))
+    def test_unpaid_expired_is_not_alerted(self, mock_status, mock_api):
+        """Обычный истёкший заказ — не инцидент; поле пусто, чтобы заказ
+        перепроверился, пока не выйдет из суточного окна."""
+        order = self._expired_order()
+
+        self._run()
+
+        order.refresh_from_db()
+        mock_api.assert_not_called()
+        self.assertIsNone(order.expired_paid_alerted_at)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_pending_and_orders_without_payment_id_are_skipped(self, mock_status, mock_api):
+        self._create_order(  # PENDING — им занимается check_payments
+            region=self.region_ru, gateway='vtb', payment_id='vtb-exp-pending',
+        )
+        self._expired_order(payment_id='', minutes_ago=5)  # заявка без оплаты
+
+        output = self._run()
+
+        mock_status.assert_not_called()
+        mock_api.assert_not_called()
+        self.assertIn('Свежих истёкших заказов с оплатой нет', output)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_old_expired_is_not_polled(self, mock_status, mock_api):
+        """Сутки прошли — банк по этому заказу уже не опрашиваем."""
+        self._expired_order(minutes_ago=60 * 25)
+
+        self._run()
+
+        mock_status.assert_not_called()
+        mock_api.assert_not_called()
+
+    @override_settings(PAYMENT_ALERT_EMAIL='')
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_without_alert_email_signal_stays_in_log(self, mock_status, mock_api):
+        """Адрес не задан — сигнал всё равно есть в логе, и поле проставлено:
+        иначе крон шумел бы одним и тем же инцидентом каждые полчаса."""
+        order = self._expired_order()
+
+        with self.assertLogs(self.LOGGER, level='ERROR') as logs:
+            self._run()
+
+        mock_api.assert_not_called()
+        self.assertIn(order.number, '\n'.join(logs.output))
+        order.refresh_from_db()
+        self.assertIsNotNone(order.expired_paid_alerted_at)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', side_effect=RuntimeError('связь с банком оборвалась'))
+    def test_bank_error_does_not_crash_the_command(self, mock_status, mock_api):
+        """Обрыв связи не должен ронять прогон и не должен «съедать» заказ:
+        поле пусто — вернётся в выборку следующим прогоном."""
+        order = self._expired_order()
+
+        output = self._run()
+
+        order.refresh_from_db()
+        self.assertIn('Ошибка проверки', output)
+        self.assertIsNone(order.expired_paid_alerted_at)
+        mock_api.assert_not_called()
+
+
 # ─── Тесты уведомления владельцу об оплате ───
 
 @patch('emails.service.send_payment_confirmed_email')

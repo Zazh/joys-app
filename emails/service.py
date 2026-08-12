@@ -393,6 +393,38 @@ def send_inquiry_notification(submission):
         logger.error('Inquiry notification failed: %s — %s', form.email_notify_to, error)
 
 
+def _owner_total_lines(order):
+    """Сумма заказа для письма владельцу: (короткая, развёрнутая).
+
+    Для региона с конверсией сумма оплаты и цена для покупателя — разные
+    валюты: списано в ₸, а в корзине человек видел ₽. Показываем обе, иначе
+    по письму не понять, о какой сумме речь.
+
+    Общая для уведомления об оплате и алерта «истёк, но оплачен»: копия этого
+    расчёта в двух письмах разъехалась бы ровно так, как разъехалась в PAY-07.
+    """
+    region = order.region
+    total = f'{order.total_amount:.0f} {_pay_symbol(region)}'
+
+    if order.display_amount and region.needs_conversion:
+        return total, (
+            f'{total} (покупатель видел '
+            f'{order.display_amount:.0f} {region.currency_symbol})'
+        )
+    return total, total
+
+
+def _order_backoffice_url(order):
+    """Адрес карточки заказа в бэкофисе.
+
+    Через reverse(): склейка строкой молча ломается при правке маршрута,
+    а ссылка нужна владельцу ровно в момент разбора оплаты.
+    """
+    return settings.SITE_URL + reverse(
+        'backoffice:order_detail', kwargs={'number': order.number},
+    )
+
+
 def send_payment_received_notification(order):
     """Уведомление владельцу о подтверждённой оплате (plain text).
 
@@ -405,24 +437,8 @@ def send_payment_received_notification(order):
         return
 
     region = order.region
-    total = f'{order.total_amount:.0f} {_pay_symbol(region)}'
-
-    # Для региона с конверсией сумма оплаты и цена для покупателя — разные
-    # валюты: списано в ₸, а в корзине человек видел ₽. Показываем обе, иначе
-    # по письму не понять, о какой сумме речь.
-    if order.display_amount and region.needs_conversion:
-        total_line = (
-            f'{total} (покупатель видел '
-            f'{order.display_amount:.0f} {region.currency_symbol})'
-        )
-    else:
-        total_line = total
-
-    # Адрес карточки — через reverse(): склейка строкой молча ломается при
-    # правке маршрута, а письмо владельцу нужно ровно в момент разбора оплаты.
-    order_url = settings.SITE_URL + reverse(
-        'backoffice:order_detail', kwargs={'number': order.number},
-    )
+    total, total_line = _owner_total_lines(order)
+    order_url = _order_backoffice_url(order)
 
     subject = f'Оплачен заказ {order.number} — {total}'
     body = (
@@ -440,3 +456,49 @@ def send_payment_received_notification(order):
     ok, error = _send_via_api(to, subject, body)
     if not ok:
         logger.error('Payment notification failed: %s — %s', to, error)
+
+
+def send_expired_paid_alert(order):
+    """Алерт владельцу: заказ истёк, а деньги в банке всё-таки списаны.
+
+    Шлёт крон `check_expired_paid`. Адрес — отдельная переменная
+    PAYMENT_ALERT_EMAIL, а не ORDER_NOTIFY_EMAIL: тот означает «письмо о
+    каждой оплате» и выключен сознательным решением владельца, а это —
+    редкий инцидент с деньгами. Пусто = алерт остаётся только в логе.
+    """
+    to = getattr(settings, 'PAYMENT_ALERT_EMAIL', '')
+    if not to:
+        return
+
+    region = order.region
+    total, total_line = _owner_total_lines(order)
+    order_url = _order_backoffice_url(order)
+    # Локальное время: сверять письмо придётся с логами и выпиской банка,
+    # а логи контейнера идут в зоне проекта (Asia/Almaty), не в UTC.
+    expired_at = (
+        timezone.localtime(order.expires_at).strftime('%d.%m.%Y %H:%M')
+        if order.expires_at else '—'
+    )
+
+    subject = f'ВНИМАНИЕ: истёкший заказ {order.number} оплачен — {total}'
+    body = (
+        f'По заказу {order.number} банк подтверждает успешное списание, '
+        f'но заказ уже истёк и резерв товара снят.\n\n'
+        f'Сумма: {total_line}\n'
+        f'Регион: {region.name} · шлюз: {order.payment_gateway or "—"}\n'
+        f'Истёк: {expired_at}\n\n'
+        f'Состав заказа:\n{_order_items_text(order)}\n\n'
+        f'Покупатель: {order.customer_name}\n'
+        f'Телефон: {order.customer_phone}\n'
+        f'Email: {order.customer_email}\n'
+        f'Доставка: {order.city}, {order.address}\n\n'
+        f'Что делать: кнопка «Подтвердить оплату» в бэкофисе для истёкшего '
+        f'заказа НЕ сработает — она принимает только заказы в статусе '
+        f'«Ожидает оплаты». Разбор ручной: связаться с покупателем и '
+        f'оформить отправку вручную либо вернуть платёж через кабинет банка.\n\n'
+        f'Заказ в бэкофисе: {order_url}\n'
+    )
+
+    ok, error = _send_via_api(to, subject, body)
+    if not ok:
+        logger.error('Expired-paid alert failed: %s — %s', to, error)
