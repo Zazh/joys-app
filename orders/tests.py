@@ -12,7 +12,7 @@ from catalog.models import Category, Product, ProductSize, RegionPrice, Stock
 from orders.gateways import get_gateway, get_gateway_by_code
 from orders.gateways.base import CallbackRejected, PaymentResult, PaymentStatus
 from orders.gateways.halyk import HalykGateway
-from orders.gateways.vtb import VTBGateway
+from orders.gateways.vtb import SESSION_TIMEOUT_SECS, VTBGateway
 from orders.models import Order, OrderItem
 from regions.models import ExchangeRate, Region
 
@@ -123,6 +123,33 @@ class VTBGatewayTest(PaymentTestBase):
 
         self.assertFalse(result.success)
         self.assertIn('Duplicate', result.error_message)
+
+    @patch.object(VTBGateway, '_post')
+    def test_register_sends_session_timeout(self, mock_post):
+        """register.do получает sessionTimeoutSecs — без него банк держит форму
+        оплаты по своему дефолту, который нам неизвестен."""
+        mock_post.return_value = {
+            'orderId': 'vtb-order-123',
+            'formUrl': 'https://vtb.test/payment/form/123',
+        }
+        order = self._create_order(region=self.region_ru)
+        VTBGateway().create_payment(
+            order, 'https://site.com/return/', 'https://site.com/callback/',
+        )
+
+        method, params = mock_post.call_args[0]
+        self.assertEqual(method, 'register.do')
+        self.assertEqual(params['sessionTimeoutSecs'], 1500)
+
+    def test_session_timeout_is_shorter_than_order_window(self):
+        """Инвариант: сессия банка короче нашего окна оплаты (30 минут,
+        `orders/views.py::_create_order`).
+
+        Поднять таймаут выше 30 минут — значит вернуть окно «деньги списаны,
+        заказ EXPIRED»: банк ещё принимает оплату по заказу, который крон
+        `release_expired_orders` уже отменил и снял резерв.
+        """
+        self.assertLess(SESSION_TIMEOUT_SECS, 30 * 60)
 
     @patch.object(VTBGateway, '_post')
     def test_check_status_paid(self, mock_post):

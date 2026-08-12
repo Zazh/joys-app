@@ -31,6 +31,14 @@ def _ca_bundle():
         _ca_bundle_path = path
     return _ca_bundle_path
 
+# Время жизни платёжной сессии банка (register.do). ИНВАРИАНТ: значение должно
+# быть МЕНЬШЕ 30-минутного `expires_at` заказа (`orders/views.py::_create_order`).
+# Иначе форма оплаты банка переживает наш заказ: крон `release_expired_orders`
+# уводит его в EXPIRED и снимает резерв, а покупатель в это время платит —
+# возвращается окно «деньги списаны, заказ EXPIRED», подтвердить который уже
+# не может ни один из путей `confirm_payment`.
+SESSION_TIMEOUT_SECS = 1500  # 25 минут
+
 # ISO 4217 numeric codes
 CURRENCY_NUMERIC = {
     'KZT': '398',
@@ -79,6 +87,7 @@ class VTBGateway(BaseGateway):
             'language': 'ru',
             'dynamicCallbackUrl': callback_url,
             'description': f'Заказ {order.number}',
+            'sessionTimeoutSecs': SESSION_TIMEOUT_SECS,
         }
         if currency_code:
             params['currency'] = currency_code
