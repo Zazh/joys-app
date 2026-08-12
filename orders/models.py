@@ -167,8 +167,14 @@ class Order(models.Model):
         self.paid_at = locked.paid_at
 
         # Отправить email о подтверждении оплаты
-        from emails.service import send_payment_confirmed_email
+        from emails.service import (
+            send_payment_confirmed_email, send_payment_received_notification,
+        )
         send_payment_confirmed_email(locked)
+        # Уведомление владельцу — здесь, а не в callback-вьюхе: подтверждение
+        # приходит тремя путями (callback, return, крон), и только этот метод
+        # общий для всех трёх. Гард выше делает его однократным.
+        send_payment_received_notification(locked)
 
     @transaction.atomic
     def cancel(self):

@@ -797,6 +797,127 @@ class CheckPaymentsCommandTest(PaymentTestBase):
         self.assertIn('Ошибка проверки', output)
 
 
+# ─── Тесты уведомления владельцу об оплате ───
+
+@patch('emails.service.send_payment_confirmed_email')
+class PaymentNotificationTest(PaymentTestBase):
+    """Уведомление владельцу о подтверждённой оплате (PAY-04).
+
+    Письмо покупателю замокано на весь класс, поэтому единственный вызов
+    `_send_via_api` в тестах — это и есть уведомление владельца.
+    """
+
+    OWNER = 'owner@dr-joys.com'
+
+    def _paid_ru_order(self, payment_id):
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id=payment_id,
+        )
+        order.display_amount = Decimal('525')
+        order.display_currency_code = 'RUB'
+        order.save(update_fields=['display_amount', 'display_currency_code'])
+        return order
+
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_owner_notified_on_confirm(self, mock_api, mock_email):
+        order = self._create_order(gateway='halyk', payment_id='notify-1')
+
+        order.confirm_payment()
+
+        mock_api.assert_called_once()
+        to, subject, body = mock_api.call_args[0]
+        self.assertEqual(to, self.OWNER)
+        self.assertIn(order.number, subject)
+        self.assertIn('Тест Тестов', body)
+        self.assertIn('+77001234567', body)
+        self.assertIn('Алматы', body)
+        self.assertIn('halyk', body)
+
+    @override_settings(ORDER_NOTIFY_EMAIL='')
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_no_notification_without_address(self, mock_api, mock_email):
+        order = self._create_order(gateway='halyk', payment_id='notify-2')
+
+        order.confirm_payment()
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+        mock_api.assert_not_called()
+
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_notification_not_duplicated(self, mock_api, mock_email):
+        order = self._create_order(gateway='halyk', payment_id='notify-3')
+
+        order.confirm_payment()
+        order.refresh_from_db()
+        order.confirm_payment()
+
+        self.assertEqual(mock_api.call_count, 1)
+
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    @patch('emails.service._send_via_api', return_value=(False, 'SendPulse упал'))
+    def test_send_failure_does_not_break_confirm(self, mock_api, mock_email):
+        """Уведомление не должно стоить нам оплаты: отправка упала — заказ
+        всё равно оплачен и склад списан."""
+        order = self._create_order(gateway='halyk', payment_id='notify-4')
+        stock = Stock.objects.get(size=self.size_m, region=self.region_kz)
+        qty_before = stock.quantity
+
+        order.confirm_payment()
+
+        order.refresh_from_db()
+        stock.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+        self.assertEqual(stock.quantity, qty_before - 2)
+
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_notification_from_callback(self, mock_api, mock_post, mock_email):
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._paid_ru_order('notify-cb')
+
+        self.client.post(
+            '/orders/payment/callback/vtb/', data={'orderId': 'notify-cb'},
+        )
+
+        mock_api.assert_called_once()
+        self.assertIn(order.number, mock_api.call_args[0][1])
+
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_notification_from_cron(self, mock_api, mock_post, mock_email):
+        """Крон — рабочий путь подтверждения (callback банк не зовёт),
+        поэтому уведомление обязано уходить и отсюда."""
+        from io import StringIO
+        from django.core.management import call_command
+
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._paid_ru_order('notify-cron')
+
+        call_command('check_payments', stdout=StringIO())
+
+        mock_api.assert_called_once()
+        self.assertIn(order.number, mock_api.call_args[0][1])
+
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_converted_region_shows_both_amounts(self, mock_api, mock_email):
+        """Регион с конверсией: списано в ₸, покупатель видел ₽. В письме
+        должны быть обе суммы — иначе владелец читает чужую валюту (та же
+        ошибка живёт в письме покупателю, хвост Н-1 аудита PAY-03)."""
+        order = self._paid_ru_order('notify-conv')
+
+        order.confirm_payment()
+
+        _, subject, body = mock_api.call_args[0]
+        self.assertIn('5000 ₸', subject)
+        self.assertIn('525 ₽', body)
+
+
 # ─── Тесты Order lifecycle ───
 
 class OrderLifecycleTest(PaymentTestBase):

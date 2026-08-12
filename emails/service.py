@@ -340,3 +340,53 @@ def send_inquiry_notification(submission):
     ok, error = _send_via_api(form.email_notify_to, subject, body)
     if not ok:
         logger.error('Inquiry notification failed: %s — %s', form.email_notify_to, error)
+
+
+def send_payment_received_notification(order):
+    """Уведомление владельцу о подтверждённой оплате (plain text).
+
+    Зовётся из `Order.confirm_payment`, то есть срабатывает на любом пути
+    подтверждения — callback банка, return-вьюха, крон `check_payments`.
+    Пустой ORDER_NOTIFY_EMAIL = уведомления выключены.
+    """
+    to = getattr(settings, 'ORDER_NOTIFY_EMAIL', '')
+    if not to:
+        return
+
+    region = order.region
+    pay_symbol = region.payment_currency_symbol or region.currency_symbol
+    total = f'{order.total_amount:.0f} {pay_symbol}'
+
+    # Для региона с конверсией сумма оплаты и цена для покупателя — разные
+    # валюты: списано в ₸, а в корзине человек видел ₽. Показываем обе, иначе
+    # по письму не понять, о какой сумме речь.
+    if order.display_amount and region.needs_conversion:
+        total_line = (
+            f'{total} (покупатель видел '
+            f'{order.display_amount:.0f} {region.currency_symbol})'
+        )
+    else:
+        total_line = total
+
+    items_text = '\n'.join(
+        f'  {item.product_name} ({item.size_name}) x {item.quantity} — '
+        f'{item.subtotal:.0f} {region.currency_symbol}'
+        for item in order.items.all()
+    )
+
+    subject = f'Оплачен заказ {order.number} — {total}'
+    body = (
+        f'Заказ {order.number} оплачен.\n\n'
+        f'Сумма: {total_line}\n'
+        f'Регион: {region.name} · шлюз: {order.payment_gateway or "—"}\n\n'
+        f'Состав заказа:\n{items_text}\n\n'
+        f'Покупатель: {order.customer_name}\n'
+        f'Телефон: {order.customer_phone}\n'
+        f'Email: {order.customer_email}\n'
+        f'Доставка: {order.city}, {order.address}\n\n'
+        f'Заказ в бэкофисе: {settings.SITE_URL}/backoffice/orders/{order.number}/\n'
+    )
+
+    ok, error = _send_via_api(to, subject, body)
+    if not ok:
+        logger.error('Payment notification failed: %s — %s', to, error)

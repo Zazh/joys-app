@@ -211,6 +211,9 @@ SENDPULSE_API_SECRET = os.environ.get('SENDPULSE_API_SECRET', '')
 DEFAULT_FROM_EMAIL = 'info@dr-joys.com'
 DEFAULT_FROM_NAME = 'DR.JOYS'
 
+# Куда слать уведомление о подтверждённой оплате. Пусто = уведомления выключены.
+ORDER_NOTIFY_EMAIL = os.environ.get('ORDER_NOTIFY_EMAIL', '')
+
 # VTB Payment Gateway (Россия)
 VTB_PAYMENT_URL = os.environ.get('VTB_PAYMENT_URL', 'https://vtbkz.rbsuat.com/payment/rest/')
 VTB_USERNAME = os.environ.get('VTB_USERNAME', '')
