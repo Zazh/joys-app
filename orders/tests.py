@@ -833,6 +833,8 @@ class PaymentNotificationTest(PaymentTestBase):
         self.assertIn('+77001234567', body)
         self.assertIn('Алматы', body)
         self.assertIn('halyk', body)
+        # Ссылка в бэкофис — рабочая: маршрут ловит номер заказа, а не pk
+        self.assertIn(f'/backoffice/orders/{order.number}/', body)
 
     @override_settings(ORDER_NOTIFY_EMAIL='')
     @patch('emails.service._send_via_api', return_value=(True, ''))
@@ -883,6 +885,26 @@ class PaymentNotificationTest(PaymentTestBase):
             '/orders/payment/callback/vtb/', data={'orderId': 'notify-cb'},
         )
 
+        mock_api.assert_called_once()
+        self.assertIn(order.number, mock_api.call_args[0][1])
+
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_notification_from_return_view(self, mock_api, mock_post, mock_email):
+        """Единственный путь, который реально сработал на проде.
+
+        Оплату заказа 260812-0005 подтвердила именно return-вьюха: банк
+        `dynamicCallbackUrl` не зовёт (Н-2 аудита), крон отработал раньше
+        оплаты. Значит уведомление обязано уходить и отсюда.
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._paid_ru_order('notify-ret')
+
+        self.client.get('/orders/payment/return/?orderId=notify-ret')
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
         mock_api.assert_called_once()
         self.assertIn(order.number, mock_api.call_args[0][1])
 

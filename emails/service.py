@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import requests
 from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -256,6 +257,15 @@ def _pay_symbol(region):
     )
 
 
+def _order_items_text(order):
+    """Позиции заказа строкой — в валюте ВИТРИНЫ (`item.price` хранится в ней)."""
+    return '\n'.join(
+        f'  {item.product_name} ({item.size_name}) x {item.quantity} — '
+        f'{item.subtotal:.0f} {order.region.currency_symbol}'
+        for item in order.items.all()
+    )
+
+
 def _order_total_context(order):
     """Ключи `{order_total}` и `{currency}` для писем покупателю.
 
@@ -293,12 +303,7 @@ def _order_total_context(order):
 
 def send_order_created_email(order):
     """Письмо о создании заказа."""
-    items = order.items.all()
-    items_text = '\n'.join(
-        f'  {item.product_name} ({item.size_name}) x {item.quantity} — '
-        f'{item.subtotal:.0f} {order.region.currency_symbol}'
-        for item in items
-    )
+    items_text = _order_items_text(order)
     _send_email(
         to=order.customer_email,
         template_slug='order_created',
@@ -317,12 +322,7 @@ def send_order_created_email(order):
 
 def send_payment_confirmed_email(order):
     """Письмо о подтверждении оплаты."""
-    items = order.items.all()
-    items_text = '\n'.join(
-        f'  {item.product_name} ({item.size_name}) x {item.quantity} — '
-        f'{item.subtotal:.0f} {order.region.currency_symbol}'
-        for item in items
-    )
+    items_text = _order_items_text(order)
     _send_email(
         to=order.customer_email,
         template_slug='order_paid',
@@ -418,10 +418,10 @@ def send_payment_received_notification(order):
     else:
         total_line = total
 
-    items_text = '\n'.join(
-        f'  {item.product_name} ({item.size_name}) x {item.quantity} — '
-        f'{item.subtotal:.0f} {region.currency_symbol}'
-        for item in order.items.all()
+    # Адрес карточки — через reverse(): склейка строкой молча ломается при
+    # правке маршрута, а письмо владельцу нужно ровно в момент разбора оплаты.
+    order_url = settings.SITE_URL + reverse(
+        'backoffice:order_detail', kwargs={'number': order.number},
     )
 
     subject = f'Оплачен заказ {order.number} — {total}'
@@ -429,12 +429,12 @@ def send_payment_received_notification(order):
         f'Заказ {order.number} оплачен.\n\n'
         f'Сумма: {total_line}\n'
         f'Регион: {region.name} · шлюз: {order.payment_gateway or "—"}\n\n'
-        f'Состав заказа:\n{items_text}\n\n'
+        f'Состав заказа:\n{_order_items_text(order)}\n\n'
         f'Покупатель: {order.customer_name}\n'
         f'Телефон: {order.customer_phone}\n'
         f'Email: {order.customer_email}\n'
         f'Доставка: {order.city}, {order.address}\n\n'
-        f'Заказ в бэкофисе: {settings.SITE_URL}/backoffice/orders/{order.number}/\n'
+        f'Заказ в бэкофисе: {order_url}\n'
     )
 
     ok, error = _send_via_api(to, subject, body)
