@@ -12,7 +12,9 @@ from catalog.models import Category, Product, ProductSize, RegionPrice, Stock
 from orders.gateways import get_gateway, get_gateway_by_code
 from orders.gateways.base import CallbackRejected, PaymentResult, PaymentStatus
 from orders.gateways.halyk import HalykGateway
-from orders.gateways.vtb import SESSION_TIMEOUT_SECS, VTBGateway
+from orders.gateways.vtb import (
+    SESSION_TIMEOUT_SECS, VTBGateway, _callback_checksum, _checksum_source,
+)
 from orders.models import Order, OrderItem
 from regions.models import ExchangeRate, Region
 
@@ -227,6 +229,71 @@ class VTBGatewayTest(PaymentTestBase):
 
         self.assertIsNone(result_order)
         self.assertFalse(paid)
+
+    @patch.object(VTBGateway, '_post')
+    def test_process_callback_reads_md_order(self, mock_post):
+        """Платформа RBS шлёт идентификатор платежа как `mdOrder`.
+
+        До PH-04 обработчик читал только `orderId` — настоящее уведомление
+        банка молча игнорировалось (200 OK, заказ не подтверждён).
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-md-1',
+        )
+
+        request = RequestFactory().get(
+            '/orders/payment/callback/vtb/',
+            data={
+                'mdOrder': 'vtb-md-1',
+                'orderNumber': order.number,
+                'operation': 'deposited',
+                'status': '1',
+            },
+        )
+
+        result_order, paid = VTBGateway().process_callback(request)
+
+        self.assertEqual(result_order.pk, order.pk)
+        self.assertTrue(paid)
+
+
+# ─── Подпись callback-уведомлений ВТБ (симметричная, HMAC-SHA256) ───
+
+class VTBCallbackChecksumTest(TestCase):
+    """Тест-вектор алгоритма подписи.
+
+    Взят из документации RBS «Callback-уведомления» (§5.1, пример кода для
+    Java): токен `123` и ровно эта строка параметров. Пиннит три вещи разом —
+    сортировку по имени, формат `имя;значение;` и верхний регистр hex.
+    """
+
+    TOKEN = '123'
+    # Порядок ключей намеренно НЕ алфавитный: реализация без сортировки
+    # соберёт другую строку и вектор не сойдётся.
+    PARAMS = {
+        'status': '1',
+        'orderNumber': '89312',
+        'mdOrder': 'ed6f3abf-cea0-427e-afdf-0ba43ead124f',
+        'operation': 'deposited',
+        'amount': '1500',
+        'checksum': 'в подписи не участвует',
+        'sign_alias': 'в подписи не участвует',
+    }
+    SOURCE = (
+        'amount;1500;'
+        'mdOrder;ed6f3abf-cea0-427e-afdf-0ba43ead124f;'
+        'operation;deposited;'
+        'orderNumber;89312;'
+        'status;1;'
+    )
+    CHECKSUM = '9F8253A6BB7777D067DD955751119FA5AAF67B14B9215147190F96B505CDB72C'
+
+    def test_source_string_matches_bank_example(self):
+        self.assertEqual(_checksum_source(self.PARAMS), self.SOURCE)
+
+    def test_checksum_matches_vector(self):
+        self.assertEqual(_callback_checksum(self.PARAMS, self.TOKEN), self.CHECKSUM)
 
 
 # ─── Тесты Halyk Gateway ───
@@ -654,6 +721,107 @@ class PaymentCallbackViewTest(PaymentTestBase):
 
         # Email отправлен только 1 раз
         self.assertEqual(mock_email.call_count, 1)
+
+    # ── Подпись callback-а (PH-04) ──
+
+    CALLBACK_TOKEN = 'test-callback-token'
+
+    def _callback_query(self, payment_id, order_number, token=None):
+        """Параметры уведомления банка; с токеном — подписанные."""
+        params = {
+            'mdOrder': payment_id,
+            'orderNumber': order_number,
+            'operation': 'deposited',
+            'status': '1',
+        }
+        if token:
+            params['checksum'] = _callback_checksum(params, token)
+        return params
+
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_vtb_callback_valid_checksum_confirms(self, mock_email, mock_post):
+        """Боевой формат: GET, mdOrder, симметричная подпись."""
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-ok',
+        )
+
+        response = self.client.get(
+            '/orders/payment/callback/vtb/',
+            data=self._callback_query(
+                'vtb-sig-ok', order.number, self.CALLBACK_TOKEN,
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    def test_vtb_callback_invalid_checksum_is_rejected(self, mock_post):
+        """Подпись чужим токеном → 403, заказ не тронут.
+
+        Это и есть смысл проверки: без неё оплату закрывал бы любой GET-запрос
+        со стороны, знающий payment_id.
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-bad',
+        )
+
+        response = self.client.get(
+            '/orders/payment/callback/vtb/',
+            data=self._callback_query('vtb-sig-bad', order.number, 'чужой-токен'),
+        )
+
+        self.assertEqual(response.status_code, 403)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+        mock_post.assert_not_called()
+
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    def test_vtb_callback_without_checksum_is_rejected(self, mock_post):
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-none',
+        )
+
+        response = self.client.get(
+            '/orders/payment/callback/vtb/',
+            data=self._callback_query('vtb-sig-none', order.number),
+        )
+
+        self.assertEqual(response.status_code, 403)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PENDING)
+        mock_post.assert_not_called()
+
+    @override_settings(VTB_CALLBACK_TOKEN='')
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_vtb_callback_without_token_skips_signature(self, mock_email, mock_post):
+        """Пустой токен = поведение прода до заполнения `.env.prod`.
+
+        Уведомление без подписи обрабатывается как раньше — иначе деплой кода
+        вперёд переменной окружения отключил бы приём оплат.
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-off',
+        )
+
+        response = self.client.get(
+            '/orders/payment/callback/vtb/',
+            data=self._callback_query('vtb-sig-off', order.number),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
 
 
 # ─── Тесты PaymentReturnView ───

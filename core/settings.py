@@ -246,6 +246,9 @@ ORDER_NOTIFY_EMAIL = os.environ.get('ORDER_NOTIFY_EMAIL', '')
 VTB_PAYMENT_URL = os.environ.get('VTB_PAYMENT_URL', 'https://vtbkz.rbsuat.com/payment/rest/')
 VTB_USERNAME = os.environ.get('VTB_USERNAME', '')
 VTB_PASSWORD = os.environ.get('VTB_PASSWORD', '')
+# Callback-токен для симметричной подписи уведомлений банка (выдаётся в ЛК ВТБ).
+# Пусто = подпись не проверяется: уведомление обрабатывается как раньше.
+VTB_CALLBACK_TOKEN = os.environ.get('VTB_CALLBACK_TOKEN', '')
 
 # Halyk ePay (Казахстан)
 # Выключатель эквайринга: боевого токена у Халыка ещё нет, а дефолтные URL ниже —

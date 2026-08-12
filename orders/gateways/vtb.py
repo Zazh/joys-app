@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import logging
 import os
 import tempfile
@@ -7,7 +9,7 @@ import requests
 from django.conf import settings
 
 from orders.models import Order
-from .base import BaseGateway, PaymentResult, PaymentStatus
+from .base import BaseGateway, CallbackRejected, PaymentResult, PaymentStatus
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +50,38 @@ CURRENCY_NUMERIC = {
     'UZS': '860',
     'KGS': '417',
 }
+
+
+# ── Симметричная подпись callback-уведомлений (RBS) ──
+# Алгоритм — документация RBS «Callback-уведомления», §4: из параметров
+# уведомления убираются `checksum` и `sign_alias`, остальные сортируются по
+# имени в прямом алфавитном порядке и склеиваются как `имя;значение;`; от
+# строки берётся HMAC-SHA256 с callback-токеном в роли ключа, hex приводится
+# к верхнему регистру.
+_CHECKSUM_SKIP = ('checksum', 'sign_alias')
+
+
+def _checksum_source(params):
+    """Строка параметров для подписи.
+
+    Пример из документации банка (§5.1):
+    `amount;1500;mdOrder;ed6f3abf-…-0ba43ead124f;operation;deposited;`
+    `orderNumber;89312;status;1;`
+    """
+    return ''.join(
+        f'{name};{value};'
+        for name, value in sorted(params.items())
+        if name not in _CHECKSUM_SKIP
+    )
+
+
+def _callback_checksum(params, token):
+    """Ожидаемая контрольная сумма уведомления — hex в верхнем регистре."""
+    return hmac.new(
+        token.encode('utf-8'),
+        _checksum_source(params).encode('utf-8'),
+        hashlib.sha256,
+    ).hexdigest().upper()
 
 
 class VTBGateway(BaseGateway):
@@ -124,11 +158,64 @@ class VTBGateway(BaseGateway):
             raw_status=str(order_status),
         )
 
+    def _callback_params(self, request):
+        """Параметры уведомления одним словарём.
+
+        Банк настроен на GET, но обработчик исторически принимал и POST —
+        читаем оба. Тем же словарём считается подпись: параметр, дописанный
+        к запросу со стороны, попадёт в строку подписи и уронит проверку.
+        """
+        params = request.GET.dict()
+        params.update(request.POST.dict())
+        return params
+
+    def _verify_callback_checksum(self, params):
+        """Проверить симметричную подпись уведомления.
+
+        Пустой `VTB_CALLBACK_TOKEN` = проверка выключена: на деве и на проде
+        до заполнения `.env.prod` поведение остаётся прежним.
+        """
+        token = getattr(settings, 'VTB_CALLBACK_TOKEN', '')
+        if not token:
+            return
+
+        checksum = (params.get('checksum') or '').strip()
+        if not checksum:
+            # Отдельное сообщение, а не общее «invalid checksum»: если банк
+            # пришлёт подпись под другим именем, это видно сразу по логу,
+            # без раскопок в алгоритме HMAC.
+            logger.error(
+                'VTB callback ОТКЛОНЁН (нет checksum): mdOrder=%s',
+                params.get('mdOrder', ''),
+            )
+            raise CallbackRejected('no checksum')
+
+        # Регистр входящей суммы не фиксируем: банк шлёт верхний, но принять
+        # нижний дешевле, чем отклонить настоящую оплату. Сравнение всё равно
+        # постоянное по времени.
+        if not hmac.compare_digest(_callback_checksum(params, token), checksum.upper()):
+            logger.error(
+                'VTB callback ОТКЛОНЁН (подпись не сошлась): mdOrder=%s',
+                params.get('mdOrder', ''),
+            )
+            raise CallbackRejected('invalid checksum')
+
     def process_callback(self, request):
-        gateway_order_id = (
-            request.POST.get('orderId')
-            or request.GET.get('orderId', '')
+        params = self._callback_params(request)
+        # Платформа RBS шлёт идентификатор платежа как `mdOrder`; `orderId`
+        # оставлен ради ручных проверок и старого формата уведомлений.
+        gateway_order_id = params.get('mdOrder') or params.get('orderId', '')
+
+        # Лог до всех проверок — по нему разбирается первый боевой callback,
+        # если формат или подпись не совпадут. Токен и checksum не пишем.
+        logger.info(
+            'VTB callback: mdOrder=%s orderNumber=%s operation=%s status=%s',
+            gateway_order_id, params.get('orderNumber', ''),
+            params.get('operation', ''), params.get('status', ''),
         )
+
+        self._verify_callback_checksum(params)
+
         if not gateway_order_id:
             return None, False
 
