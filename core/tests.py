@@ -6,9 +6,10 @@ dr-joys.com одной правкой .env, и без теста оно тихо
 рефакторинге.
 """
 import json
+import logging
 import re
 
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from catalog.models import Category, Product, ProductSize
@@ -302,3 +303,29 @@ class ErrorPageTests(TestCase):
         response = self.client.get('/favicon.ico')
         self.assertEqual(response.status_code, 301)
         self.assertTrue(response['Location'].endswith('/favicon/favicon.ico'))
+
+
+class LoggingConfigTests(SimpleTestCase):
+    """Платёжные INFO-строки должны доходить до вывода контейнера.
+
+    Без секции LOGGING в settings эффективный уровень этих логгеров —
+    WARNING от root, и logger.info в vtb.py / emails/service.py молчит:
+    инцидент с деньгами разбирать нечем. Мутацию (убрать логгер из LOGGING)
+    ловят проверки isEnabledFor; assertLogs-смоук ниже — про то, что запись
+    вообще доходит до логгера-предка, уровень он ставит себе сам.
+    """
+
+    def test_orders_logger_passes_info(self):
+        self.assertTrue(
+            logging.getLogger('orders.gateways.vtb').isEnabledFor(logging.INFO)
+        )
+
+    def test_emails_logger_passes_info(self):
+        self.assertTrue(
+            logging.getLogger('emails.service').isEnabledFor(logging.INFO)
+        )
+
+    def test_info_record_reaches_orders_logger(self):
+        with self.assertLogs('orders', level='INFO') as captured:
+            logging.getLogger('orders.gateways.vtb').info('probe')
+        self.assertIn('probe', captured.output[0])

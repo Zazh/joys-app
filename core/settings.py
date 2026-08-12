@@ -156,6 +156,34 @@ TEST_RUNNER = 'core.test_runner.IsolatedCacheRunner'
 # Сессии: кеш поверх БД — SELECT django_session только при промахе кеша
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
+# Логи: бэкенд — gunicorn в Docker, поэтому единственный хендлер консольный,
+# читается через `docker compose logs backend`. Без этой секции работал только
+# root «last resort» с порогом WARNING — и платёжные logger.info (register.do,
+# статус в банке, подтверждение callback-ом, отправка письма) не писались
+# никуда. disable_existing_loggers: False оставляет дефолтные логгеры Django
+# живыми, файлов и ротации сознательно нет (решение Р-2 бэклога payments-hardening).
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '{asctime} {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+    },
+    'loggers': {
+        'orders': {'level': 'INFO', 'handlers': ['console'], 'propagate': False},
+        'emails': {'level': 'INFO', 'handlers': ['console'], 'propagate': False},
+    },
+    'root': {'level': 'WARNING', 'handlers': ['console']},
+}
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
