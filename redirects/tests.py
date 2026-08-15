@@ -55,6 +55,22 @@ class RedirectMiddlewareTest(TestCase):
         response = self.client.get('/temp')
         self.assertEqual(response.status_code, 302)
 
+    def test_permanent_redirect_has_bounded_cache(self):
+        Redirect.objects.create(
+            path='/perm/', destination='https://example.com/',
+            redirect_type=301,
+        )
+        response = self.client.get('/perm/')
+        self.assertEqual(response['Cache-Control'], 'max-age=3600')
+
+    def test_temporary_redirect_not_cached(self):
+        Redirect.objects.create(
+            path='/tmp/', destination='https://example.com/',
+            redirect_type=302,
+        )
+        response = self.client.get('/tmp/')
+        self.assertNotIn('Cache-Control', response)
+
     def test_inactive_redirect_ignored(self):
         Redirect.objects.create(
             path='/off/', destination='https://example.com/',

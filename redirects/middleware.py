@@ -6,6 +6,11 @@ from .models import Redirect
 CACHE_KEY = 'redirects_map'
 CACHE_TIMEOUT = 60 * 15  # 15 минут
 
+# 301 без заголовков браузер запоминает бессрочно, и ошибка в записи
+# прилипает в кешах посетителей навсегда; час — потолок жизни ошибки.
+# На 302 заголовок не ставим: его не кешируют, правки применяются сразу.
+PERMANENT_CACHE_CONTROL = 'max-age=3600'
+
 
 def get_redirects_map():
     """Получить словарь редиректов из кеша или БД."""
@@ -39,7 +44,9 @@ class RedirectMiddleware:
         if target is not None:
             destination, redirect_type = target
             if redirect_type == 301:
-                return HttpResponsePermanentRedirect(destination)
+                response = HttpResponsePermanentRedirect(destination)
+                response['Cache-Control'] = PERMANENT_CACHE_CONTROL
+                return response
             return HttpResponseRedirect(destination)
 
         return self.get_response(request)
