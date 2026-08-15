@@ -186,8 +186,9 @@ class Order(models.Model):
         )
         transaction.on_commit(lambda: send_payment_confirmed_email(locked))
         # Уведомление владельцу — здесь, а не в callback-вьюхе: подтверждение
-        # приходит тремя путями (callback, return, крон), и только этот метод
-        # общий для всех трёх. Гард выше делает его однократным.
+        # приходит четырьмя путями (callback, return, крон, кнопка бэкофиса),
+        # и только этот метод общий для всех четырёх. Гард выше делает его
+        # однократным.
         transaction.on_commit(lambda: send_payment_received_notification(locked))
 
     @transaction.atomic

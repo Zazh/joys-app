@@ -177,6 +177,12 @@ class VTBGateway(BaseGateway):
         """
         token = getattr(settings, 'VTB_CALLBACK_TOKEN', '')
         if not token:
+            # Строка обязательна: без неё «подпись сошлась» и «подпись не
+            # проверялась» выглядят в логе одинаково, а потерянная при правке
+            # `.env.prod` переменная бесшумно вернула бы прод в fail-open.
+            logger.warning(
+                'VTB callback: подпись НЕ проверяется — VTB_CALLBACK_TOKEN пуст'
+            )
             return
 
         checksum = (params.get('checksum') or '').strip()
