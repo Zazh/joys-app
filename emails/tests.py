@@ -5,6 +5,7 @@ from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -491,6 +492,189 @@ class OrderEmailTotalTest(EmailTestBase):
         body = EmailLog.objects.get(template_slug='order_paid').body
         self.assertEqual(body, 'Итого: 2950 KZT (525 ₽)')
         self.assertNotIn('2950 ₽', body)
+
+
+# ─── Письма владельцу ───
+
+@override_settings(PAYMENT_ALERT_EMAIL='alert@dr-joys.test',
+                   ORDER_NOTIFY_EMAIL='owner@dr-joys.test')
+class OwnerEmailsTest(EmailTestBase):
+    """Уведомление об оплате и алерт «истёк, но оплачен».
+
+    Эти письма не идут через `EmailTemplate` — тело склеивается в коде, и до
+    клинапа блока 2 набор `emails` не держал в них ничего: сумму можно было
+    заменить строкой «МУТАНТ», и 36 тестов оставались зелёными. Денежная
+    строка здесь — та же по цене, что и в письме покупателю (PAY-07), а
+    считает её отдельная функция `_owner_total_lines`.
+
+    Связка «крон ↔ алерт» проверяется в `orders/tests.py`
+    (`ExpiredPaidDetectorTest`) — здесь только то, что специфично для писем.
+    """
+
+    ALERT = 'alert@dr-joys.test'
+    OWNER = 'owner@dr-joys.test'
+
+    def _region_ru(self, **kwargs):
+        defaults = dict(
+            code='ru', name='Россия',
+            currency_code='RUB', currency_symbol='₽',
+            payment_currency_code='KZT', payment_currency_symbol='₸',
+            payment_gateway='vtb',
+        )
+        defaults.update(kwargs)
+        return Region.objects.create(**defaults)
+
+    def _ru_order(self, region=None, **kwargs):
+        defaults = dict(
+            region=region or self._region_ru(),
+            total_amount=Decimal('2950'),
+            display_amount=Decimal('525'),
+            display_currency_code='RUB',
+        )
+        defaults.update(kwargs)
+        return self._create_order(**defaults)
+
+    def _alert_body(self, order, mock_api):
+        from emails.service import send_expired_paid_alert
+        self.assertTrue(send_expired_paid_alert(order))
+        to, subject, body = mock_api.call_args[0]
+        self.assertEqual(to, self.ALERT)
+        return subject, body
+
+    # ── Денежная строка: обе ветки `_owner_total_lines` ──
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_flat_region_shows_plain_sum(self, mock_api):
+        """КЗ платит в своей валюте — скобке взяться неоткуда.
+
+        Плоскую ветку (`return total, total`) не держал ни один ассерт во всём
+        проекте: сумму в письме владельцу можно было увести в пустую строку,
+        и `test emails orders` давал 151 OK.
+        """
+        subject, body = self._alert_body(self._create_order(), mock_api)
+
+        self.assertIn('Сумма: 5000 ₸\n', body)
+        self.assertIn('5000 ₸', subject)
+        self.assertNotIn('покупатель видел', body)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_converted_region_shows_both_amounts(self, mock_api):
+        """Списано в ₸, в корзине человек видел ₽ — в письме обе суммы."""
+        subject, body = self._alert_body(self._ru_order(), mock_api)
+
+        self.assertIn('Сумма: 2950 ₸ (покупатель видел 525 ₽)\n', body)
+        self.assertIn('2950 ₸', subject)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_legacy_order_without_display_amount(self, mock_api):
+        """Заказ до блока 1: `display_amount` пуст, но регион конвертирует —
+        печатаем сумму списания без скобок и падать нельзя.
+
+        Вторая, неочевидная дверь в плоскую ветку: она не только про КЗ.
+        """
+        order = self._ru_order(display_amount=None)
+
+        _, body = self._alert_body(order, mock_api)
+
+        self.assertIn('Сумма: 2950 ₸\n', body)
+        self.assertNotIn('покупатель видел', body)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_symbol_matches_customer_email(self, mock_api):
+        """Символ владельческой строки обязан совпадать с письмом покупателю.
+
+        Гейт `needs_conversion` у двух форматтеров одной суммы разошёлся бы
+        именно здесь: конверсию у региона сняли (ВТБ начал брать рубли), а
+        `payment_currency_symbol='₸'` в бэкофисе почистить забыли. Покупателю
+        уходит «2950 ₽», владельцу до правки уходило «2950 ₸» — и в теме тоже.
+        """
+        from emails.service import _order_total_context
+
+        region = self._region_ru(payment_currency_code='')
+        order = self._ru_order(region=region, display_amount=None)
+        self.assertFalse(region.needs_conversion)
+
+        subject, body = self._alert_body(order, mock_api)
+
+        self.assertEqual(_order_total_context(order)['currency'], '₽')
+        self.assertIn('Сумма: 2950 ₽\n', body)
+        self.assertIn('2950 ₽', subject)
+        self.assertNotIn('₸', subject)
+
+    # ── Ссылка в бэкофис ──
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_backoffice_link_is_reversed(self, mock_api):
+        """Ссылка собрана `reverse()`, а не склейкой: маршрут переедет —
+        поедет и она."""
+        from django.urls import reverse
+
+        order = self._create_order()
+        expected = settings.SITE_URL + reverse(
+            'backoffice:order_detail', kwargs={'number': order.number},
+        )
+
+        _, body = self._alert_body(order, mock_api)
+
+        self.assertIn(f'Заказ в бэкофисе: {expected}\n', body)
+
+    # ── Рантбук в теле алерта ──
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_alert_body_is_a_complete_runbook(self, mock_api):
+        """Владелец, действующий строго по письму, не должен оставить систему
+        в неверном состоянии: `Order.expire()` снимает только резерв, а
+        `Stock.quantity` уменьшает единственное место — `confirm_payment`,
+        которое для EXPIRED не сработает. Без оговорки та же единица товара
+        продаётся второй раз.
+        """
+        from django.urls import reverse
+
+        order = self._create_order(payment_id='vtb-runbook-1')
+
+        _, body = self._alert_body(order, mock_api)
+
+        self.assertIn('НЕ сработает', body)          # кнопка бэкофиса бессильна
+        self.assertIn('ID платежа: vtb-runbook-1', body)
+        self.assertIn('(Алматы)', body)              # зона у времени «Истёк»
+        self.assertIn('Django-админке', body)        # рабочий путь есть
+        self.assertIn(reverse('backoffice:stock_list'), body)
+
+    # ── Гард пустого адреса ──
+
+    @override_settings(PAYMENT_ALERT_EMAIL='')
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_alert_without_address_is_a_delivered_signal(self, mock_api):
+        """Пусто = канал выключен сознательно (Р-10): письма нет, но ответ
+        True — иначе крон считал бы это сбоем и будил бы владельца каждые
+        полчаса одним и тем же инцидентом."""
+        from emails.service import send_expired_paid_alert
+
+        self.assertTrue(send_expired_paid_alert(self._create_order()))
+        mock_api.assert_not_called()
+
+    @override_settings(ORDER_NOTIFY_EMAIL='')
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_notification_without_address_sends_nothing(self, mock_api):
+        """На проде адрес пуст ВСЕГДА (владелец выключил канал сознательно) —
+        значит эта ветка и есть боевая."""
+        from emails.service import send_payment_received_notification
+
+        send_payment_received_notification(self._create_order())
+        mock_api.assert_not_called()
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_notification_shares_the_money_line(self, mock_api):
+        """Уведомление об оплате печатает ту же строку, что и алерт: расчёт
+        общий, разъехаться они не должны."""
+        from emails.service import send_payment_received_notification
+
+        send_payment_received_notification(self._ru_order())
+
+        to, subject, body = mock_api.call_args[0]
+        self.assertEqual(to, self.OWNER)
+        self.assertIn('Сумма: 2950 ₸ (покупатель видел 525 ₽)\n', body)
+        self.assertIn('2950 ₸', subject)
 
 
 # ─── Публичные функции отправки (accounts) ───
