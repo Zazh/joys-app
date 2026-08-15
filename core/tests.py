@@ -4,11 +4,18 @@
 SITE_URL, а не из хоста запроса. Это условие переезда app.dr-joys.com →
 dr-joys.com одной правкой .env, и без теста оно тихо ломается при любом
 рефакторинге.
+
+Плюс конфигурация `core/settings.py`, которую больше негде проверить: секция
+LOGGING (PH-01) и настройки пути денег — VTB_CALLBACK_TOKEN, PAYMENT_ALERT_EMAIL
+(PH-04/PH-05).
 """
+import importlib
 import io
 import json
 import logging
+import os
 import re
+from unittest import mock
 
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
@@ -360,3 +367,52 @@ class LoggingConfigTests(SimpleTestCase):
         output = self.console_output('emails.service')
         self.assertEqual(output.count('PH-01 probe'), 1, 'строка задвоилась')
         self.assertIn('INFO emails.service: PH-01 probe', output)
+
+
+# ─── Настройки пути денег ───
+
+class PaymentSettingsFromEnvTests(SimpleTestCase):
+    """Настройки пути денег читаются из окружения под своими именами.
+
+    Потребители берут их через `getattr(settings, …, '')`
+    (`orders/gateways/vtb.py`, `emails/service.py`), а все тесты, которым
+    значение важно, ставят его сами через `override_settings` — который
+    заводит настройку, даже если строки в `settings.py` нет. Поэтому
+    пропавшая при рефакторинге строка или опечатка в имени переменной
+    окружения не роняют ни один тест, а на проде выключают ровно то, ради
+    чего писался блок: проверку подписи callback-а ВТБ и единственный
+    push-канал алерта «заказ истёк, а деньги списаны».
+    """
+
+    ENV = {
+        'VTB_CALLBACK_TOKEN': 'probe-token',
+        'PAYMENT_ALERT_EMAIL': 'probe@dr-joys.test',
+    }
+
+    def reloaded_settings(self, env):
+        """Перечитать модуль настроек с подменённым окружением.
+
+        Живые `django.conf.settings` при этом не меняются — тесты читают их,
+        а не атрибуты модуля; cleanup возвращает модуль к окружению прогона.
+        """
+        import core.settings
+
+        self.addCleanup(importlib.reload, core.settings)
+        with mock.patch.dict(os.environ, env):
+            return importlib.reload(core.settings)
+
+    def test_vtb_callback_token_comes_from_env(self):
+        reloaded = self.reloaded_settings(self.ENV)
+        self.assertEqual(reloaded.VTB_CALLBACK_TOKEN, 'probe-token')
+
+    def test_payment_alert_email_comes_from_env(self):
+        reloaded = self.reloaded_settings(self.ENV)
+        self.assertEqual(reloaded.PAYMENT_ALERT_EMAIL, 'probe@dr-joys.test')
+
+    def test_both_default_to_empty(self):
+        """Пустое окружение — обе пустые, а не AttributeError: «пусто =
+        выключено» и есть заявленный дефолт (fail-open у токена сознателен —
+        код едет на прод раньше значения)."""
+        reloaded = self.reloaded_settings({k: '' for k in self.ENV})
+        self.assertEqual(reloaded.VTB_CALLBACK_TOKEN, '')
+        self.assertEqual(reloaded.PAYMENT_ALERT_EMAIL, '')
