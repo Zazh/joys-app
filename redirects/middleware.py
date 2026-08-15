@@ -29,8 +29,15 @@ class RedirectMiddleware:
         redirects_map = get_redirects_map()
         path = request.path
 
-        if path in redirects_map:
-            destination, redirect_type = redirects_map[path]
+        target = redirects_map.get(path)
+        if target is None and path != '/':
+            # запись со слэшем ловит путь без слэша и наоборот;
+            # точное совпадение всегда в приоритете
+            alt = path[:-1] if path.endswith('/') else path + '/'
+            target = redirects_map.get(alt)
+
+        if target is not None:
+            destination, redirect_type = target
             if redirect_type == 301:
                 return HttpResponsePermanentRedirect(destination)
             return HttpResponseRedirect(destination)
