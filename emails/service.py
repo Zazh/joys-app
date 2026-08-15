@@ -363,7 +363,7 @@ def send_staff_invite(user, password):
             'user_email': user.email,
             'password': password,
             'role': role_display,
-            'login_url': f'{settings.SITE_URL}/backoffice/login/',
+            'login_url': settings.SITE_URL + reverse('backoffice:login'),
             'site_url': settings.SITE_URL,
         },
     )
@@ -404,7 +404,13 @@ def _owner_total_lines(order):
     расчёта в двух письмах разъехалась бы ровно так, как разъехалась в PAY-07.
     """
     region = order.region
-    total = f'{order.total_amount:.0f} {_pay_symbol(region)}'
+    # Гейт по `needs_conversion` — тот же, что у письма покупателю
+    # (`_order_total_context`), и его нельзя опускать: символ оплаты значим
+    # только при конверсии. Без гейта у региона, где конверсию сняли, а
+    # `payment_currency_symbol` в бэкофисе забыли почистить, покупателю уходит
+    # «4423 ₽», а владельцу за тот же заказ — «4423 ₸». Это зеркало PAY-07.
+    symbol = _pay_symbol(region) if region.needs_conversion else region.currency_symbol
+    total = f'{order.total_amount:.0f} {symbol}'
 
     if order.display_amount and region.needs_conversion:
         return total, (
@@ -466,8 +472,8 @@ def send_expired_paid_alert(order):
     каждой оплате» и выключен сознательным решением владельца, а это —
     редкий инцидент с деньгами. Пусто = алерт остаётся только в логе.
 
-    Возвращает True, если сигнал доставлен по всем настроенным каналам
-    (пустой адрес — тоже True: канал не настроен, разбор идёт по логу).
+    Возвращает True, если письмо принято SendPulse либо адрес не задан
+    (канал выключен сознательно — разбор идёт по логу).
     False = письмо не ушло; крон по этому ответу НЕ отмечает заказ
     отправленным и попробует на следующем прогоне. Здесь, в отличие от
     писем покупателю, нет очереди `EmailLog`/`retry_emails` — повтор
@@ -493,7 +499,8 @@ def send_expired_paid_alert(order):
         f'но заказ уже истёк и резерв товара снят.\n\n'
         f'Сумма: {total_line}\n'
         f'Регион: {region.name} · шлюз: {order.payment_gateway or "—"}\n'
-        f'Истёк: {expired_at}\n\n'
+        f'Истёк: {expired_at} (Алматы)\n'
+        f'ID платежа: {order.payment_id or "—"}\n\n'
         f'Состав заказа:\n{_order_items_text(order)}\n\n'
         f'Покупатель: {order.customer_name}\n'
         f'Телефон: {order.customer_phone}\n'
@@ -502,7 +509,12 @@ def send_expired_paid_alert(order):
         f'Что делать: кнопка «Подтвердить оплату» в бэкофисе для истёкшего '
         f'заказа НЕ сработает — она принимает только заказы в статусе '
         f'«Ожидает оплаты». Разбор ручной: связаться с покупателем и '
-        f'оформить отправку вручную либо вернуть платёж через кабинет банка.\n\n'
+        f'оформить отправку вручную либо вернуть платёж через кабинет банка.\n'
+        f'Если отправляете товар: статус заказа переводится руками в '
+        f'Django-админке (иначе заказ останется истёкшим — не попадёт ни в '
+        f'историю покупателя, ни в выручку), а остаток на складе при '
+        f'истечении НЕ списывался (снимался только резерв) — поправить '
+        f'вручную: {settings.SITE_URL + reverse("backoffice:stock_list")}\n\n'
         f'Заказ в бэкофисе: {order_url}\n'
     )
 
