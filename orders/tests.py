@@ -20,8 +20,17 @@ from orders.models import Order, OrderItem
 from regions.models import ExchangeRate, Region
 
 
+@override_settings(ORDER_NOTIFY_EMAIL='')
 class PaymentTestBase(TestCase):
-    """Базовый класс с общими фикстурами для платёжных тестов."""
+    """Базовый класс с общими фикстурами для платёжных тестов.
+
+    `ORDER_NOTIFY_EMAIL=''` — заградитель, а не фикстура: второй колбэк
+    `confirm_payment` (`send_payment_received_notification`) в наследниках
+    не мокается, и от настоящего HTTPS-запроса в SendPulse набор удерживает
+    только пустое значение из окружения. В день, когда владелец включит
+    уведомления, обязательный по правилу 5 прогон рассылал бы письма про
+    выдуманные заказы.
+    """
 
     @classmethod
     def setUpTestData(cls):
@@ -88,8 +97,15 @@ class PaymentTestBase(TestCase):
 
 # ─── Тесты VTB Gateway ───
 
+@override_settings(VTB_CALLBACK_TOKEN='')
 class VTBGatewayTest(PaymentTestBase):
-    """Тесты VTB callback и check_status."""
+    """Тесты VTB callback и check_status.
+
+    Токен пиннится пустым: тесты класса шлют уведомления БЕЗ подписи, и без
+    декоратора их зелёный цвет держится на том, что переменной нет в `.env`
+    разработчика. На боевой конфигурации они падали бы на 403. Подписанные
+    сценарии перебивают это своим `@override_settings` на методе.
+    """
 
     def test_get_gateway_by_code_vtb(self):
         gw = get_gateway_by_code('vtb')
@@ -556,21 +572,29 @@ class ConfirmPaymentTest(PaymentTestBase):
         # Email отправлен только 1 раз
         self.assertEqual(mock_email.call_count, 1)
 
+    @patch('emails.service.send_payment_received_notification')
     @patch('emails.service.send_payment_confirmed_email')
-    def test_emails_wait_for_commit(self, mock_email):
-        """Письмо не должно уходить из-под блокировок.
+    def test_emails_wait_for_commit(self, mock_email, mock_owner):
+        """ОБА письма не должны уходить из-под блокировок.
 
         `confirm_payment` держит select_for_update на заказе и строках Stock;
         HTTP в SendPulse внутри этой транзакции — до ~55 секунд, которые ждут
         и покупатель на return-странице, и чужие оформления того же товара.
+
+        Уведомление владельцу проверяется отдельным моком, а не заодно:
+        без него мутация «вернуть второй вызов в прямой» проезжает молча —
+        на проде она не видна, пока `ORDER_NOTIFY_EMAIL` пуст, и выстрелит
+        ровно в день включения канала.
         """
         order = self._create_order(gateway='halyk', payment_id='commit-1')
 
         with self.captureOnCommitCallbacks(execute=True):
             order.confirm_payment()
             mock_email.assert_not_called()  # транзакция ещё открыта
+            mock_owner.assert_not_called()
 
         mock_email.assert_called_once()  # ушло после коммита
+        mock_owner.assert_called_once()
 
     @patch('emails.service.send_payment_confirmed_email')
     def test_no_email_when_transaction_rolls_back(self, mock_email):
@@ -633,8 +657,13 @@ class ConfirmPaymentTest(PaymentTestBase):
 
 # ─── Тесты PaymentCallbackView (integration) ───
 
+@override_settings(VTB_CALLBACK_TOKEN='')
 class PaymentCallbackViewTest(PaymentTestBase):
-    """Интеграционные тесты view для callback."""
+    """Интеграционные тесты view для callback.
+
+    Пустой токен — по той же причине, что и у `VTBGatewayTest`: неподписанные
+    уведомления класса не должны зависеть от окружения разработчика.
+    """
 
     def test_unknown_gateway_returns_404(self):
         response = self.client.post('/orders/payment/callback/unknown/')
@@ -849,17 +878,31 @@ class PaymentCallbackViewTest(PaymentTestBase):
 
         Это и есть смысл проверки: без неё оплату закрывал бы любой GET-запрос
         со стороны, знающий payment_id.
+
+        Заодно пиннится ПОРЯДОК: INFO-строка печатается ДО проверки подписи.
+        У отклонённого уведомления это единственный след того, под какими
+        именами и с какими значениями банк прислал параметры (сам отказ
+        печатает только `mdOrder`) — им и разбирается первый боевой callback.
+        ⚠️ `assertLogs` пиннит факт вызова, а не доставку строки в лог; здесь
+        нужно ровно первое.
         """
         mock_post.return_value = {'orderStatus': 2}
         order = self._create_order(
             region=self.region_ru, gateway='vtb', payment_id='vtb-sig-bad',
         )
 
-        response = self.client.get(
-            '/orders/payment/callback/vtb/',
-            data=self._callback_query('vtb-sig-bad', order.number, 'чужой-токен'),
-        )
+        with self.assertLogs('orders.gateways.vtb', level='INFO') as logs:
+            response = self.client.get(
+                '/orders/payment/callback/vtb/',
+                data=self._callback_query(
+                    'vtb-sig-bad', order.number, 'чужой-токен',
+                ),
+            )
 
+        self.assertIn(
+            'VTB callback: mdOrder=vtb-sig-bad',
+            '\n'.join(logs.output),
+        )
         self.assertEqual(response.status_code, 403)
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
@@ -956,6 +999,82 @@ class PaymentCallbackViewTest(PaymentTestBase):
         self.assertEqual(response.status_code, 403)
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
+
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_vtb_callback_valid_checksum_post(self, mock_email, mock_post):
+        """Тот же сценарий методом POST: подпись считается по слитому словарю.
+
+        В ЛК банка метод сейчас GET, но приёмка записала оба как рабочие и
+        допустила переключение. Без этого теста подпись можно свести к
+        `request.GET` — весь набор остался бы зелёным, а переключение метода
+        в ЛК дало бы 403 на каждое боевое уведомление.
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-post',
+        )
+
+        response = self.client.post(
+            '/orders/payment/callback/vtb/',
+            data=self._callback_query(
+                'vtb-sig-post', order.number, self.CALLBACK_TOKEN,
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_vtb_callback_checksum_lowercase_accepted(self, mock_email, mock_post):
+        """Подпись в нижнем регистре принимается — сознательная толерантность.
+
+        Банк шлёт верхний (док RBS §4 п.5), но отклонить настоящую оплату
+        из-за регистра дороже, чем принять нижний. Существующие подписанные
+        тесты это не держат: они берут `checksum` из того же
+        `_callback_checksum`, который и так возвращает верхний регистр.
+        """
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-lower',
+        )
+
+        params = self._callback_query(
+            'vtb-sig-lower', order.number, self.CALLBACK_TOKEN,
+        )
+        params['checksum'] = params['checksum'].lower()
+
+        response = self.client.get('/orders/payment/callback/vtb/', data=params)
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
+
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    @patch('emails.service.send_payment_confirmed_email')
+    def test_vtb_callback_checksum_whitespace_accepted(self, mock_email, mock_post):
+        """Пробелы по краям подписи снимаются — вторая половина той же
+        толерантности (`.strip()` рядом с `.upper()`)."""
+        mock_post.return_value = {'orderStatus': 2}
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-sig-space',
+        )
+
+        params = self._callback_query(
+            'vtb-sig-space', order.number, self.CALLBACK_TOKEN,
+        )
+        params['checksum'] = f"  {params['checksum']}  "
+
+        response = self.client.get('/orders/payment/callback/vtb/', data=params)
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PAID)
 
 
 # ─── Тесты PaymentReturnView ───
@@ -1271,6 +1390,71 @@ class ExpiredPaidDetectorTest(PaymentTestBase):
         mock_api.assert_not_called()
 
     @patch('emails.service._send_via_api')
+    @patch.object(VTBGateway, 'check_status')
+    def test_problem_orders_do_not_hide_the_next_incident(
+        self, mock_status, mock_api,
+    ):
+        """Проблемный заказ не отменяет разбор остальных в том же прогоне.
+
+        Во всех остальных тестах детектора в выборке ровно один заказ, поэтому
+        три `continue` в цикле неотличимы от `break` и `return`: после цикла в
+        `handle()` кода нет. Цена подмены — сбой на первом заказе прячет
+        следующий инцидент до очередного запуска, а при систематической ошибке
+        (банк недоступен, SendPulse отвечает 500) — пока тот не выйдет из
+        суточного окна и не пропадёт из выборки навсегда.
+
+        Заказы подобраны так, чтобы каждый уходил в свою ветку `continue`:
+        обрыв связи с банком, «оплаты нет», письмо не ушло. Настоящий инцидент
+        стоит последним и обязан быть разобран.
+        """
+        broken = self._expired_order(payment_id='vtb-exp-broken')
+        unpaid = self._expired_order(payment_id='vtb-exp-unpaid', minutes_ago=5)
+        undelivered = self._expired_order(payment_id='vtb-exp-nomail', minutes_ago=6)
+        paid = self._expired_order(payment_id='vtb-exp-paid', minutes_ago=7)
+
+        # Порядок выборки задаём явно (`Order.Meta.ordering = ['-created_at']`):
+        # если настоящий инцидент окажется не последним, `break` вместо
+        # `continue` ничем себя не проявит и тест станет декоративным.
+        now = timezone.now()
+        for shift, order in enumerate([broken, unpaid, undelivered, paid]):
+            Order.objects.filter(pk=order.pk).update(
+                created_at=now - timedelta(minutes=shift),
+            )
+        self.assertEqual(
+            list(Order.objects.filter(status=Order.Status.EXPIRED)
+                 .values_list('payment_id', flat=True)),
+            ['vtb-exp-broken', 'vtb-exp-unpaid', 'vtb-exp-nomail', 'vtb-exp-paid'],
+        )
+
+        def status_by_payment_id(payment_id):
+            if payment_id == 'vtb-exp-broken':
+                raise RuntimeError('связь с банком оборвалась')
+            return PaymentStatus(paid=(payment_id != 'vtb-exp-unpaid'), raw_status='2')
+
+        def send(to, subject, body):
+            return (undelivered.number not in subject, '')
+
+        mock_status.side_effect = status_by_payment_id
+        mock_api.side_effect = send
+
+        with self.assertLogs(self.LOGGER, level='ERROR') as logs:
+            output = self._run()
+
+        # Последний заказ разобран, несмотря на три сбоя перед ним
+        self.assertIn(paid.number, '\n'.join(logs.output))
+        self.assertIn(paid.number, mock_api.call_args[0][1])
+        self.assertIn('Ошибка проверки', output)
+        self.assertIn('письмо не ушло', output)
+
+        for order in (broken, unpaid, undelivered, paid):
+            order.refresh_from_db()
+        self.assertIsNotNone(paid.expired_paid_alerted_at)
+        # Проблемные заказы не «съедены» — вернутся в выборку следующим прогоном
+        self.assertIsNone(broken.expired_paid_alerted_at)
+        self.assertIsNone(unpaid.expired_paid_alerted_at)
+        self.assertIsNone(undelivered.expired_paid_alerted_at)
+
+    @patch('emails.service._send_via_api')
     @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
     def test_failed_alert_is_retried_next_run(self, mock_status, mock_api):
         """Сбой SendPulse не должен прятать инцидент навсегда.
@@ -1413,7 +1597,9 @@ class PaymentNotificationTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PAID)
         self.assertEqual(stock.quantity, qty_before - 2)
 
-    @override_settings(ORDER_NOTIFY_EMAIL=OWNER)
+    # Уведомление шлётся неподписанным POST-ом — токен пиннится пустым,
+    # иначе на боевой конфигурации тест падал бы на 403 проверки подписи.
+    @override_settings(ORDER_NOTIFY_EMAIL=OWNER, VTB_CALLBACK_TOKEN='')
     @patch.object(VTBGateway, '_post')
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_notification_from_callback(self, mock_api, mock_post, mock_email):
