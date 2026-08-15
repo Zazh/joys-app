@@ -236,6 +236,12 @@ AUTHENTICATION_BACKENDS = [
 # Email — SendPulse API
 SENDPULSE_API_ID = os.environ.get('SENDPULSE_API_ID', '')
 SENDPULSE_API_SECRET = os.environ.get('SENDPULSE_API_SECRET', '')
+# НЕ из env, и это не забытая настройка: значение уходит в поле `from.email`
+# запроса к SendPulse (`emails/service.py`), где нужен голый адрес — имя
+# отправителя задаёт DEFAULT_FROM_NAME соседней строкой. В `.env` лежит
+# RFC-форма «DR.JOYS <info@dr-joys.com>» (правильная для django.core.mail,
+# который в проекте не используется вовсе) — подставив её сюда, получим отказ
+# на КАЖДОМ письме: и покупателям, и владельцу, и инвайты сотрудникам.
 DEFAULT_FROM_EMAIL = 'info@dr-joys.com'
 DEFAULT_FROM_NAME = 'DR.JOYS'
 
@@ -253,6 +259,10 @@ VTB_USERNAME = os.environ.get('VTB_USERNAME', '')
 VTB_PASSWORD = os.environ.get('VTB_PASSWORD', '')
 # Callback-токен для симметричной подписи уведомлений банка (выдаётся в ЛК ВТБ).
 # Пусто = подпись не проверяется: уведомление обрабатывается как раньше.
+# Fail-open здесь СОЗНАТЕЛЕН — код деплоится раньше токена, и иначе окно между
+# деплоем и правкой .env.prod отбивало бы боевые оплаты. У соседнего
+# HALYK_CALLBACK_PUBLIC_KEY семантика ОБРАТНАЯ (пусто = callback отклоняется),
+# потому что боевого терминала у Халыка нет вовсе. При правках сверять оба.
 VTB_CALLBACK_TOKEN = os.environ.get('VTB_CALLBACK_TOKEN', '')
 
 # Halyk ePay (Казахстан)
