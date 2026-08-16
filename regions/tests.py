@@ -1,10 +1,13 @@
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.http import HttpResponse
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from accounts.models import User
 
+from .context_processors import region_context
+from .middleware import RegionMiddleware
 from .models import Region
 
 
@@ -138,6 +141,96 @@ class RegionAdminChangelistTest(RegionTestBase):
         self.assertFalse(self.region_ru.is_active)
         self.region_kz.refresh_from_db()
         self.assertTrue(self.region_kz.is_active)
+
+
+class RegionCacheTest(RegionTestBase):
+    """PH-08: кеш middleware общий и сбрасывается сигналами.
+
+    Каждый запрос идёт через НОВЫЙ экземпляр middleware — иначе тест прошёл бы
+    и на старом словаре в памяти инстанса, ради ухода от которого задача и
+    делалась.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.factory = RequestFactory()
+
+    def _process(self, cookie=None):
+        request = self.factory.get('/')
+        if cookie is not None:
+            request.COOKIES['drjoys_region'] = cookie
+        RegionMiddleware(lambda req: HttpResponse())(request)
+        return request
+
+    def test_region_from_cookie_is_cached(self):
+        with self.assertNumQueries(1):
+            first = self._process('ru')
+        with self.assertNumQueries(0):
+            second = self._process('ru')
+
+        self.assertEqual(first.region, self.region_ru)
+        self.assertEqual(second.region, self.region_ru)
+        self.assertFalse(second.show_region_modal)
+
+    def test_save_invalidates_cache(self):
+        """Главный тест задачи: правка региона видна следующему запросу."""
+        self._process('ru')
+
+        self.region_ru.payment_gateway = 'halyk'
+        self.region_ru.save()
+
+        self.assertEqual(self._process('ru').region.payment_gateway, 'halyk')
+
+    def test_delete_invalidates_cache(self):
+        self._process('ru')
+
+        self.region_ru.delete()
+
+        request = self._process('ru')
+        self.assertEqual(request.region, self.region_kz)
+        self.assertTrue(request.show_region_modal)
+
+    def test_default_region_is_cached(self):
+        with self.assertNumQueries(1):
+            self._process()
+        with self.assertNumQueries(0):
+            request = self._process()
+
+        self.assertEqual(request.region, self.region_kz)
+
+    def test_unknown_code_is_cached_by_sentinel(self):
+        """Битый cookie не должен ходить в БД на каждом запросе."""
+        first = self._process('zz')
+        with self.assertNumQueries(0):
+            second = self._process('zz')
+
+        for request in (first, second):
+            self.assertEqual(request.region, self.region_kz)
+            self.assertTrue(request.show_region_modal)
+
+    def test_oversized_code_does_not_reach_db(self):
+        """Код длиннее поля и код с переводом строки — не регион и не ключ
+        кеша: до БД такой cookie не доходит вовсе."""
+        for junk in ('kz' * 40, 'a b', 'kz\nx'):
+            with self.subTest(code=junk):
+                cache.clear()
+                # Единственный запрос — дефолтный регион
+                with self.assertNumQueries(1):
+                    request = self._process(junk)
+                self.assertEqual(request.region, self.region_kz)
+                self.assertTrue(request.show_region_modal)
+
+    def test_all_regions_updates_after_save(self):
+        """Вторая половина той же проблемы — список регионов в селекте."""
+        request = self._process('kz')
+        self.assertEqual(len(region_context(request)['all_regions']), 2)
+
+        Region.objects.create(
+            code='uz', name='Узбекистан',
+            currency_code='UZS', currency_symbol='сум', order=3,
+        )
+
+        self.assertEqual(len(region_context(request)['all_regions']), 3)
 
 
 class SetRegionUnknownCodeTest(RegionTestBase):

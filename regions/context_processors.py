@@ -2,6 +2,8 @@ from django.core.cache import cache
 
 from .models import Region
 
+ALL_REGIONS_CACHE_KEY = 'all_regions'
+
 
 def _load_regions():
     return list(Region.objects.filter(is_active=True))
@@ -18,5 +20,5 @@ def region_context(request):
         'payment_currency_symbol': region.payment_currency_symbol if region and region.needs_conversion else '',
         'needs_conversion': region.needs_conversion if region else False,
         'show_region_modal': getattr(request, 'show_region_modal', False),
-        'all_regions': cache.get_or_set('all_regions', _load_regions, 600),
+        'all_regions': cache.get_or_set(ALL_REGIONS_CACHE_KEY, _load_regions, 600),
     }
