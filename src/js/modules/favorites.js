@@ -1,5 +1,6 @@
 import { apiPost } from '../lib/api.js';
 import { updateBadges } from '../lib/badges.js';
+import { escapeHtml } from '../lib/escape.js';
 
 // --------------------------------------------
 // 14. FAVORITES MODAL — загрузка из API, удаление
@@ -25,13 +26,13 @@ export function initFavoritesModal() {
 
         if (listEl) {
             listEl.innerHTML = items.map(item => `
-                <div class="fav-item flex gap-3 p-2 rounded-xl bg-stone-50" data-product-id="${item.product_id}" data-first-size-id="${item.first_size_id || ''}">
+                <div class="fav-item flex gap-3 p-2 rounded-xl bg-stone-50" data-product-id="${escapeHtml(item.product_id)}" data-first-size-id="${escapeHtml(item.first_size_id || '')}">
                     <div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-stone-50">
-                        <img src="${item.image_url || window.DRJOYS?.placeholderUrl || ''}" class="w-full h-full object-cover" alt="${item.name}" loading="lazy">
+                        <img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">
                     </div>
                     <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
                         <div>
-                            <p class="text-xs font-bold leading-tight">${item.name}</p>
+                            <p class="text-xs font-bold leading-tight">${escapeHtml(item.name)}</p>
                             ${item.price ? `<p class="text-xs text-red-500 font-benzin mt-1">${parseFloat(item.price).toLocaleString('ru-RU')} ${sym}${item.payment_price ? ` <span class="text-stone-400 font-normal">(${parseFloat(item.payment_price).toLocaleString('ru-RU')} ${window.DRJOYS?.paymentCurrencySymbol || ''})</span>` : ''}</p>` : ''}
                         </div>
                         ${item.first_size_id ? `<button class="fav-to-cart-btn text-[10px] uppercase font-bold text-gray-500 hover:text-black text-left" type="button">${window.DRJOYS.i18n.addToCart}</button>` : ''}

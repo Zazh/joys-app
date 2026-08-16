@@ -1,5 +1,6 @@
 import { apiPost } from '../lib/api.js';
 import { closeModal, goToStep } from '../lib/modal-core.js';
+import { escapeHtml } from '../lib/escape.js';
 
 // --------------------------------------------
 // 15. PROFILE MODAL — навигация по шагам
@@ -80,12 +81,12 @@ export function initProfileModal() {
                 btn.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm font-bold">#${order.number}</p>
+                            <p class="text-sm font-bold">#${escapeHtml(order.number)}</p>
                             <p class="text-[10px] text-gray-500">${formatDate(order.created_at)}</p>
                         </div>
-                        <span class="order-status ${statusCls} text-[10px] font-bold px-2 py-0.5 rounded-full">${order.status_display}</span>
+                        <span class="order-status ${statusCls} text-[10px] font-bold px-2 py-0.5 rounded-full">${escapeHtml(order.status_display)}</span>
                     </div>
-                    <p class="text-xs font-benzin text-red-500 mt-2">${formatAmount(amount, symbol)}</p>
+                    <p class="text-xs font-benzin text-red-500 mt-2">${escapeHtml(formatAmount(amount, symbol))}</p>
                 `;
 
                 btn.addEventListener('click', () => showOrderDetail(order));
@@ -114,9 +115,9 @@ export function initProfileModal() {
                         <div class="w-full h-full bg-stone-50"></div>
                     </div>
                     <div class="flex-1">
-                        <p class="text-xs font-bold">${item.product_name}</p>
-                        <p class="text-[10px] text-gray-500">${window.DRJOYS.i18n.sizeLbl}: ${item.size_name} &middot; ${item.quantity} ${window.DRJOYS.i18n.pcsLbl}</p>
-                        <p class="text-xs font-bold mt-1">${formatAmount(item.subtotal, symbol)}</p>
+                        <p class="text-xs font-bold">${escapeHtml(item.product_name)}</p>
+                        <p class="text-[10px] text-gray-500">${window.DRJOYS.i18n.sizeLbl}: ${escapeHtml(item.size_name)} &middot; ${escapeHtml(item.quantity)} ${window.DRJOYS.i18n.pcsLbl}</p>
+                        <p class="text-xs font-bold mt-1">${escapeHtml(formatAmount(item.subtotal, symbol))}</p>
                     </div>
                 </div>
             `;
@@ -125,18 +126,18 @@ export function initProfileModal() {
         contentEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <p class="text-xs text-gray-500">${formatDate(order.created_at)}</p>
-                <span class="order-status ${statusCls} text-[10px] font-bold px-2 py-0.5 rounded-full">${order.status_display}</span>
+                <span class="order-status ${statusCls} text-[10px] font-bold px-2 py-0.5 rounded-full">${escapeHtml(order.status_display)}</span>
             </div>
             <div class="flex flex-col divide-y divide-stone-50">
                 ${itemsHtml}
             </div>
             <div>
                 <p class="text-xs font-bold pb-1">${window.DRJOYS.i18n.deliveryAddr}</p>
-                <p class="text-xs text-gray-500">${order.city}, ${order.address}</p>
+                <p class="text-xs text-gray-500">${escapeHtml(order.city)}, ${escapeHtml(order.address)}</p>
             </div>
             <div class="flex justify-between items-center pt-2 border-t border-stone-50">
                 <span class="font-benzin uppercase text-sm">${window.DRJOYS.i18n.totalLbl}</span>
-                <span class="font-benzin text-red-500">${formatAmount(amount, symbol)}</span>
+                <span class="font-benzin text-red-500">${escapeHtml(formatAmount(amount, symbol))}</span>
             </div>
         `;
 

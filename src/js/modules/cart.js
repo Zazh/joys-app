@@ -1,6 +1,7 @@
 import { apiPost } from '../lib/api.js';
 import { closeModal } from '../lib/modal-core.js';
 import { updateBadges } from '../lib/badges.js';
+import { escapeHtml } from '../lib/escape.js';
 
 // --------------------------------------------
 // 13. CART MODAL — загрузка из API, update, remove
@@ -54,11 +55,11 @@ export function initCartModal() {
                 // Недоступная позиция: приглушение, метка вместо +/−, из
                 // контролов только мусорка, цен нет (устарели/скрыты)
                 const bottomRow = item.unavailable_label
-                    ? `<span class="text-[10px] font-bold text-red-500 uppercase tracking-wider">${item.unavailable_label}</span>
+                    ? `<span class="text-[10px] font-bold text-red-500 uppercase tracking-wider">${escapeHtml(item.unavailable_label)}</span>
                             <button class="cart-qty-btn" type="button" data-action="remove" aria-label="${window.DRJOYS.i18n.remove}">${trashSvg}</button>`
                     : `<div class="flex items-center gap-2">
                                 <button class="cart-qty-btn" type="button" data-action="${minusAction}" aria-label="${window.DRJOYS.i18n.decrease}">${minusSvg}</button>
-                                <span class="text-xs font-benzin min-w-5 text-center cart-item-qty">${item.qty}</span>
+                                <span class="text-xs font-benzin min-w-5 text-center cart-item-qty">${escapeHtml(item.qty)}</span>
                                 <button class="cart-qty-btn" type="button" data-action="plus" aria-label="${window.DRJOYS.i18n.increase}">
                                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                 </button>
@@ -68,13 +69,13 @@ export function initCartModal() {
                                 <span class="text-xs font-bold cart-item-price">${fmtPrice(item.subtotal)}</span>
                             </div>`;
 
-                return `<div class="cart-item flex gap-3 py-3" data-size-id="${item.size_id}" data-price="${item.price || ''}" data-old-price="${item.old_price || ''}">
+                return `<div class="cart-item flex gap-3 py-3" data-size-id="${escapeHtml(item.size_id)}" data-price="${escapeHtml(item.price || '')}" data-old-price="${escapeHtml(item.old_price || '')}">
                     <div class="w-15 h-15 shrink-0 rounded-lg overflow-hidden bg-stone-50${item.unavailable_label ? ' opacity-50' : ''}">
-                        <img src="${item.image_url || window.DRJOYS?.placeholderUrl || ''}" class="w-full h-full object-cover" alt="${item.name}" loading="lazy">
+                        <img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold truncate${item.unavailable_label ? ' text-stone-500' : ''}">${item.name}</p>
-                        <p class="text-[10px] text-gray-500">${item.size_name}</p>
+                        <p class="text-xs font-bold truncate${item.unavailable_label ? ' text-stone-500' : ''}">${escapeHtml(item.name)}</p>
+                        <p class="text-[10px] text-gray-500">${escapeHtml(item.size_name)}</p>
                         <div class="flex items-center justify-between mt-1">
                             ${bottomRow}
                         </div>
