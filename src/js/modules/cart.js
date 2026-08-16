@@ -63,7 +63,6 @@ export function initCartModal() {
                             <div class="flex items-center gap-1.5 flex-wrap justify-end">
                                 <span class="text-[10px] text-stone-400 line-through cart-item-old-price ${hasOld ? '' : 'hidden'}">${hasOld ? fmtPrice(parseFloat(item.old_price) * item.qty) : ''}</span>
                                 <span class="text-xs font-bold cart-item-price">${fmtPrice(item.subtotal)}</span>
-                                ${item.payment_subtotal ? `<span class="text-[10px] text-stone-400">(${fmtPayment(item.payment_subtotal)})</span>` : ''}
                             </div>`;
 
                 return `<div class="cart-item flex gap-3 py-3" data-size-id="${item.size_id}" data-price="${item.price || ''}" data-old-price="${item.old_price || ''}">
