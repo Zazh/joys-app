@@ -259,9 +259,22 @@
                         </svg>
                     </button>
                     <ul class="lang-dropdown__menu hidden" id="langMenu">
+                        {% if path_lang_prefixed %}
                         {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
                         <li><a href="/{{ lang_code }}{{ request.path|slice:'3:' }}" class="lang-dropdown__item{% if lang_code == CURRENT_LANGUAGE %} active{% endif %}" data-lang="{{ lang_code }}">{{ lang_name }}</a></li>
                         {% endfor %}
+                        {% else %}
+                        {# Вне i18n-префикса (/orders/, /accounts/) срез slice:'3:' калечит путь — язык ставит cookie штатный set_language #}
+                        <li>
+                            <form method="post" action="{% url 'set_language' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+                                <button type="submit" name="language" value="{{ lang_code }}" class="lang-dropdown__item w-full text-left{% if lang_code == CURRENT_LANGUAGE %} active{% endif %}">{{ lang_name }}</button>
+                                {% endfor %}
+                            </form>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>

@@ -29,6 +29,9 @@ def seo(request):
         'hreflang_links': _hreflang_links(request),
         'site_indexable': settings.SITE_INDEXABLE,
         'google_site_verification': settings.GOOGLE_SITE_VERIFICATION,
+        # Меню языка в base.html: на префиксных страницах — ссылки со срезом
+        # пути, вне префикса резать нечего — POST-форма на set_language
+        'path_lang_prefixed': bool(get_language_from_path(request.path)),
     }
 
 

@@ -29,6 +29,7 @@ urlpatterns = [
     # нескольких карт только добавил бы роботу лишний переход.
     path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
     path('region/', include('regions.urls')),
+    path('i18n/', include('django.conf.urls.i18n')),  # set_language для страниц вне i18n-префикса
     path('orders/', include('orders.urls')),
     path('accounts/', include('allauth.urls')),  # OAuth callbacks — без языкового префикса
     # API

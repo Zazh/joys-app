@@ -17,10 +17,14 @@ import os
 import re
 from unittest import mock
 
+from django.conf import settings
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from catalog.models import Category, Product, ProductSize
+# Модулем, а не `from orders.tests import ...`: класс в неймспейсе core.tests
+# тест-раннер собрал бы и прогнал второй раз целиком
+from orders import tests as orders_tests
 from pages.models import BlogPost, Page
 
 PROD = 'https://dr-joys.com'
@@ -416,3 +420,41 @@ class PaymentSettingsFromEnvTests(SimpleTestCase):
         reloaded = self.reloaded_settings({k: '' for k in self.ENV})
         self.assertEqual(reloaded.VTB_CALLBACK_TOKEN, '')
         self.assertEqual(reloaded.PAYMENT_ALERT_EMAIL, '')
+
+
+class LangSwitchOutsideI18nTest(orders_tests.CheckoutRegionTest):
+    """Меню языка вне i18n-префикса — POST на штатный set_language (SB-05).
+
+    Ссылка меню строится срезом `request.path|slice:'3:'` и на /orders/checkout/
+    давала /ruders/checkout/ → 404 на пути денег. Фикстуры корзины и логин —
+    у CheckoutRegionTest (конвенция payments-region: наследоваться,
+    не переписывать).
+    """
+
+    def test_setlang_sets_cookie_and_redirects(self):
+        response = self.client.post(
+            '/i18n/setlang/', {'language': 'en', 'next': '/orders/checkout/'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/orders/checkout/')
+        self.assertEqual(
+            response.cookies[settings.LANGUAGE_COOKIE_NAME].value, 'en',
+        )
+
+    def test_checkout_menu_is_setlang_form(self):
+        response = self.client.get('/orders/checkout/')
+        self.assertNotContains(response, '/ruders')
+        self.assertContains(response, 'action="/i18n/setlang/"')
+        for code, _name in settings.LANGUAGES:
+            self.assertContains(response, f'name="language" value="{code}"')
+
+    def test_prefixed_page_keeps_links(self):
+        response = self.client.get('/ru/')
+        self.assertContains(response, 'href="/en/"')
+        self.assertNotContains(response, '/i18n/setlang/')
+
+    def test_checkout_respects_language_cookie(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'en'
+        response = self.client.get('/orders/checkout/')
+        # Маркер шаблона: заголовок формы «Доставка» в en-локали
+        self.assertContains(response, 'Delivery')
