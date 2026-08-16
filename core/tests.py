@@ -442,11 +442,20 @@ class LangSwitchOutsideI18nTest(orders_tests.CheckoutRegionTest):
         )
 
     def test_checkout_menu_is_setlang_form(self):
+        """Кнопки, csrf и next ищем ВНУТРИ формы setlang (идиома
+        test_get_renders_region_switch_form): без next штатная вьюха уходит
+        на referer, и ассерт по всей странице этого не поймал бы."""
         response = self.client.get('/orders/checkout/')
         self.assertNotContains(response, '/ruders')
-        self.assertContains(response, 'action="/i18n/setlang/"')
+        html = response.content.decode()
+        form = next(
+            chunk for chunk in html.split('<form')
+            if 'action="/i18n/setlang/"' in chunk
+        ).split('</form>')[0]
+        self.assertIn('name="csrfmiddlewaretoken"', form)
+        self.assertIn('name="next" value="/orders/checkout/"', form)
         for code, _name in settings.LANGUAGES:
-            self.assertContains(response, f'name="language" value="{code}"')
+            self.assertIn(f'name="language" value="{code}"', form)
 
     def test_prefixed_page_keeps_links(self):
         response = self.client.get('/ru/')
