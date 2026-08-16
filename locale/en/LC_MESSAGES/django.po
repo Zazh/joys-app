@@ -204,6 +204,9 @@ msgstr "Remove unavailable items to place your order"
 msgid "Удалите недоступные товары в корзине"
 msgstr "Remove unavailable items in the cart"
 
+msgid "Спишется с карты"
+msgstr "Card will be charged"
+
 msgid "Некорректная ссылка"
 msgstr "Invalid link"
 

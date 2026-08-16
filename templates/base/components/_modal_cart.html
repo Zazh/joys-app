@@ -27,12 +27,22 @@
 
         <!-- Footer: total + checkout -->
         <div class="mt-auto pt-4 border-t border-stone-50 hidden" id="cartFooter">
-            <div class="flex justify-between items-center pb-4" id="cartTotalRow">
-                <span class="font-benzin uppercase text-xs">{% trans "Итого" %}</span>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-stone-400 line-through hidden" id="cartOldTotal"></span>
-                    <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded hidden" id="cartSavings"></span>
+            {# Одна строка — одна величина: иначе у региона с конвертацией в строке толкались 4 числа #}
+            <div class="pb-4" id="cartTotalRow">
+                <div class="flex justify-between items-center mb-1.5 hidden" id="cartDiscountRow">
+                    <span class="text-xs text-stone-400">{% trans "Без скидки" %}</span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" id="cartSavings"></span>
+                        <span class="text-xs text-stone-400 line-through" id="cartOldTotal"></span>
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-benzin uppercase text-xs">{% trans "Итого" %}</span>
                     <span class="font-benzin text-lg text-red-500" id="cartTotal"></span>
+                </div>
+                <div class="flex justify-between items-center mt-1 hidden" id="cartPaymentRow">
+                    <span class="text-xs text-stone-500">{% trans "Спишется с карты" %}</span>
+                    <span class="text-xs font-bold" id="cartPaymentTotal"></span>
                 </div>
             </div>
             <p class="text-xs text-red-500 text-center pb-2 hidden" id="cartUnavailableHint">{% trans "Удалите недоступные товары, чтобы оформить заказ" %}</p>

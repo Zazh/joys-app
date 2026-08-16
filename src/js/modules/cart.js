@@ -93,31 +93,30 @@ export function initCartModal() {
         if (hintEl) hintEl.classList.toggle('hidden', !hasUnavailable);
         if (checkoutBtnEl) checkoutBtnEl.disabled = hasUnavailable;
 
-        // Totals
+        // Totals: одна строка — одна величина (скидка / итог / списание в ₸),
+        // ₸ юридически обязателен и стоит подписанной строкой, а не скобками
         const total = parseFloat(cartData.cart_total);
         const oldTotal = parseFloat(cartData.cart_old_total);
         const cartTotalEl = document.getElementById('cartTotal');
         const cartOldTotalEl = document.getElementById('cartOldTotal');
         const cartSavingsEl = document.getElementById('cartSavings');
+        const discountRowEl = document.getElementById('cartDiscountRow');
+        const paymentRowEl = document.getElementById('cartPaymentRow');
+        const paymentTotalEl = document.getElementById('cartPaymentTotal');
 
-        if (cartTotalEl) {
-            let totalText = fmtPrice(total);
-            if (needsConv && cartData.payment_total) {
-                totalText += ' (' + fmtPayment(parseFloat(cartData.payment_total)) + ')';
-            }
-            cartTotalEl.textContent = totalText;
+        if (cartTotalEl) cartTotalEl.textContent = fmtPrice(total);
+
+        const showPay = needsConv && cartData.payment_total;
+        if (paymentRowEl) paymentRowEl.classList.toggle('hidden', !showPay);
+        if (showPay && paymentTotalEl) {
+            paymentTotalEl.textContent = fmtPayment(parseFloat(cartData.payment_total));
         }
 
         const savings = oldTotal - total;
+        if (discountRowEl) discountRowEl.classList.toggle('hidden', !(savings > 0));
         if (savings > 0 && cartOldTotalEl && cartSavingsEl) {
             cartOldTotalEl.textContent = fmtPrice(oldTotal);
-            cartOldTotalEl.classList.remove('hidden');
-            const percent = Math.round((savings / oldTotal) * 100);
-            cartSavingsEl.textContent = '-' + percent + '%';
-            cartSavingsEl.classList.remove('hidden');
-        } else {
-            if (cartOldTotalEl) cartOldTotalEl.classList.add('hidden');
-            if (cartSavingsEl) cartSavingsEl.classList.add('hidden');
+            cartSavingsEl.textContent = '-' + Math.round((savings / oldTotal) * 100) + '%';
         }
     }
 

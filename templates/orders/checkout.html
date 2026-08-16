@@ -160,13 +160,14 @@
                         {% endif %}
                         <div class="flex justify-between items-center">
                             <span class="font-benzin uppercase text-sm">{% trans "Итого" %}</span>
-                            <div class="text-right">
-                                <span class="font-benzin text-lg text-red-500">{{ cart_total|floatformat:0 }} {{ currency_symbol }}</span>
-                                {% if payment_total %}
-                                <span class="block text-xs text-stone-400 mt-0.5">({{ payment_total|floatformat:0 }} {{ payment_currency_symbol }})</span>
-                                {% endif %}
-                            </div>
+                            <span class="font-benzin text-lg text-red-500">{{ cart_total|floatformat:0 }} {{ currency_symbol }}</span>
                         </div>
+                        {% if payment_total %}
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-xs text-stone-500">{% trans "Спишется с карты" %}</span>
+                            <span class="text-xs font-bold">{{ payment_total|floatformat:0 }} {{ payment_currency_symbol }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>

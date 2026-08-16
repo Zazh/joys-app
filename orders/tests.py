@@ -1941,13 +1941,15 @@ class CheckoutRegionTest(PaymentTestBase):
         self.assertContains(response, 'value="+77001234567"')
 
     def test_mismatched_country_keeps_payment_total_line(self):
-        """У региона с конвертацией строка пересчёта в ₸ есть и на странице
-        ошибки: её текст просит «проверьте цены», а проверять надо обе суммы."""
+        """У региона с конвертацией строка списания в ₸ есть и на странице
+        ошибки: её текст просит «проверьте цены», а проверять надо обе суммы.
+        Формат — подписанная строка, а не скобки (редизайн итога 2026-08-16)."""
         self._set_region_cookie('ru')
         response = self._post_checkout('kz')
 
         self.assertContains(response, 'Регион изменился')
-        self.assertContains(response, '(5500 ₸)')
+        self.assertContains(response, 'Спишется с карты')
+        self.assertContains(response, '5500 ₸')
 
     @override_settings(HALYK_ENABLED=False)
     def test_matching_country_kz_creates_order_without_conversion(self):
