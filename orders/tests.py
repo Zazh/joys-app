@@ -2287,3 +2287,54 @@ class CartDiscountTotalTest(PaymentTestBase):
         self.assertEqual(response.context['cart_total'], Decimal('4000'))
         self.assertEqual(response.context['cart_old_total'], Decimal('5000'))
         self.assertContains(response, 'line-through')
+
+
+class CartPaymentTotalTest(PaymentTestBase):
+    """`payment_total` в payload корзины — строка «Спишется с карты» в модалке
+    корзины, а она есть на КАЖДОЙ странице сайта (`src/js/modules/cart.js`
+    читает именно этот ключ).
+
+    Ключ появляется по своему критерию — сумма после конвертации ≠ суммы
+    витрины, — а не по `region.needs_conversion`, как на странице оформления.
+    Расхождение известное (ревью `orders`, «вне скоупа» PH-10), поэтому
+    пиннится ровно как есть: до этого теста ключ можно было убрать из ответа
+    целиком, и набор оставался зелёным (проверено мутацией, критик блока 3).
+    """
+
+    def setUp(self):
+        from orders.models import CartItem
+
+        cache.clear()
+        self.client.login(email='test@example.com', password='test12345')
+        CartItem.objects.create(user=self.user, size=self.size_m, qty=2)
+        for region in (self.region_kz, self.region_ru):
+            Stock.objects.get_or_create(
+                size=self.size_m, region=region,
+                defaults={'quantity': 10, 'reserved': 0},
+            )
+        # Своя цена в рублях — иначе корзина ru взяла бы базовую (тенговую)
+        RegionPrice.objects.create(
+            size=self.size_m, region=self.region_ru, price=Decimal('500'),
+        )
+        ExchangeRate.objects.create(
+            currency_code='RUB', rate=Decimal('5.5'), quant=1,
+            fetched_at=timezone.now(),
+        )
+
+    def _payload(self, code):
+        self.client.cookies['drjoys_region'] = code
+        return self.client.get('/orders/cart/').json()
+
+    def test_region_with_conversion_gets_payment_total(self):
+        data = self._payload('ru')
+
+        self.assertEqual(data['cart_total'], '1000.00')
+        self.assertEqual(data['payment_total'], '5500')
+
+    def test_region_without_conversion_has_no_payment_total(self):
+        """У kz валюта витрины и валюта оплаты совпадают — лишней строки
+        в модалке быть не должно."""
+        data = self._payload('kz')
+
+        self.assertEqual(data['cart_total'], '5000.00')
+        self.assertNotIn('payment_total', data)
