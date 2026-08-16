@@ -13,6 +13,9 @@ export function initCartModal() {
     const paySym = window.DRJOYS?.paymentCurrencySymbol || '';
     const needsConv = window.DRJOYS?.needsConversion || false;
     let cartData = { items: [], cart_total: '0', cart_old_total: '0', cart_count: 0 };
+    // Счётчик поколений: ответы load/update/remove умеют приходить не в порядке
+    // отправки — применяется только ответ самого свежего запроса
+    let reqSeq = 0;
 
     function fmtPrice(val) {
         return parseFloat(val).toLocaleString('ru-RU') + ' ' + sym;
@@ -120,9 +123,12 @@ export function initCartModal() {
     }
 
     async function loadCart() {
+        const seq = ++reqSeq;
         try {
             const resp = await fetch('/orders/cart/');
-            cartData = await resp.json();
+            const data = await resp.json();
+            if (seq !== reqSeq) return; // устаревший ответ — уже ушёл более новый запрос
+            cartData = data;
             if (cartData.ok) {
                 renderCart();
                 updateBadges(cartData.cart_count, null);
@@ -146,17 +152,20 @@ export function initCartModal() {
         const qtyEl = item.querySelector('.cart-item-qty');
         let qty = qtyEl ? (parseInt(qtyEl.textContent) || 1) : 1;
 
-        // Бэкенд возвращает полную корзину — рендерим из ответа, без второго GET
-        function applyCart(result) {
+        // Бэкенд возвращает полную корзину — рендерим из ответа, без второго GET;
+        // ответ обогнанного запроса молча выбрасывается (см. reqSeq)
+        function applyCart(result, seq) {
+            if (seq !== reqSeq) return;
             if (!result || !result.ok) return;
             cartData = result;
             renderCart();
             updateBadges(result.cart_count, null);
         }
 
+        const seq = ++reqSeq;
         if (btn.dataset.action === 'remove') {
             try {
-                applyCart(await apiPost('/orders/cart/remove/', { size_id: sizeId }));
+                applyCart(await apiPost('/orders/cart/remove/', { size_id: sizeId }), seq);
             } catch (err) {
                 console.error('cart remove error:', err);
                 loadCart();
@@ -170,7 +179,7 @@ export function initCartModal() {
         }
         qtyEl.textContent = qty; // оптимистично, ответ сервера поправит
         try {
-            applyCart(await apiPost('/orders/cart/update/', { size_id: sizeId, qty }));
+            applyCart(await apiPost('/orders/cart/update/', { size_id: sizeId, qty }), seq);
         } catch (err) {
             // Оптимистичное qty уже в DOM — перечитываем серверное состояние
             console.error('cart update error:', err);
