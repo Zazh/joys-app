@@ -104,10 +104,10 @@ export function initRegionDropdown() {
                 regionBackBtn.classList.add('hidden');
             });
         }
-        // closeModal сбрасывает шаги на первый — прячем «Назад» и при закрытии
-        const regionCloseBtn = regionModal.querySelector('.modal-close');
-        if (regionCloseBtn && regionBackBtn) {
-            regionCloseBtn.addEventListener('click', () => regionBackBtn.classList.add('hidden'));
+        // closeModal сбрасывает шаги на первый — прячем «Назад» на любом
+        // пути закрытия (Escape, фон, крестик) по событию modal:close (SB-07)
+        if (regionBackBtn) {
+            regionModal.addEventListener('modal:close', () => regionBackBtn.classList.add('hidden'));
         }
     }
 }

@@ -1,5 +1,5 @@
 import { apiPost } from '../lib/api.js';
-import { closeModal, goToStep } from '../lib/modal-core.js';
+import { goToStep } from '../lib/modal-core.js';
 import { escapeHtml } from '../lib/escape.js';
 import { formatMoney } from '../lib/money.js';
 
@@ -23,10 +23,11 @@ export function initProfileModal() {
         cancelled: 'order-status--processing',
     };
 
+    // Чистый сброс состояния — зовётся событием modal:close (SB-07),
+    // closeModal отсюда звать нельзя: рекурсия события
     function resetProfile() {
         stepHistory = ['1'];
         if (backBtn) backBtn.classList.add('hidden');
-        closeModal(profileOverlay);
     }
 
     function goToProfileStep(stepNum) {
@@ -159,12 +160,9 @@ export function initProfileModal() {
         });
     }
 
-    // Close button (remove inline onclick, use JS)
-    const closeBtn = profileOverlay.querySelector('.modal-close');
-    if (closeBtn) {
-        closeBtn.removeAttribute('onclick');
-        closeBtn.addEventListener('click', resetProfile);
-    }
+    // Сброс на любом пути закрытия (Escape, фон, крестик) — modal-core
+    // диспатчит modal:close из closeModal
+    profileOverlay.addEventListener('modal:close', resetProfile);
 
     // Logout
     const logoutBtn = document.getElementById('profileLogoutBtn');
@@ -174,9 +172,4 @@ export function initProfileModal() {
             location.reload();
         });
     }
-
-    // Close on overlay click
-    profileOverlay.addEventListener('click', (e) => {
-        if (e.target === profileOverlay) resetProfile();
-    });
 }

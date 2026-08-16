@@ -29,6 +29,8 @@ export function initAuthModal() {
     let ssoPopup = null;
     let ssoPopupTimer = null;
 
+    // Чистый сброс состояния — зовётся событием modal:close (SB-07),
+    // closeModal отсюда звать нельзя: рекурсия события
     function resetAuth() {
         if (backBtn) backBtn.classList.add('hidden');
         authOverlay.querySelectorAll('input').forEach(i => { i.value = ''; });
@@ -36,7 +38,6 @@ export function initAuthModal() {
             el.textContent = '';
             el.classList.add('hidden');
         });
-        closeModal(authOverlay);
     }
 
     function showError(el, errors) {
@@ -203,14 +204,7 @@ export function initAuthModal() {
         handleSSOComplete(event.data.success);
     });
 
-    // --- Close handlers ---
-    const closeBtn = authOverlay.querySelector('.modal-close');
-    if (closeBtn) {
-        closeBtn.removeAttribute('onclick');
-        closeBtn.addEventListener('click', resetAuth);
-    }
-
-    authOverlay.addEventListener('click', (e) => {
-        if (e.target === authOverlay) resetAuth();
-    });
+    // Сброс на любом пути закрытия (Escape, фон, крестик) — modal-core
+    // диспатчит modal:close из closeModal
+    authOverlay.addEventListener('modal:close', resetAuth);
 }

@@ -20,6 +20,10 @@ export function closeModal(overlay) {
     steps.forEach((step, i) => {
         step.classList.toggle('hidden', i !== 0);
     });
+    // Симметрия modal:open: модалки со своим состоянием (профиль, auth,
+    // регион) сбрасываются подпиской, а не локальными копиями обработчиков
+    // закрытия. Слушатели не должны звать closeModal — рекурсия события
+    overlay.dispatchEvent(new CustomEvent('modal:close'));
 }
 
 export function goToStep(overlay, stepNum) {
