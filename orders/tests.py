@@ -2048,3 +2048,48 @@ class CheckoutMirHintTest(CheckoutRegionTest):
         response = self.client.get('/orders/checkout/')
         self.assertNotContains(response, 'Подсказка только для региона')
         self.assertNotContains(response, 'Р-6')
+
+
+@override_settings(HALYK_ENABLED=False)
+class CheckoutWithdrawnItemTest(CheckoutRegionTest):
+    """Guard «снят с продажи» в `_create_order`: coming_soon отсекается только
+    при добавлении в корзину, is_active — вообще нигде на пути корзины.
+    Товар, снятый ПОСЛЕ добавления, без guard-а становился заказом — склад
+    при этом полон, и Stock-проверка его не ловит.
+
+    Фикстуры и хелперы — у CheckoutRegionTest: корзина, сток, цены, курс.
+    HALYK_ENABLED пиннится по той же причине, что и в тесте kz-оформления
+    родителя: сломанный guard уводил бы тест в сеть к банку вместо красного.
+    """
+
+    def _post_checkout_kz(self):
+        self._set_region_cookie('kz')
+        return self._post_checkout('kz')
+
+    def test_coming_soon_size_does_not_create_order(self):
+        ProductSize.objects.filter(pk=self.size_m.pk).update(coming_soon=True)
+        response = self._post_checkout_kz()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'снят с продажи')
+        self.assertEqual(Order.objects.count(), 0)
+        stock = Stock.objects.get(size=self.size_m, region=self.region_kz)
+        self.assertEqual(stock.reserved, 0)
+
+    def test_inactive_product_does_not_create_order(self):
+        Product.objects.filter(pk=self.product.pk).update(is_active=False)
+        response = self._post_checkout_kz()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'снят с продажи')
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_cart_is_kept_for_correction(self):
+        """Корзина не чистится: покупатель должен сам убрать снятый товар,
+        а не потерять остальное содержимое."""
+        from orders.models import CartItem
+
+        ProductSize.objects.filter(pk=self.size_m.pk).update(coming_soon=True)
+        self._post_checkout_kz()
+
+        self.assertTrue(CartItem.objects.filter(user=self.user).exists())

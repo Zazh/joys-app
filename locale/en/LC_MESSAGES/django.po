@@ -188,6 +188,10 @@ msgstr "%(name)s (%(size)s) — out of stock"
 msgid "%(name)s (%(size)s) — недостаточно на складе"
 msgstr "%(name)s (%(size)s) — not enough in stock"
 
+#, python-format
+msgid "%(name)s (%(size)s) — снят с продажи, удалите его из корзины"
+msgstr "%(name)s (%(size)s) — no longer for sale, please remove it from the cart"
+
 msgid "Некорректная ссылка"
 msgstr "Invalid link"
 

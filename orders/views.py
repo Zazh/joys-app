@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -470,6 +471,21 @@ class CheckoutView(View):
 
     def _create_order(self, request, region, first_name, last_name,
                       phone, email, city, address, total, cart_items):
+        # coming_soon отсекается только при добавлении в корзину, is_active —
+        # вообще нигде на пути корзины: товар, снятый с продажи ПОСЛЕ
+        # добавления, доезжает сюда и без проверки стал бы заказом
+        withdrawn = ProductSize.objects.filter(
+            pk__in=[i['size_id'] for i in cart_items],
+        ).select_related('product').filter(
+            Q(coming_soon=True) | Q(product__is_active=False)
+        ).first()
+        if withdrawn:
+            raise ValueError(
+                _('%(name)s (%(size)s) — снят с продажи, удалите его из корзины') % {
+                    'name': str(withdrawn.product.name), 'size': withdrawn.name,
+                }
+            )
+
         order_kwargs = {
             'region': region,
             'user': request.user,
