@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect
 from django.core.cache import cache
 
@@ -24,6 +25,26 @@ def get_redirects_map():
     return redirects_map
 
 
+def _slash_alt(path):
+    return path[:-1] if path.endswith('/') else path + '/'
+
+
+def _strip_language_prefix(path):
+    """Путь без языкового префикса или None, если префикса нет.
+
+    Middleware стоит до LocaleMiddleware и сверяет сырой request.path,
+    поэтому запись `/foo/` сама по себе не ловит `/ru/foo/` — а легаси-трафик
+    (QR, печать) бьётся именно в префиксные варианты.
+    """
+    for code, _name in settings.LANGUAGES:
+        prefix = f'/{code}/'
+        if path.startswith(prefix):
+            return path[len(prefix) - 1:]
+        if path == f'/{code}':
+            return '/'
+    return None
+
+
 class RedirectMiddleware:
     """Middleware для обработки редиректов из БД."""
 
@@ -34,12 +55,23 @@ class RedirectMiddleware:
         redirects_map = get_redirects_map()
         path = request.path
 
-        target = redirects_map.get(path)
-        if target is None and path != '/':
-            # запись со слэшем ловит путь без слэша и наоборот;
-            # точное совпадение всегда в приоритете
-            alt = path[:-1] if path.endswith('/') else path + '/'
-            target = redirects_map.get(alt)
+        # Порядок приоритета: точное совпадение → слэш-вариант →
+        # то же без языкового префикса. Запись со слэшем ловит путь без
+        # слэша и наоборот. `/` и голый префикс (`/ru/`) в фолбэки не идут:
+        # запись для `/` не должна перехватывать все языковые главные.
+        candidates = [path]
+        if path != '/':
+            candidates.append(_slash_alt(path))
+        stripped = _strip_language_prefix(path)
+        if stripped is not None and stripped != '/':
+            candidates.append(stripped)
+            candidates.append(_slash_alt(stripped))
+
+        target = None
+        for candidate in candidates:
+            target = redirects_map.get(candidate)
+            if target is not None:
+                break
 
         if target is not None:
             destination, redirect_type = target
