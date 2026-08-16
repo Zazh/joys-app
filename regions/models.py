@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -63,6 +64,22 @@ class Region(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.currency_code})'
+
+    def clean(self):
+        """Дефолтный регион нельзя деактивировать.
+
+        `get_default()` фильтрует по `is_active=True`, поэтому снятая галка
+        «Активен» у дефолта оставляла сайт без дефолтного региона: посетитель
+        с неизвестным кодом в cookie получал `None` и 500 в `SetRegionView`.
+        Проверка на уровне модели — её видят обе формы админки (обычная и
+        `list_editable` в списке); обход остаётся только через
+        `queryset.update()`, минующий валидацию.
+        """
+        if self.is_default and not self.is_active:
+            raise ValidationError(
+                'Регион по умолчанию нельзя деактивировать — '
+                'сначала назначьте дефолтным другой регион'
+            )
 
     @property
     def needs_conversion(self):
