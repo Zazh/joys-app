@@ -117,7 +117,10 @@
                             {% if current_region.payment_gateway == 'vtb' %}
                             <p class="text-xs text-stone-400 text-center">{% trans "Онлайн-оплата — только картой «Мир»" %}</p>
                             {% endif %}
-                            <button type="submit" class="btn-macro black w-full text-center text-xs">
+                            {% if has_unavailable %}
+                            <p class="text-xs text-red-500 text-center">{% trans "Удалите недоступные товары в корзине" %}</p>
+                            {% endif %}
+                            <button type="submit" class="btn-macro black w-full text-center text-xs"{% if has_unavailable %} disabled{% endif %}>
                                 {% trans "ОФОРМИТЬ ЗАКАЗ" %}
                             </button>
                         </div>
@@ -131,18 +134,23 @@
                     <div class="flex flex-col divide-y divide-stone-100">
                         {% for item in cart_items %}
                         <div class="flex gap-3 py-3">
-                            <div class="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-stone-50">
+                            <div class="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-stone-50{% if item.unavailable_label %} opacity-50{% endif %}">
                                 <img src="{% if item.image_url %}{{ item.image_url }}{% else %}{{ placeholder_image_url }}{% endif %}" class="w-full h-full object-cover" alt="{{ item.name }}" loading="lazy">
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs font-bold leading-tight">{{ item.name }}</p>
+                                <p class="text-xs font-bold leading-tight{% if item.unavailable_label %} text-stone-500{% endif %}">{{ item.name }}</p>
                                 <p class="text-[10px] text-stone-400 mt-0.5">{{ item.size_name }} &times; {{ item.qty }}</p>
+                                {% if item.unavailable_label %}
+                                <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mt-1">{{ item.unavailable_label }}</p>
+                                {% else %}
                                 <p class="text-xs text-red-500 font-benzin mt-1">{{ item.subtotal|floatformat:0 }} {{ currency_symbol }}</p>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
                     </div>
 
+                    {% if has_available %}
                     <div class="border-t border-stone-200 pt-4 mt-2">
                         {% if cart_old_total and cart_old_total > cart_total %}
                         <div class="flex justify-between items-center mb-2">
@@ -160,6 +168,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
                 <!-- END order summary -->
             </div>

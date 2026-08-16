@@ -27,7 +27,7 @@
 
         <!-- Footer: total + checkout -->
         <div class="mt-auto pt-4 border-t border-stone-50 hidden" id="cartFooter">
-            <div class="flex justify-between items-center pb-4">
+            <div class="flex justify-between items-center pb-4" id="cartTotalRow">
                 <span class="font-benzin uppercase text-xs">{% trans "Итого" %}</span>
                 <div class="flex items-center gap-2">
                     <span class="text-xs text-stone-400 line-through hidden" id="cartOldTotal"></span>
@@ -35,6 +35,7 @@
                     <span class="font-benzin text-lg text-red-500" id="cartTotal"></span>
                 </div>
             </div>
+            <p class="text-xs text-red-500 text-center pb-2 hidden" id="cartUnavailableHint">{% trans "Удалите недоступные товары, чтобы оформить заказ" %}</p>
             <button class="btn-macro black w-full text-center text-xs" type="button" id="cartCheckoutBtn">{% trans "ОФОРМИТЬ ЗАКАЗ" %}</button>
             <button class="w-full text-center text-xs text-black hover:text-red-500 transition-colors py-3 mt-2 cursor-pointer uppercase tracking-wider font-benzin" type="button" id="cartContinueBtn">{% trans "Продолжить покупки" %}</button>
         </div>

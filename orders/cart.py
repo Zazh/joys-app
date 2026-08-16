@@ -1,6 +1,8 @@
 from decimal import Decimal
 
-from catalog.models import ProductSize, RegionPrice, Product
+from django.utils.translation import gettext as _
+
+from catalog.models import ProductSize, RegionPrice, Product, Stock
 
 
 CART_SESSION_KEY = 'cart'
@@ -118,11 +120,18 @@ class Cart:
         sizes_map = {s.pk: s for s in sizes}
 
         prices_map = {}
+        stocks_map = {}
         if self.region:
             region_prices = RegionPrice.objects.filter(
                 size_id__in=size_ids, region=self.region,
             )
             prices_map = {rp.size_id: rp for rp in region_prices}
+            stocks_map = {
+                s.size_id: s
+                for s in Stock.objects.filter(
+                    size_id__in=size_ids, region=self.region,
+                )
+            }
 
         needs_conv = self.region and self.region.needs_conversion
         if needs_conv:
@@ -156,6 +165,7 @@ class Cart:
                 'subtotal': price * qty,
                 'image_url': image_url,
                 'product_url': size.product.get_absolute_url(),
+                'unavailable_label': self._unavailable_label(size, stocks_map),
             }
 
             # Двойная валюта
@@ -171,6 +181,23 @@ class Cart:
             CartItem.objects.filter(user=self.user, size_id__in=orphaned).delete()
 
         return items
+
+    def _unavailable_label(self, size, stocks_map):
+        """Готовая переведённая метка недоступности — или '' для обычной позиции.
+
+        Формулировки повторяют страницу товара; зеркалит guard `_create_order`:
+        всё, что помечено здесь, там не оформится (и наоборот — отсутствие
+        строки Stock у региона чекаут тоже валит «нет в наличии»).
+        """
+        if not size.product.is_active:
+            return _('Снят с продажи')
+        if size.coming_soon:
+            return _('Скоро в продаже')
+        if self.region:
+            stock = stocks_map.get(size.pk)
+            if stock is None or stock.available <= 0:
+                return _('Нет в наличии')
+        return ''
 
     def get_total(self):
         items = self.get_items()

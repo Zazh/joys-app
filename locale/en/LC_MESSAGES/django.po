@@ -192,6 +192,18 @@ msgstr "%(name)s (%(size)s) — not enough in stock"
 msgid "%(name)s (%(size)s) — снят с продажи, удалите его из корзины"
 msgstr "%(name)s (%(size)s) — no longer for sale, please remove it from the cart"
 
+msgid "Снят с продажи"
+msgstr "No longer for sale"
+
+msgid "Удалить из корзины"
+msgstr "Remove from cart"
+
+msgid "Удалите недоступные товары, чтобы оформить заказ"
+msgstr "Remove unavailable items to place your order"
+
+msgid "Удалите недоступные товары в корзине"
+msgstr "Remove unavailable items in the cart"
+
 msgid "Некорректная ссылка"
 msgstr "Invalid link"
 

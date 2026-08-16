@@ -39,22 +39,21 @@ export function initCartModal() {
         if (footerEl) footerEl.classList.remove('hidden');
 
         if (listEl) {
+            const trashSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+
             listEl.innerHTML = items.map(item => {
                 const hasOld = item.old_price && parseFloat(item.old_price) > parseFloat(item.price);
                 const minusSvg = item.qty <= 1
-                    ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
+                    ? trashSvg
                     : '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
                 const minusAction = item.qty <= 1 ? 'remove' : 'minus';
 
-                return `<div class="cart-item flex gap-3 py-3" data-size-id="${item.size_id}" data-price="${item.price}" data-old-price="${item.old_price || ''}">
-                    <div class="w-15 h-15 shrink-0 rounded-lg overflow-hidden bg-stone-50">
-                        <img src="${item.image_url || window.DRJOYS?.placeholderUrl || ''}" class="w-full h-full object-cover" alt="${item.name}" loading="lazy">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold truncate">${item.name}</p>
-                        <p class="text-[10px] text-gray-500">${item.size_name}</p>
-                        <div class="flex items-center justify-between mt-1">
-                            <div class="flex items-center gap-2">
+                // Недоступная позиция: приглушение, метка вместо +/−, из
+                // контролов только мусорка, цен нет (устарели/скрыты)
+                const bottomRow = item.unavailable_label
+                    ? `<span class="text-[10px] font-bold text-red-500 uppercase tracking-wider">${item.unavailable_label}</span>
+                            <button class="cart-qty-btn" type="button" data-action="remove" aria-label="${window.DRJOYS.i18n.remove}">${trashSvg}</button>`
+                    : `<div class="flex items-center gap-2">
                                 <button class="cart-qty-btn" type="button" data-action="${minusAction}" aria-label="${window.DRJOYS.i18n.decrease}">${minusSvg}</button>
                                 <span class="text-xs font-benzin min-w-5 text-center cart-item-qty">${item.qty}</span>
                                 <button class="cart-qty-btn" type="button" data-action="plus" aria-label="${window.DRJOYS.i18n.increase}">
@@ -65,12 +64,34 @@ export function initCartModal() {
                                 <span class="text-[10px] text-stone-400 line-through cart-item-old-price ${hasOld ? '' : 'hidden'}">${hasOld ? fmtPrice(parseFloat(item.old_price) * item.qty) : ''}</span>
                                 <span class="text-xs font-bold cart-item-price">${fmtPrice(item.subtotal)}</span>
                                 ${item.payment_subtotal ? `<span class="text-[10px] text-stone-400">(${fmtPayment(item.payment_subtotal)})</span>` : ''}
-                            </div>
+                            </div>`;
+
+                return `<div class="cart-item flex gap-3 py-3" data-size-id="${item.size_id}" data-price="${item.price || ''}" data-old-price="${item.old_price || ''}">
+                    <div class="w-15 h-15 shrink-0 rounded-lg overflow-hidden bg-stone-50${item.unavailable_label ? ' opacity-50' : ''}">
+                        <img src="${item.image_url || window.DRJOYS?.placeholderUrl || ''}" class="w-full h-full object-cover" alt="${item.name}" loading="lazy">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold truncate${item.unavailable_label ? ' text-stone-500' : ''}">${item.name}</p>
+                        <p class="text-[10px] text-gray-500">${item.size_name}</p>
+                        <div class="flex items-center justify-between mt-1">
+                            ${bottomRow}
                         </div>
                     </div>
                 </div>`;
             }).join('');
         }
+
+        // Недоступные позиции: «Итого» без них уже посчитал сервер; ряд итога
+        // прячем, когда доступных нет вовсе («Итого 0 ₸» показывать нельзя),
+        // оформление блокируем, пока покупатель их не удалит
+        const hasUnavailable = items.some(i => i.unavailable_label);
+        const hasAvailable = items.some(i => !i.unavailable_label);
+        const totalRowEl = document.getElementById('cartTotalRow');
+        const hintEl = document.getElementById('cartUnavailableHint');
+        const checkoutBtnEl = document.getElementById('cartCheckoutBtn');
+        if (totalRowEl) totalRowEl.classList.toggle('hidden', !hasAvailable);
+        if (hintEl) hintEl.classList.toggle('hidden', !hasUnavailable);
+        if (checkoutBtnEl) checkoutBtnEl.disabled = hasUnavailable;
 
         // Totals
         const total = parseFloat(cartData.cart_total);
@@ -123,8 +144,9 @@ export function initCartModal() {
 
         const item = btn.closest('.cart-item');
         const sizeId = parseInt(item.dataset.sizeId);
+        // У недоступной позиции счётчика нет — там возможен только remove
         const qtyEl = item.querySelector('.cart-item-qty');
-        let qty = parseInt(qtyEl.textContent) || 1;
+        let qty = qtyEl ? (parseInt(qtyEl.textContent) || 1) : 1;
 
         // Бэкенд возвращает полную корзину — рендерим из ответа, без второго GET
         function applyCart(result) {

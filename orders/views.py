@@ -43,9 +43,12 @@ def serialize_cart(cart):
     cart_count = 0
     serialized = []
     for item in items:
-        cart_total += item['subtotal']
-        old_p = item['old_price'] or item['price']
-        cart_old_total += old_p * item['qty']
+        # Недоступные позиции в итог не входят: их цена не показывается,
+        # и сумма с ними не сошлась бы с видимыми ценами
+        if not item.get('unavailable_label'):
+            cart_total += item['subtotal']
+            old_p = item['old_price'] or item['price']
+            cart_old_total += old_p * item['qty']
         cart_count += item['qty']
         s = {
             'size_id': item['size_id'],
@@ -62,6 +65,8 @@ def serialize_cart(cart):
         if 'payment_price' in item:
             s['payment_price'] = str(item['payment_price'])
             s['payment_subtotal'] = str(item['payment_subtotal'])
+        if item.get('unavailable_label'):
+            s['unavailable_label'] = item['unavailable_label']
         serialized.append(s)
 
     resp = {
@@ -75,6 +80,21 @@ def serialize_cart(cart):
     if payment_total != cart_total:
         resp['payment_total'] = str(payment_total)
     return resp
+
+
+def _available_totals(items):
+    """Суммы корзины без недоступных позиций — как в serialize_cart: цена
+    недоступной не показывается, и сумма с ней не сошлась бы с видимыми."""
+    total = sum(
+        (i['subtotal'] for i in items if not i.get('unavailable_label')),
+        Decimal('0'),
+    )
+    old_total = sum(
+        ((i['old_price'] or i['price']) * i['qty']
+         for i in items if not i.get('unavailable_label')),
+        Decimal('0'),
+    )
+    return total, old_total
 
 
 class CartView(APIView):
@@ -269,10 +289,7 @@ class CheckoutView(View):
             return redirect(reverse('catalog:catalog'))
 
         cart_items = cart.get_items()
-        cart_total = sum(i['subtotal'] for i in cart_items)
-        cart_old_total = sum(
-            (i['old_price'] or i['price']) * i['qty'] for i in cart_items
-        )
+        cart_total, cart_old_total = _available_totals(cart_items)
 
         # Страна — не поле профиля, а зеркало региона из cookie: селект должен
         # показывать текущий регион всем, а не только авторизованным
@@ -300,10 +317,7 @@ class CheckoutView(View):
     def _handle_form_checkout(self, request):
         cart = Cart(request)
         cart_items = cart.get_items()
-        cart_total = sum(i['subtotal'] for i in cart_items)
-        cart_old_total = sum(
-            (i['old_price'] or i['price']) * i['qty'] for i in cart_items
-        )
+        cart_total, cart_old_total = _available_totals(cart_items)
 
         def _render_with_error(form, error_message=None):
             return render(request, 'orders/checkout.html', self._checkout_context(
@@ -464,6 +478,12 @@ class CheckoutView(View):
             'cart_old_total': cart_old_total,
             'is_authenticated': request.user.is_authenticated,
             'error_message': error_message,
+            'has_unavailable': any(
+                i.get('unavailable_label') for i in cart_items
+            ),
+            'has_available': any(
+                not i.get('unavailable_label') for i in cart_items
+            ),
         }
         if request.region and request.region.needs_conversion:
             ctx['payment_total'] = cart.get_payment_total(cart_total)

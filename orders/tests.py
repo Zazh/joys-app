@@ -2093,3 +2093,100 @@ class CheckoutWithdrawnItemTest(CheckoutRegionTest):
         self._post_checkout_kz()
 
         self.assertTrue(CartItem.objects.filter(user=self.user).exists())
+
+    # ─── Витрина: пометка ДО сабмита (второй хотфикс) ───
+
+    def test_withdrawn_item_marked_on_checkout_page(self):
+        """Метка вместо цены, submit заблокирован с подсказкой; «Итого»
+        скрыт — доступных позиций в корзине нет вовсе."""
+        ProductSize.objects.filter(pk=self.size_m.pk).update(coming_soon=True)
+        self._set_region_cookie('kz')
+        response = self.client.get('/orders/checkout/')
+
+        self.assertContains(response, 'Скоро в продаже')
+        self.assertContains(response, 'Удалите недоступные товары в корзине')
+        self.assertContains(response, 'text-xs" disabled>')
+        # «Итого» модалки корзины (text-xs) есть на каждой странице —
+        # проверяем именно блок checkout-сводки (text-sm)
+        self.assertNotContains(response, 'uppercase text-sm">Итого')
+        self.assertNotContains(response, '5000')  # цена недоступной скрыта
+
+    def test_mixed_cart_totals_exclude_withdrawn(self):
+        """Смешанная корзина: итог — только по доступной позиции."""
+        from orders.models import CartItem
+
+        size_l = ProductSize.objects.create(
+            product=self.product, name='L', sku='DJ-CL-L', price=Decimal('1000'),
+        )
+        CartItem.objects.create(user=self.user, size=size_l, qty=1)
+        Stock.objects.create(size=size_l, region=self.region_kz, quantity=5)
+        ProductSize.objects.filter(pk=self.size_m.pk).update(coming_soon=True)
+        self._set_region_cookie('kz')
+        response = self.client.get('/orders/checkout/')
+
+        self.assertContains(response, 'Скоро в продаже')
+        self.assertContains(response, 'uppercase text-sm">Итого')
+        self.assertContains(response, '1000 ₸')
+        self.assertNotContains(response, '5000')
+
+
+class CartUnavailableLabelTest(PaymentTestBase):
+    """`unavailable_label` в payload корзины — витринное зеркало guard-а
+    «снят с продажи»: покупатель видит проблему в корзине, а не ошибкой
+    на сабмите. Формулировки — те же, что на странице товара."""
+
+    def setUp(self):
+        from orders.models import CartItem
+
+        cache.clear()
+        self.client.login(email='test@example.com', password='test12345')
+        self.client.cookies['drjoys_region'] = 'kz'
+        CartItem.objects.create(user=self.user, size=self.size_m, qty=1)
+        Stock.objects.get_or_create(
+            size=self.size_m, region=self.region_kz,
+            defaults={'quantity': 10, 'reserved': 0},
+        )
+
+    def _item(self):
+        data = self.client.get('/orders/cart/').json()
+        return data['items'][0]
+
+    def test_available_item_has_no_label(self):
+        self.assertNotIn('unavailable_label', self._item())
+
+    def test_coming_soon_size(self):
+        ProductSize.objects.filter(pk=self.size_m.pk).update(coming_soon=True)
+        self.assertEqual(self._item()['unavailable_label'], 'Скоро в продаже')
+
+    def test_inactive_product(self):
+        Product.objects.filter(pk=self.product.pk).update(is_active=False)
+        self.assertEqual(self._item()['unavailable_label'], 'Снят с продажи')
+
+    def test_zero_stock(self):
+        Stock.objects.filter(size=self.size_m, region=self.region_kz).update(
+            quantity=0,
+        )
+        self.assertEqual(self._item()['unavailable_label'], 'Нет в наличии')
+
+    def test_missing_stock_row_counts_as_unavailable(self):
+        """Нет строки Stock у региона — чекаут упал бы «нет в наличии»
+        (`Stock.DoesNotExist` в `_create_order`), витрина обязана совпадать."""
+        Stock.objects.filter(size=self.size_m, region=self.region_kz).delete()
+        self.assertEqual(self._item()['unavailable_label'], 'Нет в наличии')
+
+    def test_totals_exclude_unavailable_but_badge_counts_all(self):
+        """Итог — без недоступных (их цена не показывается, сумма обязана
+        сходиться с видимыми), бейдж — всё содержимое корзины."""
+        from orders.models import CartItem
+
+        size_l = ProductSize.objects.create(
+            product=self.product, name='L', sku='DJ-CL-L', price=Decimal('1000'),
+        )
+        CartItem.objects.create(user=self.user, size=size_l, qty=2)
+        Stock.objects.create(size=size_l, region=self.region_kz, quantity=5)
+        ProductSize.objects.filter(pk=self.size_m.pk).update(coming_soon=True)
+
+        data = self.client.get('/orders/cart/').json()
+
+        self.assertEqual(data['cart_total'], '2000.00')
+        self.assertEqual(data['cart_count'], 3)
