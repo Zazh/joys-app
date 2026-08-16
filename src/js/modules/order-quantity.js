@@ -28,16 +28,29 @@ export function initOrderQuantity() {
         }
     });
 
-    // Add to cart button → API
+    // Обе кнопки шлют один и тот же аддитивный POST /orders/cart/add/:
+    // пока запрос в полёте, заблокированы обе — тап по второй до ответа
+    // первой удваивал qty в корзине
     const addToCartBtn = document.getElementById('addToCartBtn');
+    const goToDeliveryBtn = document.getElementById('goToDeliveryBtn');
+    let inFlight = false;
+
+    function setInFlight(state) {
+        inFlight = state;
+        if (addToCartBtn) addToCartBtn.disabled = state;
+        if (goToDeliveryBtn) goToDeliveryBtn.disabled = state;
+    }
+
+    // Add to cart button → API
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', async () => {
+            if (inFlight) return;
             const sizeId = addToCartBtn.dataset.sizeId;
             const qty = parseInt(qtyValue.textContent) || 1;
             if (!sizeId) return;
-            addToCartBtn.disabled = true;
+            setInFlight(true);
             const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
-            addToCartBtn.disabled = false;
+            setInFlight(false);
             if (result.ok) {
                 updateBadges(result.cart_count, null);
                 closeModal(document.getElementById('modalOrderQuantity'));
@@ -49,17 +62,17 @@ export function initOrderQuantity() {
     }
 
     // Go to checkout page
-    const goToDeliveryBtn = document.getElementById('goToDeliveryBtn');
     if (goToDeliveryBtn) {
         goToDeliveryBtn.addEventListener('click', async () => {
+            if (inFlight) return;
             // Сначала кладём выбранный размер в корзину — иначе checkout
             // увидит пустую корзину и средиректит обратно в каталог
             const sizeId = addToCartBtn ? addToCartBtn.dataset.sizeId : '';
             if (sizeId) {
                 const qty = parseInt(qtyValue.textContent) || 1;
-                goToDeliveryBtn.disabled = true;
+                setInFlight(true);
                 const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
-                goToDeliveryBtn.disabled = false;
+                setInFlight(false);
                 if (!result.ok) return;
                 updateBadges(result.cart_count, null);
             }
