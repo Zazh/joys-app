@@ -1,6 +1,7 @@
 import { apiPost } from '../lib/api.js';
 import { openModal, closeModal } from '../lib/modal-core.js';
 import { updateBadges } from '../lib/badges.js';
+import { formatMoney } from '../lib/money.js';
 
 // --------------------------------------------
 // 12. ORDER QUANTITY — счётчик + цена (API-aware)
@@ -107,7 +108,5 @@ function updateOrderTotal() {
     const priceStr = (unitEl.dataset.price || '0').replace(/\s/g, '').replace(',', '.');
     const unitPrice = parseFloat(priceStr) || 0;
     const qty = parseInt(qtyValue.textContent) || 1;
-    const total = unitPrice * qty;
-    const sym = window.DRJOYS?.currencySymbol || '₸';
-    totalEl.textContent = total.toLocaleString('ru-RU') + ' ' + sym;
+    totalEl.textContent = formatMoney(unitPrice * qty);
 }

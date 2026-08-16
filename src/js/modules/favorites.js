@@ -1,6 +1,7 @@
 import { apiPost } from '../lib/api.js';
 import { updateBadges } from '../lib/badges.js';
 import { escapeHtml } from '../lib/escape.js';
+import { formatMoney, formatPayment } from '../lib/money.js';
 
 // --------------------------------------------
 // 14. FAVORITES MODAL — загрузка из API, удаление
@@ -8,8 +9,6 @@ import { escapeHtml } from '../lib/escape.js';
 export function initFavoritesModal() {
     const favOverlay = document.getElementById('modalFavorites');
     if (!favOverlay) return;
-
-    const sym = window.DRJOYS?.currencySymbol || '₸';
 
     function renderFavorites(data) {
         const listEl = document.getElementById('favoritesList');
@@ -33,7 +32,7 @@ export function initFavoritesModal() {
                     <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
                         <div>
                             <p class="text-xs font-bold leading-tight">${escapeHtml(item.name)}</p>
-                            ${item.price ? `<p class="text-xs text-red-500 font-benzin mt-1">${parseFloat(item.price).toLocaleString('ru-RU')} ${sym}${item.payment_price ? ` <span class="text-stone-400 font-normal">(${parseFloat(item.payment_price).toLocaleString('ru-RU')} ${window.DRJOYS?.paymentCurrencySymbol || ''})</span>` : ''}</p>` : ''}
+                            ${item.price ? `<p class="text-xs text-red-500 font-benzin mt-1">${formatMoney(item.price)}${item.payment_price ? ` <span class="text-stone-400 font-normal">(${formatPayment(item.payment_price)})</span>` : ''}</p>` : ''}
                         </div>
                         ${item.first_size_id ? `<button class="fav-to-cart-btn text-[10px] uppercase font-bold text-gray-500 hover:text-black text-left" type="button">${window.DRJOYS.i18n.addToCart}</button>` : ''}
                     </div>

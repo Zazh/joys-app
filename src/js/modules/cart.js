@@ -2,6 +2,7 @@ import { apiPost } from '../lib/api.js';
 import { closeModal } from '../lib/modal-core.js';
 import { updateBadges } from '../lib/badges.js';
 import { escapeHtml } from '../lib/escape.js';
+import { formatMoney, formatPayment } from '../lib/money.js';
 
 // --------------------------------------------
 // 13. CART MODAL — загрузка из API, update, remove
@@ -10,21 +11,11 @@ export function initCartModal() {
     const cartOverlay = document.getElementById('modalCart');
     if (!cartOverlay) return;
 
-    const sym = window.DRJOYS?.currencySymbol || '₸';
-    const paySym = window.DRJOYS?.paymentCurrencySymbol || '';
     const needsConv = window.DRJOYS?.needsConversion || false;
     let cartData = { items: [], cart_total: '0', cart_old_total: '0', cart_count: 0 };
     // Счётчик поколений: ответы load/update/remove умеют приходить не в порядке
     // отправки — применяется только ответ самого свежего запроса
     let reqSeq = 0;
-
-    function fmtPrice(val) {
-        return parseFloat(val).toLocaleString('ru-RU') + ' ' + sym;
-    }
-
-    function fmtPayment(val) {
-        return parseFloat(val).toLocaleString('ru-RU') + ' ' + paySym;
-    }
 
     function renderCart() {
         const listEl = document.getElementById('cartItemsList');
@@ -65,8 +56,8 @@ export function initCartModal() {
                                 </button>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap justify-end">
-                                <span class="text-[10px] text-stone-400 line-through cart-item-old-price ${hasOld ? '' : 'hidden'}">${hasOld ? fmtPrice(parseFloat(item.old_price) * item.qty) : ''}</span>
-                                <span class="text-xs font-bold cart-item-price">${fmtPrice(item.subtotal)}</span>
+                                <span class="text-[10px] text-stone-400 line-through cart-item-old-price ${hasOld ? '' : 'hidden'}">${hasOld ? formatMoney(parseFloat(item.old_price) * item.qty) : ''}</span>
+                                <span class="text-xs font-bold cart-item-price">${formatMoney(item.subtotal)}</span>
                             </div>`;
 
                 return `<div class="cart-item flex gap-3 py-3" data-size-id="${escapeHtml(item.size_id)}" data-price="${escapeHtml(item.price || '')}" data-old-price="${escapeHtml(item.old_price || '')}">
@@ -107,18 +98,18 @@ export function initCartModal() {
         const paymentRowEl = document.getElementById('cartPaymentRow');
         const paymentTotalEl = document.getElementById('cartPaymentTotal');
 
-        if (cartTotalEl) cartTotalEl.textContent = fmtPrice(total);
+        if (cartTotalEl) cartTotalEl.textContent = formatMoney(total);
 
         const showPay = needsConv && cartData.payment_total;
         if (paymentRowEl) paymentRowEl.classList.toggle('hidden', !showPay);
         if (showPay && paymentTotalEl) {
-            paymentTotalEl.textContent = fmtPayment(parseFloat(cartData.payment_total));
+            paymentTotalEl.textContent = formatPayment(parseFloat(cartData.payment_total));
         }
 
         const savings = oldTotal - total;
         if (discountRowEl) discountRowEl.classList.toggle('hidden', !(savings > 0));
         if (savings > 0 && cartOldTotalEl && cartSavingsEl) {
-            cartOldTotalEl.textContent = fmtPrice(oldTotal);
+            cartOldTotalEl.textContent = formatMoney(oldTotal);
             cartSavingsEl.textContent = '-' + Math.round((savings / oldTotal) * 100) + '%';
         }
     }
