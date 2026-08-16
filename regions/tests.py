@@ -186,6 +186,22 @@ class RegionCacheTest(RegionTestBase):
 
         self.assertEqual(self._process('ru').region.payment_gateway, 'halyk')
 
+    def test_save_invalidates_default_region_cache(self):
+        """Тот же сброс для САМОГО дефолта — у него отдельный ключ кеша.
+
+        Ключ `region:default` отдаётся посетителю без cookie, то есть каждому,
+        кто пришёл на сайт впервые. Без этого теста набор оставался зелёным,
+        даже если убрать `DEFAULT_CACHE_KEY` из сигнала: правку дефолтного
+        региона покупатели видели бы через 10 минут TTL (проверено мутацией,
+        критик блока 3).
+        """
+        self._process()
+
+        self.region_kz.payment_gateway = 'vtb'
+        self.region_kz.save()
+
+        self.assertEqual(self._process().region.payment_gateway, 'vtb')
+
     def test_delete_invalidates_cache(self):
         self._process('ru')
 
