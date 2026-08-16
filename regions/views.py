@@ -2,7 +2,7 @@ from django.http import HttpResponseRedirect
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
-from .models import Region
+from .middleware import get_default_region, get_region
 
 
 class SetRegionView(View):
@@ -21,17 +21,23 @@ class SetRegionView(View):
         ):
             redirect_url = '/'
 
-        try:
-            region = Region.objects.get(code=region_code, is_active=True)
-        except Region.DoesNotExist:
-            region = Region.get_default()
+        # Тот же поиск, что у middleware (общий кеш, PH-08), а не свой второй:
+        # cookie ставит эта вьюха, а читает его middleware — расходиться им нельзя
+        region = get_region(region_code) or get_default_region()
 
         response = HttpResponseRedirect(redirect_url)
-        response.set_cookie(
-            'drjoys_region',
-            region.code,
-            max_age=365 * 24 * 60 * 60,
-            httponly=False,
-            samesite='Lax',
-        )
+        # Дефолта может не быть вовсе, и это не поломка данных: снять
+        # `is_default` у одного региона, не назначив другого, — единственный
+        # путь смены дефолта (constraint `unique_default_region` не даёт
+        # держать два сразу). В этом окне `region.code` падал с AttributeError,
+        # то есть 500 посетителю с чужим кодом региона. Cookie просто не ставим:
+        # человек увидит модалку выбора региона и выберет сам.
+        if region:
+            response.set_cookie(
+                'drjoys_region',
+                region.code,
+                max_age=365 * 24 * 60 * 60,
+                httponly=False,
+                samesite='Lax',
+            )
         return response

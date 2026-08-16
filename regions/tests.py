@@ -345,3 +345,41 @@ class SetRegionUnknownCodeTest(RegionTestBase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.cookies['drjoys_region'].value, 'kz')
+
+
+class SetRegionNoDefaultTest(RegionTestBase):
+    """Окно «дефолта нет вовсе» — вторая половина той же мины.
+
+    PH-07 закрыл «дефолт + неактивен», но состояние «дефолта нет» остаётся
+    достижимым и, больше того, **неизбежным**: constraint `unique_default_region`
+    не даёт держать два дефолта сразу, поэтому смена дефолта — это ровно два
+    сохранения, и между ними дефолта нет. В этом окне `SetRegionView` падал на
+    `region.code` у `None` — 500 посетителю с чужим кодом региона (тот же вход,
+    что у исходного бага Н-2). Найдено критиком блока 3, судьбу назначил
+    владелец.
+    """
+
+    def setUp(self):
+        super().setUp()
+        # Первая половина легитимной смены дефолта. `update()` минует сигналы,
+        # поэтому кеш чистим руками — иначе `region:default` держал бы старое
+        Region.objects.filter(pk=self.region_kz.pk).update(is_default=False)
+        cache.clear()
+
+    def test_unknown_code_without_default_does_not_crash(self):
+        response = self.client.post('/region/set/', {
+            'region': 'zz', 'next': '/',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn('drjoys_region', response.cookies)
+
+    def test_known_code_still_switches_without_default(self):
+        """Самовосстановление: посетитель выбирает страну в модалке — и это
+        обязано работать, пока владелец не назначил новый дефолт."""
+        response = self.client.post('/region/set/', {
+            'region': 'ru', 'next': '/',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.cookies['drjoys_region'].value, 'ru')
