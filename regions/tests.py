@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.contrib import admin
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -5,7 +8,9 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from accounts.models import User
+from catalog.models import Category, Product, ProductSize, RegionPrice, Stock
 
+from .admin import RegionAdmin
 from .context_processors import region_context
 from .middleware import RegionMiddleware
 from .models import Region
@@ -231,6 +236,82 @@ class RegionCacheTest(RegionTestBase):
         )
 
         self.assertEqual(len(region_context(request)['all_regions']), 3)
+
+
+class RegionAdminHookTest(RegionTestBase):
+    """PH-09: сохранение активного региона заводит цены и остатки.
+
+    `save_model` зовём напрямую: хук не использует ни request, ни form.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.category = Category.objects.create(name='Презервативы', slug='condoms')
+        cls.product = Product.objects.create(
+            name='DR.JOYS классические', slug='classic',
+            category=cls.category, pack_quantity=5,
+        )
+        cls.size_m = ProductSize.objects.create(
+            product=cls.product, name='M', sku='DJ-CL-M', price=Decimal('2500'),
+        )
+        cls.size_l = ProductSize.objects.create(
+            product=cls.product, name='L', sku='DJ-CL-L', price=Decimal('2700'),
+        )
+
+    def setUp(self):
+        super().setUp()
+        self.region_admin = RegionAdmin(Region, admin.site)
+
+    def _save(self, region, change=False):
+        self.region_admin.save_model(
+            request=None, obj=region, form=None, change=change,
+        )
+
+    def _new_region(self, is_active=True):
+        return Region(
+            code='uz', name='Узбекистан',
+            currency_code='UZS', currency_symbol='сум',
+            is_active=is_active, order=3,
+        )
+
+    def test_new_active_region_gets_prices_and_stocks(self):
+        region = self._new_region()
+
+        self._save(region)
+
+        prices = RegionPrice.objects.filter(region=region)
+        self.assertEqual(prices.count(), 2)
+        self.assertEqual({p.price for p in prices}, {Decimal('0')})
+        self.assertEqual(Stock.objects.filter(region=region).count(), 2)
+
+    def test_repeated_save_does_not_overwrite_prices(self):
+        region = self._new_region()
+        self._save(region)
+        price = RegionPrice.objects.filter(region=region).first()
+        price.price = Decimal('1234')
+        price.save()
+
+        self._save(region, change=True)
+
+        self.assertEqual(RegionPrice.objects.filter(region=region).count(), 2)
+        self.assertEqual(Stock.objects.filter(region=region).count(), 2)
+        price.refresh_from_db()
+        self.assertEqual(price.price, Decimal('1234'))
+
+    def test_inactive_region_creates_nothing_until_activated(self):
+        region = self._new_region(is_active=False)
+
+        self._save(region)
+
+        self.assertFalse(RegionPrice.objects.filter(region=region).exists())
+        self.assertFalse(Stock.objects.filter(region=region).exists())
+
+        region.is_active = True
+        self._save(region, change=True)
+
+        self.assertEqual(RegionPrice.objects.filter(region=region).count(), 2)
+        self.assertEqual(Stock.objects.filter(region=region).count(), 2)
 
 
 class SetRegionUnknownCodeTest(RegionTestBase):
