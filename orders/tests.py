@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from accounts.models import User
 from catalog.models import Category, Product, ProductSize, RegionPrice, Stock
+from orders.cart import cart_totals
 from orders.gateways import get_gateway, get_gateway_by_code
 from orders.gateways.base import CallbackRejected, PaymentResult, PaymentStatus
 from orders.gateways.halyk import HalykGateway
@@ -2192,3 +2193,97 @@ class CartUnavailableLabelTest(PaymentTestBase):
 
         self.assertEqual(data['cart_total'], '2000.00')
         self.assertEqual(data['cart_count'], 3)
+
+
+# ─── Суммы корзины одной функцией ───
+
+class CartTotalsTest(TestCase):
+    """`cart_totals` — единственный счёт сумм корзины: payload корзины,
+    страница оформления и её страница ошибки берут их отсюда. Позиции
+    подаём словарями (форма `Cart.get_items()`), БД тут не нужна."""
+
+    @staticmethod
+    def _item(price, qty, old_price=None, unavailable=''):
+        item = {
+            'qty': qty,
+            'price': Decimal(price),
+            'old_price': Decimal(old_price) if old_price else None,
+            'subtotal': Decimal(price) * qty,
+        }
+        if unavailable:
+            item['unavailable_label'] = unavailable
+        return item
+
+    def test_empty_cart(self):
+        totals = cart_totals([])
+
+        self.assertEqual(totals.total, Decimal('0'))
+        self.assertEqual(totals.old_total, Decimal('0'))
+        self.assertEqual(totals.count, 0)
+
+    def test_item_without_old_price_uses_price(self):
+        totals = cart_totals([self._item('1000', 2)])
+
+        self.assertEqual(totals.total, Decimal('2000'))
+        self.assertEqual(totals.old_total, Decimal('2000'))
+        self.assertEqual(totals.count, 2)
+
+    def test_mixed_items(self):
+        totals = cart_totals([
+            self._item('1000', 2, old_price='1500'),
+            self._item('300', 1),
+        ])
+
+        self.assertEqual(totals.total, Decimal('2300'))
+        self.assertEqual(totals.old_total, Decimal('3300'))
+        self.assertEqual(totals.count, 3)
+
+    def test_unavailable_item_is_counted_but_not_summed(self):
+        """Тот же контракт, что у витрины: цена недоступной позиции не
+        показывается, поэтому в итог не идёт, а из бейджа не исчезает."""
+        totals = cart_totals([
+            self._item('1000', 2),
+            self._item('500', 3, old_price='700', unavailable='Нет в наличии'),
+        ])
+
+        self.assertEqual(totals.total, Decimal('2000'))
+        self.assertEqual(totals.old_total, Decimal('2000'))
+        self.assertEqual(totals.count, 5)
+
+
+class CartDiscountTotalTest(PaymentTestBase):
+    """Сумма без скидки на сквозном пути: RegionPrice.old_price → JSON
+    корзины и зачёркнутая цена на оформлении.
+
+    До PH-10 её не пиннило ничто: сломанный фолбэк `old_price or price`
+    оставлял набор зелёным, хотя строка скидки исчезала у покупателя.
+    """
+
+    def setUp(self):
+        from orders.models import CartItem
+
+        cache.clear()
+        self.client.login(email='test@example.com', password='test12345')
+        self.client.cookies['drjoys_region'] = 'kz'
+        CartItem.objects.create(user=self.user, size=self.size_m, qty=2)
+        Stock.objects.get_or_create(
+            size=self.size_m, region=self.region_kz,
+            defaults={'quantity': 10, 'reserved': 0},
+        )
+        RegionPrice.objects.create(
+            size=self.size_m, region=self.region_kz,
+            price=Decimal('2000'), old_price=Decimal('2500'),
+        )
+
+    def test_cart_payload_keeps_old_total(self):
+        data = self.client.get('/orders/cart/').json()
+
+        self.assertEqual(data['cart_total'], '4000.00')
+        self.assertEqual(data['cart_old_total'], '5000.00')
+
+    def test_checkout_page_shows_struck_out_total(self):
+        response = self.client.get('/orders/checkout/')
+
+        self.assertEqual(response.context['cart_total'], Decimal('4000'))
+        self.assertEqual(response.context['cart_old_total'], Decimal('5000'))
+        self.assertContains(response, 'line-through')

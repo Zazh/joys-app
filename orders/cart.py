@@ -1,3 +1,4 @@
+from collections import namedtuple
 from decimal import Decimal
 
 from django.utils.translation import gettext as _
@@ -7,6 +8,32 @@ from catalog.models import ProductSize, RegionPrice, Product, Stock
 
 CART_SESSION_KEY = 'cart'
 FAVORITES_SESSION_KEY = 'favorites'
+
+CartTotals = namedtuple('CartTotals', ['total', 'old_total', 'count'])
+
+
+def cart_totals(items):
+    """Итог, итог без скидки и количество — одним проходом по `get_items()`.
+
+    Принимает готовый список позиций, а не корзину: все три потребителя
+    (payload корзины, страница оформления, её же страница ошибки) уже держат
+    его в руках, а пересчёт внутри стоил бы второго `get_items()` — запроса
+    в БД на каждый рендер.
+
+    Недоступные позиции в суммы не входят: их цена на витрине не печатается,
+    и итог с ними не сошёлся бы с видимыми числами. В счётчик они входят —
+    бейдж показывает всё содержимое корзины.
+    """
+    total = Decimal('0')
+    old_total = Decimal('0')
+    count = 0
+    for item in items:
+        count += item['qty']
+        if item.get('unavailable_label'):
+            continue
+        total += item['subtotal']
+        old_total += (item['old_price'] or item['price']) * item['qty']
+    return CartTotals(total, old_total, count)
 
 
 class Cart:
@@ -199,25 +226,12 @@ class Cart:
                 return _('Нет в наличии')
         return ''
 
-    def get_total(self):
-        items = self.get_items()
-        return sum(i['subtotal'] for i in items)
-
-    def get_old_total(self):
-        items = self.get_items()
-        total = Decimal('0')
-        for i in items:
-            p = i['old_price'] or i['price']
-            total += p * i['qty']
-        return total
-
-    def get_payment_total(self, total=None):
+    def get_payment_total(self, total):
         """Итого в валюте оплаты (KZT если конвертация).
 
-        total — уже посчитанная сумма, чтобы не перечитывать позиции из БД.
+        total — уже посчитанная сумма (`cart_totals`), а не пересчёт внутри:
+        иначе каждый вызов стоил бы второго `get_items()`.
         """
-        if total is None:
-            total = self.get_total()
         if self.region and self.region.needs_conversion:
             from regions.models import convert_to_kzt
             return convert_to_kzt(total, self.region.currency_code)

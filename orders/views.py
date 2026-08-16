@@ -1,5 +1,4 @@
 import logging
-from decimal import Decimal
 from datetime import timedelta
 
 from django.conf import settings
@@ -19,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from catalog.models import ProductSize, RegionPrice, Stock
-from .cart import Cart, Favorites
+from .cart import Cart, Favorites, cart_totals
 from emails.service import send_order_created_email
 from .forms import CheckoutForm
 from .gateways import get_gateway, get_gateway_by_code
@@ -38,18 +37,9 @@ logger = logging.getLogger(__name__)
 def serialize_cart(cart):
     """Полный payload корзины: один проход get_items, без повторных запросов."""
     items = cart.get_items()
-    cart_total = Decimal('0')
-    cart_old_total = Decimal('0')
-    cart_count = 0
+    totals = cart_totals(items)
     serialized = []
     for item in items:
-        # Недоступные позиции в итог не входят: их цена не показывается,
-        # и сумма с ними не сошлась бы с видимыми ценами
-        if not item.get('unavailable_label'):
-            cart_total += item['subtotal']
-            old_p = item['old_price'] or item['price']
-            cart_old_total += old_p * item['qty']
-        cart_count += item['qty']
         s = {
             'size_id': item['size_id'],
             'qty': item['qty'],
@@ -72,29 +62,14 @@ def serialize_cart(cart):
     resp = {
         'ok': True,
         'items': serialized,
-        'cart_total': str(cart_total),
-        'cart_old_total': str(cart_old_total),
-        'cart_count': cart_count,
+        'cart_total': str(totals.total),
+        'cart_old_total': str(totals.old_total),
+        'cart_count': totals.count,
     }
-    payment_total = cart.get_payment_total(cart_total)
-    if payment_total != cart_total:
+    payment_total = cart.get_payment_total(totals.total)
+    if payment_total != totals.total:
         resp['payment_total'] = str(payment_total)
     return resp
-
-
-def _available_totals(items):
-    """Суммы корзины без недоступных позиций — как в serialize_cart: цена
-    недоступной не показывается, и сумма с ней не сошлась бы с видимыми."""
-    total = sum(
-        (i['subtotal'] for i in items if not i.get('unavailable_label')),
-        Decimal('0'),
-    )
-    old_total = sum(
-        ((i['old_price'] or i['price']) * i['qty']
-         for i in items if not i.get('unavailable_label')),
-        Decimal('0'),
-    )
-    return total, old_total
 
 
 class CartView(APIView):
@@ -289,7 +264,7 @@ class CheckoutView(View):
             return redirect(reverse('catalog:catalog'))
 
         cart_items = cart.get_items()
-        cart_total, cart_old_total = _available_totals(cart_items)
+        totals = cart_totals(cart_items)
 
         # Страна — не поле профиля, а зеркало региона из cookie: селект должен
         # показывать текущий регион всем, а не только авторизованным
@@ -306,7 +281,7 @@ class CheckoutView(View):
         form = CheckoutForm(initial=initial)
 
         return render(request, 'orders/checkout.html', self._checkout_context(
-            request, cart, form, cart_items, cart_total, cart_old_total,
+            request, cart, form, cart_items, totals,
         ))
 
     def post(self, request):
@@ -317,12 +292,11 @@ class CheckoutView(View):
     def _handle_form_checkout(self, request):
         cart = Cart(request)
         cart_items = cart.get_items()
-        cart_total, cart_old_total = _available_totals(cart_items)
+        totals = cart_totals(cart_items)
 
         def _render_with_error(form, error_message=None):
             return render(request, 'orders/checkout.html', self._checkout_context(
-                request, cart, form, cart_items, cart_total, cart_old_total,
-                error_message,
+                request, cart, form, cart_items, totals, error_message,
             ))
 
         if not request.user.is_authenticated:
@@ -363,7 +337,7 @@ class CheckoutView(View):
         email = cd.get('email', '')
         city = cd['city']
         address = form.get_address()
-        total = cart_total
+        total = totals.total
 
         try:
             order = self._create_order(
@@ -461,8 +435,8 @@ class CheckoutView(View):
 
     # ─── Общие helpers ───
 
-    def _checkout_context(self, request, cart, form, cart_items,
-                          cart_total, cart_old_total, error_message=None):
+    def _checkout_context(self, request, cart, form, cart_items, totals,
+                          error_message=None):
         """Контекст checkout.html — один на GET и на страницу ошибки.
 
         Суммы принимает готовыми: считать их внутри значило бы второй
@@ -474,8 +448,8 @@ class CheckoutView(View):
         ctx = {
             'form': form,
             'cart_items': cart_items,
-            'cart_total': cart_total,
-            'cart_old_total': cart_old_total,
+            'cart_total': totals.total,
+            'cart_old_total': totals.old_total,
             'is_authenticated': request.user.is_authenticated,
             'error_message': error_message,
             'has_unavailable': any(
@@ -486,7 +460,7 @@ class CheckoutView(View):
             ),
         }
         if request.region and request.region.needs_conversion:
-            ctx['payment_total'] = cart.get_payment_total(cart_total)
+            ctx['payment_total'] = cart.get_payment_total(totals.total)
         return ctx
 
     def _create_order(self, request, region, first_name, last_name,
