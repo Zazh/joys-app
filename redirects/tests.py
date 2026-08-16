@@ -1,3 +1,7 @@
+from unittest.mock import Mock, patch
+
+import requests
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from .models import Redirect
@@ -135,3 +139,40 @@ class LanguagePrefixTest(TestCase):
         # живые страницы с префиксом проходят мимо middleware
         response = self.client.get('/ru/nonexistent-page/')
         self.assertEqual(response.status_code, 404)
+
+
+class DestinationValidationTest(TestCase):
+    """clean(): назначение, отдающее 404, не даёт сохранить запись."""
+
+    @staticmethod
+    def _redirect(**kwargs):
+        fields = dict(
+            path='/legacy/', destination='https://example.com/target/',
+            redirect_type=301,
+        )
+        fields.update(kwargs)
+        return Redirect(**fields)
+
+    @patch('redirects.models.requests.get')
+    def test_404_destination_rejected(self, mock_get):
+        mock_get.return_value = Mock(status_code=404)
+        with self.assertRaises(ValidationError) as ctx:
+            self._redirect().full_clean()
+        self.assertIn('destination', ctx.exception.message_dict)
+
+    @patch('redirects.models.requests.get')
+    def test_alive_destination_accepted(self, mock_get):
+        mock_get.return_value = Mock(status_code=200)
+        self._redirect().full_clean()
+
+    @patch('redirects.models.requests.get')
+    def test_network_error_does_not_block_save(self, mock_get):
+        # таймаут или недоступный хост — не 404: запись сохраняется
+        mock_get.side_effect = requests.ConnectionError()
+        self._redirect().full_clean()
+
+    @patch('redirects.models.requests.get')
+    def test_inactive_record_not_checked(self, mock_get):
+        # выключенную запись с умершим назначением сохранить можно
+        self._redirect(is_active=False).full_clean()
+        mock_get.assert_not_called()
