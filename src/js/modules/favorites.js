@@ -24,14 +24,18 @@ export function initFavoritesModal() {
         if (emptyEl) { emptyEl.classList.add('hidden'); emptyEl.classList.remove('flex'); }
 
         if (listEl) {
-            listEl.innerHTML = items.map(item => `
+            listEl.innerHTML = items.map(item => {
+                // Ссылка на страницу товара (SB-08); пустой product_url — без ссылки
+                const url = item.product_url ? escapeHtml(item.product_url) : '';
+                const imgHtml = `<img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">`;
+                return `
                 <div class="fav-item flex gap-3 p-2 rounded-xl bg-stone-50" data-product-id="${escapeHtml(item.product_id)}" data-first-size-id="${escapeHtml(item.first_size_id || '')}">
                     <div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-stone-50">
-                        <img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">
+                        ${url ? `<a href="${url}">${imgHtml}</a>` : imgHtml}
                     </div>
                     <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
                         <div>
-                            <p class="text-xs font-bold leading-tight">${escapeHtml(item.name)}</p>
+                            <p class="text-xs font-bold leading-tight">${url ? `<a href="${url}">${escapeHtml(item.name)}</a>` : escapeHtml(item.name)}</p>
                             ${item.price ? `<p class="text-xs text-red-500 font-benzin mt-1">${formatMoney(item.price)}${item.payment_price ? ` <span class="text-stone-400 font-normal">(${formatPayment(item.payment_price)})</span>` : ''}</p>` : ''}
                         </div>
                         ${item.first_size_id ? `<button class="fav-to-cart-btn text-[10px] uppercase font-bold text-gray-500 hover:text-black text-left" type="button">${window.DRJOYS.i18n.addToCart}</button>` : ''}
@@ -45,7 +49,8 @@ export function initFavoritesModal() {
                         </svg>
                     </button>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
     }
 

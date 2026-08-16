@@ -60,12 +60,17 @@ export function initCartModal() {
                                 <span class="text-xs font-bold cart-item-price">${formatMoney(item.subtotal)}</span>
                             </div>`;
 
+                // Ссылка на страницу товара (SB-08) — только у доступной
+                // позиции: у недоступной страницы может уже не быть (404)
+                const url = !item.unavailable_label && item.product_url ? escapeHtml(item.product_url) : '';
+                const imgHtml = `<img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">`;
+
                 return `<div class="cart-item flex gap-3 py-3" data-size-id="${escapeHtml(item.size_id)}" data-price="${escapeHtml(item.price || '')}" data-old-price="${escapeHtml(item.old_price || '')}">
                     <div class="w-15 h-15 shrink-0 rounded-lg overflow-hidden bg-stone-50${item.unavailable_label ? ' opacity-50' : ''}">
-                        <img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">
+                        ${url ? `<a href="${url}">${imgHtml}</a>` : imgHtml}
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold truncate${item.unavailable_label ? ' text-stone-500' : ''}">${escapeHtml(item.name)}</p>
+                        <p class="text-xs font-bold truncate${item.unavailable_label ? ' text-stone-500' : ''}">${url ? `<a href="${url}">${escapeHtml(item.name)}</a>` : escapeHtml(item.name)}</p>
                         <p class="text-[10px] text-gray-500">${escapeHtml(item.size_name)}</p>
                         <div class="flex items-center justify-between mt-1">
                             ${bottomRow}
