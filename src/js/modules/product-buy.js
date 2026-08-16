@@ -154,14 +154,18 @@ export function initProductBuy() {
         const favPath = favBtn.querySelector('svg path');
         favBtn.addEventListener('click', async () => {
             favBtn.disabled = true;
-            const result = await apiPost('/orders/favorites/toggle/', { product_id: parseInt(productId) });
-            favBtn.disabled = false;
-
-            if (result.ok) {
-                const isActive = result.added;
-                favBtn.classList.toggle('active', isActive);
-                if (favPath) favPath.setAttribute('fill', isActive ? 'currentColor' : 'none');
-                updateBadges(null, result.fav_count);
+            try {
+                const result = await apiPost('/orders/favorites/toggle/', { product_id: parseInt(productId) });
+                if (result.ok) {
+                    const isActive = result.added;
+                    favBtn.classList.toggle('active', isActive);
+                    if (favPath) favPath.setAttribute('fill', isActive ? 'currentColor' : 'none');
+                    updateBadges(null, result.fav_count);
+                }
+            } catch (err) {
+                console.error('favorite toggle error:', err);
+            } finally {
+                favBtn.disabled = false;
             }
         });
     }

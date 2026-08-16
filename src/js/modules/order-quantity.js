@@ -49,14 +49,19 @@ export function initOrderQuantity() {
             const qty = parseInt(qtyValue.textContent) || 1;
             if (!sizeId) return;
             setInFlight(true);
-            const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
-            setInFlight(false);
-            if (result.ok) {
-                updateBadges(result.cart_count, null);
-                closeModal(document.getElementById('modalOrderQuantity'));
-                // Открыть корзину
-                const cartModal = document.getElementById('modalCart');
-                if (cartModal) openModal(cartModal);
+            try {
+                const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
+                if (result.ok) {
+                    updateBadges(result.cart_count, null);
+                    closeModal(document.getElementById('modalOrderQuantity'));
+                    // Открыть корзину
+                    const cartModal = document.getElementById('modalCart');
+                    if (cartModal) openModal(cartModal);
+                }
+            } catch (err) {
+                console.error('cart add error:', err);
+            } finally {
+                setInFlight(false);
             }
         });
     }
@@ -71,10 +76,17 @@ export function initOrderQuantity() {
             if (sizeId) {
                 const qty = parseInt(qtyValue.textContent) || 1;
                 setInFlight(true);
-                const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
-                setInFlight(false);
-                if (!result.ok) return;
-                updateBadges(result.cart_count, null);
+                try {
+                    const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
+                    if (!result.ok) return;
+                    updateBadges(result.cart_count, null);
+                } catch (err) {
+                    // Сбой сети: товар в корзину не лёг — на checkout не уходим
+                    console.error('cart add error:', err);
+                    return;
+                } finally {
+                    setInFlight(false);
+                }
             }
             closeModal(document.getElementById('modalOrderQuantity'));
             window.location.href = '/orders/checkout/';

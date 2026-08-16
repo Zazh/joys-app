@@ -155,7 +155,12 @@ export function initCartModal() {
         }
 
         if (btn.dataset.action === 'remove') {
-            applyCart(await apiPost('/orders/cart/remove/', { size_id: sizeId }));
+            try {
+                applyCart(await apiPost('/orders/cart/remove/', { size_id: sizeId }));
+            } catch (err) {
+                console.error('cart remove error:', err);
+                loadCart();
+            }
             return;
         }
         if (btn.dataset.action === 'minus' && qty > 1) {
@@ -164,7 +169,13 @@ export function initCartModal() {
             qty += 1;
         }
         qtyEl.textContent = qty; // оптимистично, ответ сервера поправит
-        applyCart(await apiPost('/orders/cart/update/', { size_id: sizeId, qty }));
+        try {
+            applyCart(await apiPost('/orders/cart/update/', { size_id: sizeId, qty }));
+        } catch (err) {
+            // Оптимистичное qty уже в DOM — перечитываем серверное состояние
+            console.error('cart update error:', err);
+            loadCart();
+        }
     });
 
     // Checkout → страница оформления заказа

@@ -72,8 +72,12 @@ export function initFavoritesModal() {
         if (removeBtn) {
             const item = removeBtn.closest('.fav-item');
             const productId = parseInt(item.dataset.productId);
-            const result = await apiPost('/orders/favorites/remove/', { product_id: productId });
-            if (result.ok) updateBadges(null, result.fav_count);
+            try {
+                const result = await apiPost('/orders/favorites/remove/', { product_id: productId });
+                if (result.ok) updateBadges(null, result.fav_count);
+            } catch (err) {
+                console.error('favorites remove error:', err);
+            }
             loadFavorites();
             return;
         }
@@ -85,12 +89,17 @@ export function initFavoritesModal() {
             const sizeId = item.dataset.firstSizeId;
             if (!sizeId) return;
             cartBtn.disabled = true;
-            const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty: 1 });
-            cartBtn.disabled = false;
-            if (result.ok) {
-                updateBadges(result.cart_count, null);
-                cartBtn.textContent = '✓';
-                setTimeout(() => { cartBtn.textContent = window.DRJOYS.i18n.addToCart; }, 800);
+            try {
+                const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty: 1 });
+                if (result.ok) {
+                    updateBadges(result.cart_count, null);
+                    cartBtn.textContent = '✓';
+                    setTimeout(() => { cartBtn.textContent = window.DRJOYS.i18n.addToCart; }, 800);
+                }
+            } catch (err) {
+                console.error('favorites add-to-cart error:', err);
+            } finally {
+                cartBtn.disabled = false;
             }
         }
     });
