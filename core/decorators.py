@@ -16,7 +16,7 @@ def staff_only_404(view_func):
         user = request.user
         if not user.is_authenticated:
             raise Http404
-        if not (user.is_staff or getattr(user, 'is_staff_role', False)):
+        if not (user.is_staff or getattr(user, 'is_full_staff', False)):
             raise Http404
         return view_func(request, *args, **kwargs)
 

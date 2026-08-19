@@ -7,7 +7,7 @@ def backoffice_badges(request):
         return {}
     if not hasattr(request, 'user') or not request.user.is_authenticated:
         return {}
-    if not getattr(request.user, 'is_staff_role', False):
+    if not getattr(request.user, 'is_full_staff', False):
         return {}
     return {
         'bo_pending_orders': Order.objects.filter(status=Order.Status.PENDING).count(),

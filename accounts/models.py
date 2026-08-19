@@ -35,6 +35,7 @@ class User(AbstractUser):
         MANAGER = 'manager', 'Менеджер'
         SUPER_MANAGER = 'super_manager', 'Супер-менеджер'
         OWNER = 'owner', 'Владелец'
+        STORE_MANAGER = 'store_manager', 'Менеджер точек'
 
     username = None
     email = models.EmailField('Email', unique=True)
@@ -68,6 +69,19 @@ class User(AbstractUser):
 
     @property
     def is_staff_role(self):
+        """Пускается ли в бэкофис вообще (какой раздел — решает гейт вьюхи)."""
+        return self.role in (
+            self.Role.MANAGER, self.Role.SUPER_MANAGER,
+            self.Role.OWNER, self.Role.STORE_MANAGER,
+        )
+
+    @property
+    def is_store_manager(self):
+        return self.role == self.Role.STORE_MANAGER
+
+    @property
+    def is_full_staff(self):
+        """Штатный сотрудник бэкофиса — все роли, кроме «Менеджера точек»."""
         return self.role in (self.Role.MANAGER, self.Role.SUPER_MANAGER, self.Role.OWNER)
 
     @property

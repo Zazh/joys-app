@@ -8,6 +8,9 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
+from django.urls.converters import IntConverter
+
+from backoffice import urls as backoffice_urls
 from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm, ContactsPageForm
 from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
@@ -573,3 +576,167 @@ class CityCrudTests(TestCase):
             {c.name_ru: c.stores_count for c in response.context['cities']},
             {'Алматы': 1, 'Астана': 0},
         )
+
+
+def backoffice_routes():
+    """Все именованные маршруты бэкофиса с фиктивными аргументами.
+
+    Гейт проверяется циклом по этому списку, а не по составленному руками
+    перечню разделов: новый раздел, забытый в allowlist роли, роняет тест —
+    иначе права разъехались бы молча.
+    """
+    routes = []
+    for pattern in backoffice_urls.urlpatterns:
+        kwargs = {
+            arg: (1 if isinstance(converter, IntConverter) else 'X')
+            for arg, converter in pattern.pattern.converters.items()
+        }
+        routes.append((pattern.name, reverse(f'backoffice:{pattern.name}', kwargs=kwargs)))
+    return routes
+
+
+# Разделы, доступные роли «Менеджер точек» (§3 матрица прав бэклога)
+STORE_MANAGER_ALLOWED = {
+    'login', 'logout',
+    'store_list', 'store_create', 'store_edit', 'store_delete',
+    'city_list', 'city_create', 'city_edit', 'city_delete',
+}
+
+
+class BackofficeRoleMatrixTests(TestCase):
+    """Матрица доступа циклом по всем маршрутам бэкофиса."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.routes = backoffice_routes()
+
+    def login_as(self, role):
+        email = f'{role}@example.com'
+        User.objects.create_user(email=email, password='x', role=role)
+        self.client.login(email=email, password='x')
+
+    def test_allowlist_names_exist(self):
+        """Переименовали маршрут — allowlist не должен молча протухнуть."""
+        names = {name for name, _ in self.routes}
+        self.assertTrue(STORE_MANAGER_ALLOWED <= names,
+                        STORE_MANAGER_ALLOWED - names)
+
+    def test_store_manager_forbidden_outside_allowlist(self):
+        self.login_as(User.Role.STORE_MANAGER)
+        for name, url in self.routes:
+            if name in STORE_MANAGER_ALLOWED:
+                continue
+            with self.subTest(url=name):
+                # GET хватает и POST-only вьюхам: 403 приходит из dispatch
+                # раньше разбора метода
+                self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_customer_forbidden_everywhere(self):
+        self.login_as(User.Role.CUSTOMER)
+        for name, url in self.routes:
+            if name in ('login', 'logout'):
+                continue
+            with self.subTest(url=name):
+                self.assertEqual(self.client.get(url).status_code, 403)
+
+
+class StoreManagerAccessTests(TestCase):
+    """Свои разделы роли «Менеджер точек»: доступ, CRUD, вход, счётчики."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='points@example.com', password='x', role=User.Role.STORE_MANAGER)
+        self.client.login(email='points@example.com', password='x')
+        self.city = City.objects.create(name='Алматы')
+
+    def test_own_sections_open(self):
+        for name in ('store_list', 'store_create', 'city_list', 'city_create'):
+            with self.subTest(url=name):
+                self.assertEqual(self.client.get(reverse(f'backoffice:{name}')).status_code, 200)
+
+    def test_full_store_crud(self):
+        self.client.post(reverse('backoffice:store_create'), {
+            'city': str(self.city.pk), 'name': 'Flirtshop', 'address': 'Абая 1',
+            'map_url': '', 'lat': '', 'lng': '',
+            'fulfillment': 'pickup_delivery', 'is_active': 'on', 'order': '0',
+        })
+        store = OfflineStore.objects.get(name='Flirtshop')
+
+        self.client.post(reverse('backoffice:store_edit', args=[store.pk]), {
+            'city': str(self.city.pk), 'name': 'Flirtshop', 'address': 'Абая 2',
+            'map_url': '', 'lat': '', 'lng': '',
+            'fulfillment': 'pickup_delivery', 'is_active': 'on', 'order': '0',
+        })
+        store.refresh_from_db()
+        self.assertEqual(store.address, 'Абая 2')
+
+        self.client.post(reverse('backoffice:store_delete', args=[store.pk]))
+        self.assertFalse(OfflineStore.objects.filter(pk=store.pk).exists())
+
+    def test_full_city_crud(self):
+        self.client.post(reverse('backoffice:city_create'), {
+            'name_ru': 'Астана', 'name_kk': 'Астана қаласы', 'name_en': 'Astana',
+        })
+        city = City.objects.get(name_ru='Астана')
+
+        self.client.post(reverse('backoffice:city_edit', args=[city.pk]), {
+            'name_ru': 'Астана', 'name_kk': '', 'name_en': 'Astana city',
+        })
+        city.refresh_from_db()
+        self.assertEqual(city.name_en, 'Astana city')
+
+        self.client.post(reverse('backoffice:city_delete', args=[city.pk]))
+        self.assertFalse(City.objects.filter(pk=city.pk).exists())
+
+    def test_badges_not_counted(self):
+        """Счётчики заказов и заявок — данные чужих для роли разделов."""
+        response = self.client.get(reverse('backoffice:store_list'))
+        self.assertNotIn('bo_pending_orders', response.context)
+
+    def test_api_schema_hidden(self):
+        self.assertEqual(self.client.get('/api/schema/').status_code, 404)
+
+
+class BackofficeLoginRedirectTests(TestCase):
+    """Куда роль попадает после входа (Р-1: точкам — сразу их список)."""
+
+    def setUp(self):
+        self.url = reverse('backoffice:login')
+
+    def start_page(self, role):
+        email = f'{role}@example.com'
+        User.objects.create_user(email=email, password='x', role=role)
+        return self.client.post(self.url, {'email': email, 'password': 'x'})
+
+    def test_store_manager_lands_on_stores(self):
+        self.assertRedirects(self.start_page(User.Role.STORE_MANAGER),
+                             reverse('backoffice:store_list'))
+
+    def test_manager_lands_on_dashboard(self):
+        self.assertRedirects(self.start_page(User.Role.MANAGER),
+                             reverse('backoffice:dashboard'))
+
+    def test_logged_in_store_manager_reopening_login(self):
+        """Закладка на форму входа не должна уводить роль в закрытый дашборд."""
+        self.start_page(User.Role.STORE_MANAGER)
+        self.assertRedirects(self.client.get(self.url), reverse('backoffice:store_list'))
+
+
+class ManagerKeepsAccessTests(TestCase):
+    """Р-7: у обычного менеджера ничего не отобрали появлением новой роли."""
+
+    def setUp(self):
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+
+    def test_sections_open(self):
+        for name in ('store_list', 'city_list', 'order_list'):
+            with self.subTest(url=name):
+                self.assertEqual(self.client.get(reverse(f'backoffice:{name}')).status_code, 200)
+
+    def test_senior_sections_still_closed(self):
+        self.assertEqual(self.client.get(reverse('backoffice:user_create')).status_code, 403)
+
+    def test_api_schema_open(self):
+        self.assertEqual(self.client.get('/api/schema/').status_code, 200)

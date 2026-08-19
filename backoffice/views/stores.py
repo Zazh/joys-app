@@ -71,6 +71,7 @@ def _fill_store(store, request):
 
 
 class OfflineStoreListView(BackofficeAccessMixin, ListView):
+    allow_store_manager = True
     template_name = 'backoffice/stores/list.html'
     context_object_name = 'stores'
     paginate_by = 50
@@ -120,6 +121,8 @@ def _form_response(request, store, is_new):
 
 
 class OfflineStoreCreateView(BackofficeAccessMixin, View):
+    allow_store_manager = True
+
     def get(self, request):
         return _form_response(request, OfflineStore(), is_new=True)
 
@@ -134,6 +137,8 @@ class OfflineStoreCreateView(BackofficeAccessMixin, View):
 
 
 class OfflineStoreEditView(BackofficeAccessMixin, View):
+    allow_store_manager = True
+
     def get(self, request, pk):
         store = get_object_or_404(OfflineStore, pk=pk)
         return _form_response(request, store, is_new=False)
@@ -149,6 +154,8 @@ class OfflineStoreEditView(BackofficeAccessMixin, View):
 
 
 class OfflineStoreDeleteView(BackofficeAccessMixin, View):
+    allow_store_manager = True
+
     def post(self, request, pk):
         store = get_object_or_404(OfflineStore, pk=pk)
         store.delete()

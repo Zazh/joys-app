@@ -5,10 +5,17 @@ from django.views import View
 from backoffice.ratelimit import is_rate_limited, record_failed_attempt, clear_attempts
 
 
+def _start_page(user):
+    """Стартовая страница роли: дашборд закрыт «Менеджеру точек»."""
+    if user.is_store_manager:
+        return 'backoffice:store_list'
+    return 'backoffice:dashboard'
+
+
 class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated and hasattr(request.user, 'is_staff_role') and request.user.is_staff_role:
-            return redirect('backoffice:dashboard')
+            return redirect(_start_page(request.user))
         return render(request, 'backoffice/auth/login.html')
 
     def post(self, request):
@@ -35,7 +42,7 @@ class LoginView(View):
         else:
             clear_attempts(request, scope='backoffice')
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect('backoffice:dashboard')
+            return redirect(_start_page(user))
 
         return render(request, 'backoffice/auth/login.html', {
             'error': error,
