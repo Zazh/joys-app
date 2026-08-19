@@ -1,5 +1,3 @@
-from urllib.parse import urlencode
-
 from django.conf import settings
 from django.urls import translate_url
 from django.utils.translation import get_language_from_path
@@ -36,21 +34,20 @@ def seo(request):
 
 
 def _canonical_url(request):
-    """Канонический адрес страницы — путь без мусора в query-строке.
+    """Канонический адрес страницы — путь, вся query-строка отбрасывается.
 
     build_absolute_uri() тащит всё, что пришло в ссылке: utm_*, gclid, fbclid,
     ?region=. Каждая рекламная ссылка каноникализировалась сама на себя, и для
     поисковика это отдельная страница-дубль вместо одной канонической.
 
-    Единственный параметр, который оставляем, — page: у страниц пагинации
-    канонический адрес это они сами, а не первая страница (рекомендация Google).
-    page=1 отбрасываем: он отдаёт тот же контент, что и адрес без параметра.
+    Исключение для ?page= здесь было, пока каталог делился на страницы: у
+    страницы пагинации канонический адрес — она сама. С OS-10 пагинации на
+    витрине нет вовсе (paginate_by остался только в бэкофисе, а он закрыт и
+    логином, и robots.txt), и `?page=2` отдаёт тот же полный каталог. Оставь
+    исключение — старые проиндексированные адреса пагинации канонизировались бы
+    сами на себя, то есть остались бы дублями каталога вместо склейки с ним.
     """
-    url = f'{site_base_url()}{request.path}'
-    page = request.GET.get('page', '')
-    if page.isdigit() and page != '1':
-        url = f'{url}?{urlencode({"page": page})}'
-    return url
+    return f'{site_base_url()}{request.path}'
 
 
 def _hreflang_links(request):

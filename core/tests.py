@@ -156,6 +156,16 @@ class CanonicalTests(TestCase):
         self.assertIn(f'<link rel="canonical" href="{PROD}/ru/blog/">', body)
         self.assertNotIn('utm_source', body.split('</head>')[0])
 
+    def test_canonical_drops_page_param(self):
+        """С OS-10 пагинации на витрине нет: `?page=2` отдаёт тот же каталог.
+        Старый проиндексированный адрес пагинации должен склеиваться с
+        каталогом, а не канонизироваться сам на себя."""
+        body = self.client.get(
+            reverse('catalog:catalog'), {'page': '2'},
+        ).content.decode()
+        self.assertIn(f'<link rel="canonical" href="{PROD}/ru/catalog/">', body)
+        self.assertNotIn('page=2', body.split('</head>')[0])
+
     def test_hreflang_covers_all_languages_plus_x_default(self):
         body = self.client.get(reverse('pages:blog_list')).content.decode()
         for lang, path in (
