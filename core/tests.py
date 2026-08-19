@@ -100,6 +100,28 @@ class RobotsTests(TestCase):
         for path in ('/backoffice/', '/api/', '/orders/', '/ru/accounts/', '/kk/quiz/'):
             self.assertIn(f'Disallow: {path}', body)
 
+    @override_settings(SITE_URL=PROD, SITE_INDEXABLE=True)
+    def test_clean_param_only_in_yandex_group(self):
+        """Clean-param понимает только Яндекс: в общей группе Google писал на
+        него предупреждение в Search Console."""
+        body = self.client.get('/robots.txt').content.decode()
+        common, yandex = body.split('User-agent: Yandex')
+        self.assertNotIn('Clean-param', common)
+        self.assertIn('Clean-param: utm_source', yandex)
+
+    @override_settings(SITE_URL=PROD, SITE_INDEXABLE=True)
+    def test_yandex_group_closes_the_same_sections(self):
+        """Своя группа означает, что общую Яндекс не читает — закрытое в ней
+        должно совпадать до строки, иначе бэкофис уедет в его индекс."""
+        body = self.client.get('/robots.txt').content.decode()
+        common, yandex = body.split('User-agent: Yandex')
+
+        def rules(part):
+            return [ln for ln in part.splitlines() if ln.startswith('Disallow: ')]
+
+        self.assertEqual(rules(common), rules(yandex))
+        self.assertIn('Disallow: /backoffice/', rules(yandex))
+
     @override_settings(SITE_URL='https://app.dr-joys.com', SITE_INDEXABLE=False)
     def test_staging_is_closed_entirely(self):
         body = self.client.get('/robots.txt').content.decode()

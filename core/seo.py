@@ -102,7 +102,7 @@ def robots_txt(request):
     закрытый в robots.txt адрес робот не скачивает и потому не видит на нём
     rel=canonical, из-за чего URL всё равно попадает в индекс, но без
     склейки с основным. За склейку отвечает canonical (core.context_processors),
-    Яндексу дополнительно помогает Clean-param ниже.
+    Яндексу дополнительно помогает Clean-param в его собственной группе.
     """
     if not settings.SITE_INDEXABLE:
         body = 'User-agent: *\nDisallow: /\n'
@@ -125,19 +125,26 @@ def robots_txt(request):
     for lang_code, _name in settings.LANGUAGES:
         disallow += [f'/{lang_code}/accounts/', f'/{lang_code}/quiz/']
 
-    lines = ['User-agent: *']
-    lines += [f'Disallow: {path}' for path in disallow]
-    lines += [
-        '',
-        # Рекламные метки склеиваем для Яндекса — иначе один товар попадает
-        # в индекс десятком адресов из рассылок и рекламных кабинетов.
-        'Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content'
-        '&gclid&yclid&fbclid&from&region',
-        '',
-        f'Sitemap: {absolute_url("/sitemap.xml")}',
-        '',
-    ]
-    return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
+    # Две группы с одним и тем же списком закрытого. Отдельная группа Яндексу
+    # нужна из-за Clean-param: директиву понимает только он, а в общей группе
+    # Google печатал на неё предупреждение в Search Console («правило, которое
+    # не учитывается Googlebot»). Раз у Яндекса есть своя группа, он читает
+    # только её — поэтому Disallow в ней те же, из одного списка
+    groups = []
+    for agent in ('*', 'Yandex'):
+        lines = [f'User-agent: {agent}']
+        lines += [f'Disallow: {path}' for path in disallow]
+        if agent == 'Yandex':
+            # Рекламные метки склеиваем для Яндекса — иначе один товар попадает
+            # в индекс десятком адресов из рассылок и рекламных кабинетов.
+            lines.append(
+                'Clean-param: utm_source&utm_medium&utm_campaign&utm_term'
+                '&utm_content&gclid&yclid&fbclid&from&region'
+            )
+        groups.append('\n'.join(lines))
+
+    body = '\n\n'.join(groups) + f'\n\nSitemap: {absolute_url("/sitemap.xml")}\n'
+    return HttpResponse(body, content_type='text/plain; charset=utf-8')
 
 
 # ─── llms.txt ───
