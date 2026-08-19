@@ -58,7 +58,8 @@
                         {% trans "Все" %}
                     </button>
                     {% for city in city_groups %}
-                    <button type="button" class="stores-chip" data-city="{{ city.name }}" aria-pressed="false">
+                    {# data-city — id города, а не название: на kk/en названия переводятся #}
+                    <button type="button" class="stores-chip" data-city="{{ city.id }}" aria-pressed="false">
                         {{ city.name }} <span class="stores-chip__count">{{ city.count }}</span>
                     </button>
                     {% endfor %}
@@ -84,7 +85,7 @@
             <div id="storesLayout" class="stores-layout">
                 <div id="storesList" class="stores-list">
                     {% for group in city_groups %}
-                    <section class="stores-city" data-city-group="{{ group.name }}">
+                    <section class="stores-city" data-city-group="{{ group.id }}">
                         <h2 class="stores-city__title">
                             {{ group.name }} <span class="stores-city__count">{{ group.count }}</span>
                         </h2>

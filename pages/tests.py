@@ -595,3 +595,36 @@ class PartnersPageTests(TestCase):
     def test_meta_description_fallback(self):
         """body шаблон не читает — сниппет собирается из фолбэка вьюхи."""
         self.assertContains(self._get(), 'Оффлайн магазины с товарами DR.JOYS')
+
+    def test_chips_marked_by_id_and_named_by_language(self):
+        """Фильтр держится на id города, подпись переводится; без перевода —
+        русское имя (Р-6), иначе город пропал бы из чипов на kk/en."""
+        self.almaty.name_kk = 'Алматы қаласы'
+        self.almaty.save()
+        response = self._get('kk')
+        self.assertContains(response, f'data-city="{self.almaty.pk}"')
+        self.assertContains(response, f'data-city-group="{self.almaty.pk}"')
+        self.assertContains(response, 'Алматы қаласы')
+        self.assertNotContains(response, 'data-city="Алматы"')
+        # У Атырау казахского названия нет — печатается русское
+        self.assertContains(response, 'Атырау')
+
+    def test_stores_json_identifies_city_by_id(self):
+        """JS сверяет город точки с data-city чипа — по id, не по имени."""
+        by_name = {s['name']: s for s in self._get().context['stores_json']}
+        self.assertEqual(by_name['Flirtshop']['cityId'], self.almaty.pk)
+        self.assertEqual(by_name['Flirtshop']['cityName'], 'Алматы')
+        self.assertNotIn('city', by_name['Flirtshop'])
+
+    def test_jsonld_country_follows_russian_name_on_english_page(self):
+        """addressCountry сверяется с name_ru: на /en/ Бишкек называется
+        Bishkek, но страна от языка страницы не зависит."""
+        bishkek = City.objects.create(name='Бишкек')
+        bishkek.name_en = 'Bishkek'
+        bishkek.save()
+        OfflineStore.objects.create(city=bishkek, name='KG Shop', address='Чуй, 1')
+        block = self._jsonld(self._get('en'), 'WebPage')
+        items = {i['item']['name']: i['item'] for i in block['mainEntity']['itemListElement']}
+        self.assertEqual(items['KG Shop']['address']['addressCountry'], 'KG')
+        self.assertEqual(items['KG Shop']['address']['addressLocality'], 'Bishkek')
+        self.assertEqual(items['Flirtshop']['address']['addressCountry'], 'KZ')

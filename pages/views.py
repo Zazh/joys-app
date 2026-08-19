@@ -252,24 +252,30 @@ class PageDetailView(DetailView):
         JSON для карты — те же точки, что в карточках: JS не ходит за данными,
         а собирает пины из json_script.
         """
-        counts = {}
+        groups = {}
         for store in stores:
-            counts[store.city.name] = counts.get(store.city.name, 0) + 1
-        ordered_cities = sorted(counts, key=lambda city: -counts[city])
+            group = groups.get(store.city_id)
+            if group is None:
+                group = groups[store.city_id] = {
+                    'id': store.city_id,
+                    'name': store.city.name,
+                    'count': 0,
+                    'stores': [],
+                }
+            group['count'] += 1
+            group['stores'].append(store)
         return {
             'page_type': 'partners',
-            'city_groups': [
-                {
-                    'name': city,
-                    'count': counts[city],
-                    'stores': [s for s in stores if s.city.name == city],
-                }
-                for city in ordered_cities
-            ],
+            # sorted стабилен: города с одинаковым числом точек остаются
+            # в алфавитном порядке, который дал queryset
+            'city_groups': sorted(groups.values(), key=lambda g: -g['count']),
             'stores_json': [
                 {
                     'id': store.pk,
-                    'city': store.city.name,
+                    # Фильтр сверяет id (чипы и секции размечены им же),
+                    # имя нужно только для подписи кластера и тултипа
+                    'cityId': store.city_id,
+                    'cityName': store.city.name,
                     'name': store.name,
                     'address': store.address,
                     'lat': store.geo['lat'] if store.geo else None,

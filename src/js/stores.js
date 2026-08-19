@@ -54,8 +54,12 @@ function initStores() {
     let activeCity = 'all';
     let activeStoreId = null;
 
+    // Город точки сверяется по id: data-city чипов и секций — строка из DOM,
+    // а cityId в JSON число. Имя города переводится и в сравнение не годится
+    const cityKey = store => String(store.cityId);
+
     const visibleLocated = () =>
-        located.filter(s => activeCity === 'all' || s.city === activeCity);
+        located.filter(s => activeCity === 'all' || cityKey(s) === activeCity);
 
     // --------------------------------------------
     // Попап пина: клонируем <template> из шаблона — тексты и иконки живут в Django
@@ -133,11 +137,13 @@ function initStores() {
     function buildClusters() {
         const byCity = new Map();
         for (const store of located) {
-            if (!byCity.has(store.city)) byCity.set(store.city, []);
-            byCity.get(store.city).push(store);
+            if (!byCity.has(cityKey(store))) byCity.set(cityKey(store), []);
+            byCity.get(cityKey(store)).push(store);
         }
         const clusterMarkers = [];
-        for (const [city, cityStores] of byCity) {
+        for (const cityStores of byCity.values()) {
+            // Подпись — переведённое имя города со страницы, группировка — id
+            const city = cityStores[0].cityName;
             const lat = cityStores.reduce((sum, s) => sum + s.lat, 0) / cityStores.length;
             const lng = cityStores.reduce((sum, s) => sum + s.lng, 0) / cityStores.length;
             const marker = L.marker([lat, lng], {
@@ -174,7 +180,7 @@ function initStores() {
         if (map.hasLayer(clustersLayer)) clustersLayer.remove();
         markers.forEach((marker, id) => {
             const store = located.find(s => s.id === id);
-            const show = activeCity === 'all' || store.city === activeCity;
+            const show = activeCity === 'all' || cityKey(store) === activeCity;
             if (show && !map.hasLayer(marker)) marker.addTo(map);
             if (!show && map.hasLayer(marker)) marker.remove();
         });
@@ -391,9 +397,9 @@ function initStores() {
                 (a, b) => distances.get(a.id) - distances.get(b.id),
             );
             // В городе — включаем его чип; в глуши между городами — «Все»
-            setCity(distances.get(nearest[0].id) <= NEAR_CITY_KM ? nearest[0].city : 'all');
+            setCity(distances.get(nearest[0].id) <= NEAR_CITY_KM ? cityKey(nearest[0]) : 'all');
             fitStores(
-                nearest.filter(s => activeCity === 'all' || s.city === activeCity).slice(0, 3),
+                nearest.filter(s => activeCity === 'all' || cityKey(s) === activeCity).slice(0, 3),
                 [lat, lng],
             );
         }, () => {
