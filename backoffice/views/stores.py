@@ -14,7 +14,7 @@ from django.template.response import TemplateResponse
 from django.views import View
 from django.views.generic import ListView
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import StoreManagerSectionMixin
 from pages.models import City, OfflineStore
 
 
@@ -70,9 +70,7 @@ def _fill_store(store, request):
     return None
 
 
-class OfflineStoreListView(BackofficeAccessMixin, ListView):
-    allow_store_manager = True
-    allow_manager = False
+class OfflineStoreListView(StoreManagerSectionMixin, ListView):
     template_name = 'backoffice/stores/list.html'
     context_object_name = 'stores'
     paginate_by = 50
@@ -121,10 +119,7 @@ def _form_response(request, store, is_new):
     })
 
 
-class OfflineStoreCreateView(BackofficeAccessMixin, View):
-    allow_store_manager = True
-    allow_manager = False
-
+class OfflineStoreCreateView(StoreManagerSectionMixin, View):
     def get(self, request):
         return _form_response(request, OfflineStore(), is_new=True)
 
@@ -138,10 +133,7 @@ class OfflineStoreCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:store_list')
 
 
-class OfflineStoreEditView(BackofficeAccessMixin, View):
-    allow_store_manager = True
-    allow_manager = False
-
+class OfflineStoreEditView(StoreManagerSectionMixin, View):
     def get(self, request, pk):
         store = get_object_or_404(OfflineStore, pk=pk)
         return _form_response(request, store, is_new=False)
@@ -156,10 +148,7 @@ class OfflineStoreEditView(BackofficeAccessMixin, View):
         return redirect('backoffice:store_list')
 
 
-class OfflineStoreDeleteView(BackofficeAccessMixin, View):
-    allow_store_manager = True
-    allow_manager = False
-
+class OfflineStoreDeleteView(StoreManagerSectionMixin, View):
     def post(self, request, pk):
         store = get_object_or_404(OfflineStore, pk=pk)
         store.delete()

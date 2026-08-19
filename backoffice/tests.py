@@ -12,6 +12,7 @@ from django.urls.converters import IntConverter
 
 from backoffice import urls as backoffice_urls
 from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm, ContactsPageForm
+from backoffice.mixins import BackofficeAccessMixin
 from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
 from catalog.models import Category, Product, ProductSize
@@ -637,6 +638,32 @@ class BackofficeRoleMatrixTests(TestCase):
         User.objects.create_user(email=email, password='x', role=role)
         self.client.login(email=email, password='x')
 
+    def test_every_route_is_gated(self):
+        """Вьюха без гейта — дыра, которую матрица не поймает.
+
+        Матрица ходит по ролям; вьюху, забывшую миксин, она увидит только
+        если роль до неё дойдёт. Здесь проверяется сам класс: кроме входа и
+        выхода, каждый маршрут бэкофиса собран на BackofficeAccessMixin.
+        """
+        for pattern in backoffice_urls.urlpatterns:
+            if pattern.name in ('login', 'logout'):
+                continue
+            with self.subTest(url=pattern.name):
+                view_class = pattern.callback.view_class
+                self.assertTrue(
+                    issubclass(view_class, BackofficeAccessMixin),
+                    f'{view_class.__name__} без BackofficeAccessMixin',
+                )
+
+    def test_store_manager_views_are_expected_ones(self):
+        """`allow_store_manager` стоит ровно на разделах роли — и нигде больше."""
+        opened = {
+            pattern.name for pattern in backoffice_urls.urlpatterns
+            if pattern.name not in ('login', 'logout')
+            and pattern.callback.view_class.allow_store_manager
+        }
+        self.assertEqual(opened, STORE_MANAGER_ALLOWED - {'login', 'logout'})
+
     def test_allowlist_names_exist(self):
         """Переименовали маршрут — allowlist не должен молча протухнуть."""
         names = {name for name, _ in self.routes}
@@ -815,6 +842,14 @@ class SidebarByRoleTests(TestCase):
                 # остальных ссылок, подстрокой его не проверить
                 self.assertNotIn('href="%s"' % reverse('backoffice:' + hidden), html)
 
+    def test_store_manager_has_no_empty_section_headers(self):
+        """Заголовок закрытой секции без единого пункта — мусор в сайдбаре."""
+        html = self.sidebar_of(User.Role.STORE_MANAGER, 'store_list')
+        for header in ('Контент', 'Команда'):
+            with self.subTest(header=header):
+                self.assertNotIn(header, html)
+        self.assertIn('Точки', html)
+
     def test_manager_sees_seven_sections(self):
         html = self.sidebar_of(User.Role.MANAGER, 'order_list')
         for link in ('dashboard', 'order_list', 'inquiry_list', 'contacts',
@@ -920,6 +955,12 @@ class PartnerInquiriesScopeTests(TestCase):
         response = self.client.get(reverse('backoffice:inquiry_list'))
         self.assertEqual(list(response.context['submissions']), [self.partner])
         self.assertEqual([f.slug for f in response.context['forms']], ['partner-request'])
+
+    def test_form_filter_cannot_widen_scope(self):
+        """`?form=` — фильтр внутри своих заявок, а не способ достать чужие."""
+        response = self.client.get(
+            reverse('backoffice:inquiry_list'), {'form': 'tattoo-request'})
+        self.assertEqual(list(response.context['submissions']), [])
 
     def test_own_detail_open(self):
         response = self.client.get(reverse('backoffice:inquiry_detail', args=[self.partner.pk]))
