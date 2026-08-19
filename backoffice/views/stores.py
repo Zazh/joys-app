@@ -9,6 +9,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.views import View
@@ -154,3 +155,29 @@ class OfflineStoreDeleteView(StoreManagerSectionMixin, View):
         store.delete()
         messages.success(request, 'Точка удалена.')
         return redirect('backoffice:store_list')
+
+
+class ParseGisUrlView(StoreManagerSectionMixin, View):
+    """Координаты из ссылки 2ГИС для живого автозаполнения формы точки.
+
+    Разбор — тот же `coords_from_2gis`, что и при сохранении: второго парсера
+    таких ссылок в проекте быть не должно (Р-4), в том числе на JS. В сеть не
+    ходит, только разбирает строку.
+    """
+
+    # Ссылка 2ГИС на порядок короче; длинная строка — мусор, координат в ней нет
+    MAX_URL_LENGTH = 2048
+
+    def get(self, request):
+        url = request.GET.get('url', '').strip()[:self.MAX_URL_LENGTH]
+        try:
+            pair = OfflineStore.coords_from_2gis(url)
+        except ValueError:
+            # urlsplit бросает на битом адресе (например, незакрытая скобка
+            # IPv6-хоста) — для формы это просто «не разобралось», не 500
+            pair = None
+        if not pair:
+            return JsonResponse({'found': False})
+        lat, lng = pair
+        # Строки с шестью знаками — ровно то, что печатает форма
+        return JsonResponse({'found': True, 'lat': f'{lat:.6f}', 'lng': f'{lng:.6f}'})

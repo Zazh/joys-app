@@ -470,6 +470,66 @@ class OfflineStoreCrudTests(TestCase):
         self.assertEqual(OfflineStore.objects.count(), 0)
 
 
+class ParseGisUrlTests(TestCase):
+    """Эндпоинт живого автозаполнения координат: разбор и доступ по ролям."""
+
+    URL_WITH_POINT = 'https://2gis.kz/almaty/branches/1/firm/2/76.898728%2C43.204689'
+    URL_BRANCH_LIST = 'https://2gis.kz/astana/branches/1/firm/2?m=71.443112%2C51.129661%2F11'
+
+    def setUp(self):
+        self.url = reverse('backoffice:store_parse_2gis')
+
+    def login_as(self, role):
+        email = f'{role}-parse@example.com'
+        User.objects.create_user(email=email, password='x', role=role)
+        self.client.login(email=email, password='x')
+
+    def parse(self, url):
+        return self.client.get(self.url, {'url': url}).json()
+
+    def test_point_url_returns_coords(self):
+        """Ссылка карточки: координаты строками с шестью знаками — как в форме."""
+        self.login_as(User.Role.SUPER_MANAGER)
+        self.assertEqual(self.parse(self.URL_WITH_POINT),
+                         {'found': True, 'lat': '43.204689', 'lng': '76.898728'})
+
+    def test_branch_list_url_not_parsed(self):
+        """Список филиалов — центр города на мелком зуме, координат не даём."""
+        self.login_as(User.Role.SUPER_MANAGER)
+        self.assertEqual(self.parse(self.URL_BRANCH_LIST), {'found': False})
+
+    def test_garbage_url_is_not_an_error(self):
+        """Пустое, кириллица, не-URL и очень длинная строка — «не разобралось»,
+        а не 500: в поле формы попадает что угодно."""
+        self.login_as(User.Role.SUPER_MANAGER)
+        for raw in ('', 'Алматы, Жамбыла 180', 'http://[::1', 'x' * 5000):
+            with self.subTest(url=raw[:20]):
+                self.assertEqual(self.parse(raw), {'found': False})
+
+    def test_missing_url_param(self):
+        self.login_as(User.Role.SUPER_MANAGER)
+        self.assertEqual(self.client.get(self.url).json(), {'found': False})
+
+    def test_store_manager_allowed(self):
+        """Точки — раздел «Менеджера точек», эндпоинт формы тоже его."""
+        self.login_as(User.Role.STORE_MANAGER)
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_manager_forbidden(self):
+        """Р-9: обычный менеджер к точкам больше не ходит."""
+        self.login_as(User.Role.MANAGER)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_customer_forbidden(self):
+        self.login_as(User.Role.CUSTOMER)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_anonymous_redirected_to_login(self):
+        response = self.client.get(self.url)
+        self.assertRedirects(response, f'/backoffice/login/?next={self.url}',
+                             fetch_redirect_response=False)
+
+
 class CityAccessTests(TestCase):
     """Раздел городов закрыт тем же гейтом, что остальной бэкофис."""
 
@@ -609,7 +669,7 @@ def backoffice_routes():
 # Разделы, доступные роли «Менеджер точек» (§3 матрица прав бэклога)
 STORE_MANAGER_ALLOWED = {
     'login', 'logout',
-    'store_list', 'store_create', 'store_edit', 'store_delete',
+    'store_list', 'store_create', 'store_edit', 'store_delete', 'store_parse_2gis',
     'city_list', 'city_create', 'city_edit', 'city_delete',
     'inquiry_list', 'inquiry_detail', 'inquiry_toggle',
 }

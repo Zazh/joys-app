@@ -50,6 +50,8 @@
                 <input type="text" name="lng" value="{{ store.lng|default_if_none:'' }}" placeholder="76.898728" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
             </div>
         </div>
+        {# Одна строка на все вставки ссылки: подсказки не должны накапливаться #}
+        <p class="text-[11px] text-stone-500" id="coordsHint"></p>
 
         <div class="grid grid-cols-2 gap-3">
             <div>
@@ -78,4 +80,50 @@
         </button>
     </div>
 </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Живое автозаполнение координат: вставил ссылку 2ГИС — широта и долгота
+// подставились до сохранения и остались редактируемыми. Разбор ссылки —
+// на сервере (единственный парсер в проекте), тут только запрос и подстановка.
+(function () {
+    const urlInput = document.querySelector('input[name="map_url"]');
+    const latInput = document.querySelector('input[name="lat"]');
+    const lngInput = document.querySelector('input[name="lng"]');
+    const hint = document.getElementById('coordsHint');
+    if (!urlInput || !latInput || !lngInput || !hint) return;
+
+    const endpoint = '{% url "backoffice:store_parse_2gis" %}';
+    let timer = null;
+    // Счётчик поколений: ответ обогнанного запроса не перетирает свежие правки
+    let seq = 0;
+
+    function lookup() {
+        const value = urlInput.value.trim();
+        if (!value) { hint.textContent = ''; return; }
+        const mySeq = ++seq;
+        fetch(endpoint + '?url=' + encodeURIComponent(value))
+            .then(response => response.json())
+            .then(data => {
+                if (mySeq !== seq) return;
+                if (data.found) {
+                    latInput.value = data.lat;
+                    lngInput.value = data.lng;
+                    hint.textContent = 'Координаты взяты из ссылки — можно поправить вручную.';
+                } else {
+                    hint.textContent = 'Из ссылки координаты не извлеклись — введите вручную или оставьте пустыми.';
+                }
+            })
+            .catch(() => {
+                if (mySeq === seq) hint.textContent = '';
+            });
+    }
+
+    urlInput.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(lookup, 400);
+    });
+})();
+</script>
 {% endblock %}

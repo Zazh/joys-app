@@ -28,7 +28,7 @@ from .views.redirects import (
 )
 from .views.stores import (
     OfflineStoreListView, OfflineStoreCreateView,
-    OfflineStoreEditView, OfflineStoreDeleteView,
+    OfflineStoreEditView, OfflineStoreDeleteView, ParseGisUrlView,
 )
 from .views.cities import (
     CityListView, CityCreateView, CityEditView, CityDeleteView,
@@ -99,6 +99,7 @@ urlpatterns = [
     # Оффлайн точки и их города
     path('stores/', OfflineStoreListView.as_view(), name='store_list'),
     path('stores/create/', OfflineStoreCreateView.as_view(), name='store_create'),
+    path('stores/parse-2gis/', ParseGisUrlView.as_view(), name='store_parse_2gis'),
     path('stores/<int:pk>/', OfflineStoreEditView.as_view(), name='store_edit'),
     path('stores/<int:pk>/delete/', OfflineStoreDeleteView.as_view(), name='store_delete'),
     path('cities/', CityListView.as_view(), name='city_list'),
