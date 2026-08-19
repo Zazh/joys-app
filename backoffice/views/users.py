@@ -91,6 +91,7 @@ class UserCreateView(SeniorStaffRequiredMixin, View):
             'roles': [
                 (User.Role.MANAGER, 'Менеджер'),
                 (User.Role.SUPER_MANAGER, 'Супер-менеджер'),
+                (User.Role.STORE_MANAGER, 'Менеджер точек'),
             ],
         })
 
@@ -112,7 +113,7 @@ class UserCreateView(SeniorStaffRequiredMixin, View):
             messages.error(request, 'Пользователь с таким email уже существует.')
             return redirect('backoffice:user_create')
 
-        if role not in (User.Role.MANAGER, User.Role.SUPER_MANAGER):
+        if role not in (User.Role.MANAGER, User.Role.SUPER_MANAGER, User.Role.STORE_MANAGER):
             messages.error(request, 'Недопустимая роль.')
             return redirect('backoffice:user_create')
 

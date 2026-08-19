@@ -12,6 +12,7 @@
 
     <!-- Navigation -->
     <nav class="flex-1 py-3 space-y-0.5 px-2 overflow-y-auto">
+        {% if request.user.is_full_staff %}
         <a href="{% url 'backoffice:dashboard' %}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if request.resolver_match.url_name == 'dashboard' %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -63,6 +64,7 @@
             </svg>
             Отзывы
         </a>
+        {% endif %}
 
         {% if request.user.is_senior_staff %}
         <div class="mt-3 pt-3 border-t border-stone-700">
@@ -84,6 +86,26 @@
         </a>
         {% endif %}
 
+        <div class="mt-3 pt-3 border-t border-stone-700">
+            <p class="px-3 mb-1 text-[10px] uppercase tracking-wider text-stone-500">Точки</p>
+        </div>
+        <a href="{% url 'backoffice:store_list' %}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if 'store_' in request.resolver_match.url_name %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+            </svg>
+            Оффлайн точки
+        </a>
+        <a href="{% url 'backoffice:city_list' %}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if 'city_' in request.resolver_match.url_name %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
+            </svg>
+            Города
+        </a>
+
+        {% if request.user.is_full_staff %}
         <div class="mt-3 pt-3 border-t border-stone-700">
             <p class="px-3 mb-1 text-[10px] uppercase tracking-wider text-stone-500">Контент</p>
         </div>
@@ -151,21 +173,6 @@
             </svg>
             Блог
         </a>
-        <a href="{% url 'backoffice:store_list' %}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if 'store_' in request.resolver_match.url_name %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
-            </svg>
-            Оффлайн точки
-        </a>
-        <a href="{% url 'backoffice:city_list' %}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if 'city_' in request.resolver_match.url_name %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
-            </svg>
-            Города
-        </a>
         <a href="{% url 'backoffice:redirect_list' %}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if 'redirect' in request.resolver_match.url_name %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -173,6 +180,7 @@
             </svg>
             Редиректы
         </a>
+        {% endif %}
     </nav>
 
     <!-- User info + Logout -->

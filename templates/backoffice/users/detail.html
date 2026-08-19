@@ -154,6 +154,7 @@
                         <option value="customer" {% if u.role == 'customer' %}selected{% endif %}>Покупатель</option>
                         <option value="manager" {% if u.role == 'manager' %}selected{% endif %}>Менеджер</option>
                         <option value="super_manager" {% if u.role == 'super_manager' %}selected{% endif %}>Супер-менеджер</option>
+                        <option value="store_manager" {% if u.role == 'store_manager' %}selected{% endif %}>Менеджер точек</option>
                         {% if request.user.role == 'owner' %}
                         <option value="owner" {% if u.role == 'owner' %}selected{% endif %}>Владелец</option>
                         {% endif %}

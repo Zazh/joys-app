@@ -740,3 +740,71 @@ class ManagerKeepsAccessTests(TestCase):
 
     def test_api_schema_open(self):
         self.assertEqual(self.client.get('/api/schema/').status_code, 200)
+
+
+class SidebarByRoleTests(TestCase):
+    """Сайдбар показывает роли только её разделы (ссылки — не только гейт)."""
+
+    def sidebar_of(self, role, url_name):
+        email = f'{role}@example.com'
+        User.objects.create_user(email=email, password='x', role=role)
+        self.client.login(email=email, password='x')
+        return self.client.get(reverse(f'backoffice:{url_name}')).content.decode()
+
+    def test_store_manager_sees_only_own_sections(self):
+        html = self.sidebar_of(User.Role.STORE_MANAGER, 'store_list')
+        self.assertIn(reverse('backoffice:store_list'), html)
+        self.assertIn(reverse('backoffice:city_list'), html)
+        for hidden in ('order_list', 'product_list', 'dashboard'):
+            with self.subTest(link=hidden):
+                # href целиком: адрес дашборда /backoffice/ — префикс всех
+                # остальных ссылок, подстрокой его не проверить
+                self.assertNotIn('href="%s"' % reverse('backoffice:' + hidden), html)
+
+    def test_manager_keeps_previous_sections(self):
+        html = self.sidebar_of(User.Role.MANAGER, 'order_list')
+        for link in ('dashboard', 'order_list', 'inquiry_list', 'stock_list'):
+            with self.subTest(link=link):
+                self.assertIn(reverse(f'backoffice:{link}'), html)
+
+
+class StoreManagerUserCreationTests(TestCase):
+    """Пользователя новой роли заводит senior в разделе «Пользователи» (Р-7)."""
+
+    def setUp(self):
+        User.objects.create_user(email='senior@example.com', password='x',
+                                 role=User.Role.SUPER_MANAGER)
+        self.client.login(email='senior@example.com', password='x')
+
+    def test_role_offered_in_create_form(self):
+        html = self.client.get(reverse('backoffice:user_create')).content.decode()
+        self.assertIn('value="store_manager"', html)
+
+    def test_senior_creates_store_manager(self):
+        self.client.post(reverse('backoffice:user_create'), {
+            'email': 'points@example.com', 'role': User.Role.STORE_MANAGER,
+            'password': 'secret-pass', 'first_name': '', 'last_name': '', 'phone': '',
+        })
+        created = User.objects.get(email='points@example.com')
+        self.assertEqual(created.role, User.Role.STORE_MANAGER)
+
+    def test_senior_switches_existing_user_to_role(self):
+        user = User.objects.create_user(email='was-manager@example.com', password='x',
+                                        role=User.Role.MANAGER)
+        self.client.post(reverse('backoffice:user_edit', args=[user.pk]), {
+            'role': User.Role.STORE_MANAGER, 'first_name': '', 'last_name': '', 'phone': '',
+        })
+        user.refresh_from_db()
+        self.assertEqual(user.role, User.Role.STORE_MANAGER)
+
+    def test_manager_cannot_create_staff(self):
+        self.client.logout()
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+        response = self.client.post(reverse('backoffice:user_create'), {
+            'email': 'sneaky@example.com', 'role': User.Role.STORE_MANAGER,
+            'password': 'secret-pass',
+        })
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(User.objects.filter(email='sneaky@example.com').exists())
