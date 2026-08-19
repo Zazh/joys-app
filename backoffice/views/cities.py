@@ -8,7 +8,7 @@ name_ru/name_kk/name_en. Пустой перевод пишется как None,
 """
 
 from django.contrib import messages
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Count, ProtectedError
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -61,7 +61,11 @@ class CityCreateView(BackofficeAccessMixin, View):
             messages.error(request, error)
             return _form_response(request, city, is_new=True)
         try:
-            city.save()
+            # atomic обязателен: без него упавший INSERT рвёт транзакцию, и
+            # следующий же запрос (сообщение, перерисовка формы) падает
+            # TransactionManagementError вместо показа ошибки
+            with transaction.atomic():
+                city.save()
         except IntegrityError:
             # Дубль ловится проверкой по name_ru, сюда доходит только повтор
             # казахского или английского названия — они тоже уникальны
@@ -81,7 +85,8 @@ class CityEditView(BackofficeAccessMixin, View):
             messages.error(request, error)
             return _form_response(request, city, is_new=False)
         try:
-            city.save()
+            with transaction.atomic():
+                city.save()
         except IntegrityError:
             messages.error(request, 'Такое название уже занято другим городом.')
             return _form_response(request, city, is_new=False)

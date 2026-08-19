@@ -62,7 +62,8 @@
             <tbody>
                 {% for store in stores %}
                 <tr class="border-b border-stone-50 hover:bg-stone-50">
-                    <td class="px-4 py-2.5">{{ store.city }}</td>
+                    {# name_ru, а не store.city: у __str__ язык из куки django_language — колонка расходилась с селектом фильтра #}
+                    <td class="px-4 py-2.5">{{ store.city.name_ru }}</td>
                     <td class="px-4 py-2.5 font-medium">{{ store.name }}</td>
                     <td class="px-4 py-2.5 text-stone-500 max-w-xs truncate">{{ store.address }}</td>
                     <td class="px-4 py-2.5 text-center">

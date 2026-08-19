@@ -2,6 +2,7 @@
 
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import TestCase
@@ -433,6 +434,35 @@ class OfflineStoreCrudTests(TestCase):
                                    {'city': str(astana.pk)})
         self.assertEqual([s.name for s in response.context['stores']], ['B'])
 
+    def test_list_column_is_russian_regardless_of_language_cookie(self):
+        """Бэкофис вне i18n-префикса, но язык берётся из куки django_language:
+        под kk колонка города печаталась по-казахски, а селект фильтра рядом —
+        по-русски. Раздел говорит на одном языке — русском."""
+        self.almaty.name_kk = 'Алматы қаласы'
+        self.almaty.save()
+        OfflineStore.objects.create(city=self.almaty, name='A', address='1')
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'kk'
+        response = self.client.get(reverse('backoffice:store_list'))
+        self.assertNotContains(response, 'Алматы қаласы')
+        self.assertContains(response, 'Алматы')
+
+    def test_list_ignores_non_numeric_city_filter(self):
+        """Ссылка эпохи текстового города (`?city=Алматы` из закладок и истории
+        браузера) отдаёт список без фильтра, а не ValueError → 500."""
+        OfflineStore.objects.create(city=self.almaty, name='A', address='1')
+        response = self.client.get(reverse('backoffice:store_list'),
+                                   {'city': 'Алматы'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([s.name for s in response.context['stores']], ['A'])
+
+    def test_form_rejects_non_numeric_city_without_crash(self):
+        """Тот же разбор id в форме: '²' проходит isdigit(), но не int()."""
+        response = self.client.post(reverse('backoffice:store_create'),
+                                    self.payload(city='²'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(OfflineStore.objects.count(), 0)
+
+
 class CityAccessTests(TestCase):
     """Раздел городов закрыт тем же гейтом, что остальной бэкофис."""
 
@@ -521,6 +551,18 @@ class CityCrudTests(TestCase):
                                     follow=True)
         self.assertEqual(City.objects.count(), 1)
         self.assertContains(response, 'привязаны точки (1 шт.)')
+
+    def test_duplicate_translation_shows_message_not_traceback(self):
+        """Проверка на дубль смотрит только name_ru, а уникальны все три
+        колонки: повтор казахского названия должен дать сообщение."""
+        first = City.objects.create(name='Алматы')
+        first.name_kk = 'Алматы қаласы'
+        first.save()
+        response = self.client.post(reverse('backoffice:city_create'), {
+            'name_ru': 'Астана', 'name_kk': 'Алматы қаласы',
+        }, follow=True)
+        self.assertEqual(City.objects.count(), 1)
+        self.assertContains(response, 'уже занято другим городом')
 
     def test_list_shows_store_counts(self):
         city = City.objects.create(name='Алматы')

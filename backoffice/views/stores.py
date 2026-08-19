@@ -18,13 +18,27 @@ from backoffice.mixins import BackofficeAccessMixin
 from pages.models import City, OfflineStore
 
 
+def _city_pk(raw):
+    """id города из сырой строки запроса или None, если это не число.
+
+    И фильтр списка, и селект формы шлют id, но в адрес приходит и чужое:
+    ссылка эпохи текстового города (`?city=Алматы`), правка адреса руками.
+    Без проверки такой запрос уходит в БД и падает ValueError — 500 вместо
+    списка. `isdigit()` тут не годится: у '²' он True, а int('²') бросает.
+    """
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def _fill_store(store, request):
     """Поля из POST в объект; возвращает текст ошибки или None."""
     # Город — id из селекта справочника: свободный ввод разводил «Алматы»
     # и «алматы» по двум записям. Присваиваем до валидации, чтобы форма после
     # ошибки вернула выбранный город
-    city_id = request.POST.get('city', '').strip()
-    city = City.objects.filter(pk=city_id).first() if city_id.isdigit() else None
+    city_pk = _city_pk(request.POST.get('city', '').strip())
+    city = City.objects.filter(pk=city_pk).first() if city_pk is not None else None
     store.city = city
     store.name = request.POST.get('name', '').strip()
     store.address = request.POST.get('address', '').strip()
@@ -69,9 +83,9 @@ class OfflineStoreListView(BackofficeAccessMixin, ListView):
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(address__icontains=q))
 
-        city = self.request.GET.get('city')
-        if city:
-            qs = qs.filter(city_id=city)
+        city_pk = _city_pk(self.request.GET.get('city'))
+        if city_pk is not None:
+            qs = qs.filter(city_id=city_pk)
 
         active = self.request.GET.get('active')
         if active == 'yes':
