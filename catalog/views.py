@@ -259,6 +259,11 @@ class ProductDetailView(DetailView):
         # добираем до шести товарами остальных категорий в порядке каталога
         region = getattr(self.request, 'region', None)
         rel_rp_qs = RegionPrice.objects.filter(region=region) if region else RegionPrice.objects.none()
+        # Остатки префетчим и здесь: без них in_stock отдаёт True, и карточка
+        # карусели печатала цену там, где та же карточка в каталоге говорит
+        # «Нет в наличии». Это prefetch, то есть один запрос на весь список,
+        # а не N+1
+        rel_stock_qs = Stock.objects.filter(region=region) if region else Stock.objects.none()
         rel_qs = (
             Product.objects
             .filter(is_active=True)
@@ -269,6 +274,7 @@ class ProductDetailView(DetailView):
                     'sizes',
                     queryset=ProductSize.objects.prefetch_related(
                         Prefetch('region_prices', queryset=rel_rp_qs, to_attr='_region_prices'),
+                        Prefetch('stocks', queryset=rel_stock_qs, to_attr='_stocks'),
                     ),
                 ),
             )

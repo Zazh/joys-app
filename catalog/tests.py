@@ -1,5 +1,7 @@
 """Тесты каталога."""
 
+import json
+import re
 from decimal import Decimal
 
 from django.test import TestCase
@@ -108,6 +110,76 @@ class CatalogCardStateTests(TestCase):
         self.assertIn('2 000', html)
         self.assertNotIn('1 000', html)
         self.assertNotIn(self.COMING_SOON, html)
+
+
+class RelatedCarouselStateTests(TestCase):
+    """Карусель «Похожие товары» печатает статус по тому же правилу, что и
+    каталог: до OS-09 обе карточки показывали цену и не расходились, после —
+    разошлись бы, не префетчи карусель остатки."""
+
+    def setUp(self):
+        self.category = Category.objects.create(name='Тест', slug='test-cat')
+        self.opened = Product.objects.create(
+            name='Открытый', slug='opened', category=self.category, is_active=True)
+        ProductSize.objects.create(product=self.opened, name='M', sku='SKU-OPEN',
+                                   price=Decimal('1000'))
+        self.related = Product.objects.create(
+            name='Похожий', slug='related', category=self.category, is_active=True)
+        self.region = Region.get_default() or Region.objects.create(
+            code='kz', name='Казахстан', is_default=True,
+        )
+
+    def carousel_html(self):
+        html = self.client.get(self.opened.get_absolute_url()).content.decode()
+        return html.split('carousel-card_info', 1)[-1]
+
+    def test_zero_stock_related_shows_status_not_price(self):
+        size = ProductSize.objects.create(product=self.related, name='L', sku='SKU-REL',
+                                          price=Decimal('7000'))
+        Stock.objects.create(size=size, region=self.region, quantity=0)
+        html = self.carousel_html()
+        self.assertIn('Нет в наличии', html)
+        self.assertNotIn('7 000', html)
+
+    def test_coming_soon_related_shows_status(self):
+        ProductSize.objects.create(product=self.related, name='L', sku='SKU-REL',
+                                   price=Decimal('7000'), coming_soon=True)
+        html = self.carousel_html()
+        self.assertIn('Скоро в продаже', html)
+        self.assertNotIn('7 000', html)
+
+
+class CatalogItemListJsonLdTests(TestCase):
+    """ItemList каталога: цена только там, где она есть у покупателя."""
+
+    def setUp(self):
+        self.category = Category.objects.create(name='Тест', slug='test-cat')
+        self.product = Product.objects.create(
+            name='Товар', slug='test-product', category=self.category, is_active=True)
+
+    def itemlist(self):
+        html = self.client.get(reverse('catalog:catalog')).content.decode()
+        for raw in re.findall(
+            r'<script type="application/ld\+json">(.*?)</script>', html, re.S,
+        ):
+            data = json.loads(raw)
+            if data.get('@type') == 'CollectionPage':
+                return data['mainEntity']['itemListElement']
+        self.fail('ItemList в разметке каталога не найден')
+
+    def test_zero_price_size_does_not_become_offer(self):
+        """У «скоро в продаже» цена заведена нулём: min() отдавал «0.00», и
+        каталог размечался ценой ноль там, где карточка цену не печатает."""
+        ProductSize.objects.create(product=self.product, name='M', sku='SKU-M',
+                                   price=Decimal('0'), coming_soon=True)
+        self.assertNotIn('offers', self.itemlist()[0]['item'])
+
+    def test_lowest_non_zero_price_wins(self):
+        ProductSize.objects.create(product=self.product, name='M', sku='SKU-M',
+                                   price=Decimal('0'), coming_soon=True, order=1)
+        ProductSize.objects.create(product=self.product, name='L', sku='SKU-L',
+                                   price=Decimal('2000'), order=2)
+        self.assertEqual(self.itemlist()[0]['item']['offers']['price'], '2000.00')
 
 
 class CatalogPaginationTests(TestCase):

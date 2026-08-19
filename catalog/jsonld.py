@@ -171,9 +171,15 @@ def build_catalog_itemlist_jsonld(request, products, current_category=None, regi
 
         image_url = _image_url(request, cover.image) if cover else None
 
-        # Минимальная цена для текущего региона
+        # Минимальная цена для текущего региона — по тому же правилу, что и
+        # offers товара выше: размеры без цены (у «скоро в продаже» она 0) в
+        # расчёт не берём. Иначе min() отдавал «0.00», и каталог размечался
+        # ценой ноль там, где карточка цену вообще не печатает
         product_sizes = list(product.sizes.all())
-        region_prices = [_get_region_price(s, region) for s in product_sizes]
+        region_prices = [
+            price for price in (_get_region_price(s, region) for s in product_sizes)
+            if price
+        ]
         lowest_price = min(region_prices, default=None)
 
         list_item = {
