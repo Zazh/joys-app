@@ -342,21 +342,21 @@
                             </div>
                             <div class="carousel-card_info">
                                 <h3 class="text-sm uppercase tracking-wider">{{ related.name }}</h3>
-                                {% with first_size=related.sizes.all|first %}
-                                {% if first_size %}
-                                {% region_price_data first_size as rpd %}
-                                {% if rpd.price %}
+                                {# Как в карточке каталога: цена только у покупаемого #}
+                                {% product_card_state related as rcs %}
+                                {% if rcs.state == 'available' %}
+                                {% region_price_data rcs.size as rpd %}
                                 <div class="flex items-center gap-2 mt-1">
                                     {% if rpd.has_discount %}
                                     <span class="text-xs text-stone-400 line-through">{{ rpd.old_price|format_price }} {{ currency_symbol }}</span>
                                     {% endif %}
                                     <span class="text-sm font-bold text-red-500">{{ rpd.price|format_price }} {{ currency_symbol }}</span>
                                 </div>
-                                {% else %}
+                                {% elif rcs.state == 'coming_soon' %}
+                                <div class="text-xs text-stone-400 mt-1">{% trans "Скоро в продаже" %}</div>
+                                {% elif rcs.size %}
                                 <div class="text-xs text-stone-400 mt-1">{% trans "Нет в наличии" %}</div>
                                 {% endif %}
-                                {% endif %}
-                                {% endwith %}
                             </div>
                         </a>
                     </article>

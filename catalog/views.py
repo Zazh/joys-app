@@ -8,7 +8,9 @@ from core import seo
 
 from modals.models import InteractiveModal
 
-from .models import Category, Product, ProductSize, FAQ, RegionPrice, Stock
+from .models import (
+    Category, Product, ProductSize, FAQ, RegionPrice, Stock, resolve_buy_state,
+)
 from . import jsonld as jld
 
 
@@ -173,32 +175,13 @@ class ProductDetailView(DetailView):
 
         sizes = list(product.sizes.all())
         ctx['sizes'] = sizes
-        # default_size: первый «покупаемый» (не «скоро», в наличии, цена > 0),
-        # иначе первый.
+        # Состояние покупки одним флагом: от него зависят и подпись кнопки, и
+        # стиль, и показ цены. В шаблоне это условие собиралось трижды и
+        # расходилось — размер без остатка, но с ценой, давал «Добавить в
+        # корзину». Тот же расчёт печатает статус в карточке каталога, поэтому
+        # он общий (resolve_buy_state), а не свой у каждой страницы
         region = getattr(self.request, 'region', None)
-
-        def _effective_price(size):
-            rps = getattr(size, '_region_prices', None) or []
-            if region:
-                for rp in rps:
-                    if rp.region_id == region.pk:
-                        return rp.price
-            return size.price
-
-        purchasable = next(
-            (s for s in sizes if not s.coming_soon and s.in_stock and _effective_price(s)),
-            None,
-        )
-        ctx['default_size'] = purchasable or (sizes[0] if sizes else None)
-        # Состояние кнопки покупки одним флагом: от него зависят и подпись, и стиль,
-        # и показ цены. В шаблоне это условие собиралось трижды и расходилось —
-        # размер без остатка, но с ценой, давал «Добавить в корзину».
-        if purchasable:
-            ctx['buy_state'] = 'available'
-        elif ctx['default_size'] and ctx['default_size'].coming_soon:
-            ctx['buy_state'] = 'coming_soon'
-        else:
-            ctx['buy_state'] = 'out_of_stock'
+        ctx['buy_state'], ctx['default_size'] = resolve_buy_state(sizes, region)
         cover_image = product.get_cover_image()
         ctx['cover_image'] = cover_image
         main_images = list(product.main_images.all())

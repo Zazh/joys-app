@@ -3,6 +3,7 @@
 from decimal import Decimal
 
 from django.test import TestCase
+from django.urls import reverse
 
 from catalog.models import Category, Product, ProductSize, Stock
 from regions.models import Region
@@ -51,6 +52,62 @@ class BuyStateTests(TestCase):
         response = self.client.get(self.product.get_absolute_url())
         self.assertEqual(response.context['buy_state'], 'out_of_stock')
         self.assertIn('btn-cat--out', response.content.decode())
+
+
+class CatalogCardStateTests(TestCase):
+    """Карточка каталога: цена только у того, что можно купить."""
+
+    COMING_SOON = 'Скоро в продаже'
+    OUT_OF_STOCK = 'Нет в наличии'
+
+    def setUp(self):
+        self.category = Category.objects.create(name='Тест', slug='test-cat')
+        self.product = Product.objects.create(
+            name='Товар', slug='test-product', category=self.category, is_active=True,
+        )
+        self.region = Region.get_default() or Region.objects.create(
+            code='kz', name='Казахстан', is_default=True,
+        )
+
+    def catalog_html(self):
+        return self.client.get(reverse('catalog:catalog')).content.decode()
+
+    def test_coming_soon_instead_of_price(self):
+        """Цена у «скоро в продаже» стояла рядом с недоступной покупкой."""
+        ProductSize.objects.create(product=self.product, name='M', sku='SKU-M',
+                                   price=Decimal('1000'), coming_soon=True)
+        html = self.catalog_html()
+        self.assertIn(self.COMING_SOON, html)
+        self.assertNotIn('1 000', html)
+
+    def test_zero_stock_is_out_of_stock(self):
+        """Цена есть, остатка в регионе запроса нет — «Нет в наличии»."""
+        size = ProductSize.objects.create(product=self.product, name='L', sku='SKU-L',
+                                          price=Decimal('1000'))
+        Stock.objects.create(size=size, region=self.region, quantity=0)
+        html = self.catalog_html()
+        self.assertIn(self.OUT_OF_STOCK, html)
+        self.assertNotIn(self.COMING_SOON, html)
+
+    def test_available_shows_price(self):
+        ProductSize.objects.create(product=self.product, name='M', sku='SKU-M',
+                                   price=Decimal('1000'))
+        html = self.catalog_html()
+        self.assertIn('1 000', html)
+        self.assertNotIn(self.COMING_SOON, html)
+        self.assertNotIn(self.OUT_OF_STOCK, html)
+
+    def test_price_of_purchasable_size_not_of_first(self):
+        """Первый размер «скоро», второй покупаемый — карточка печатает цену
+        второго, как default_size на странице товара."""
+        ProductSize.objects.create(product=self.product, name='M', sku='SKU-M',
+                                   price=Decimal('1000'), coming_soon=True, order=1)
+        ProductSize.objects.create(product=self.product, name='L', sku='SKU-L',
+                                   price=Decimal('2000'), order=2)
+        html = self.catalog_html()
+        self.assertIn('2 000', html)
+        self.assertNotIn('1 000', html)
+        self.assertNotIn(self.COMING_SOON, html)
 
 
 class ProductHelpLinksTests(TestCase):

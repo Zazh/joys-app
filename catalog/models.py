@@ -271,6 +271,36 @@ class ProductSize(models.Model):
         return 0
 
 
+def resolve_buy_state(sizes, region):
+    """Состояние покупки по набору размеров: `(state, size)`.
+
+    `state` — 'available' / 'coming_soon' / 'out_of_stock', `size` — размер,
+    чью цену показывать (первый покупаемый, иначе первый вообще, иначе None).
+
+    Один расчёт на страницу товара и на карточку каталога: карточка печатала
+    цену первого размера и про «Скоро в продаже» не знала — покупатель видел
+    цену там, где кнопки покупки нет.
+    """
+    def effective_price(size):
+        region_prices = getattr(size, '_region_prices', None) or []
+        if region:
+            for rp in region_prices:
+                if rp.region_id == region.pk:
+                    return rp.price
+        return size.price
+
+    purchasable = next(
+        (s for s in sizes if not s.coming_soon and s.in_stock and effective_price(s)),
+        None,
+    )
+    if purchasable:
+        return 'available', purchasable
+    size = sizes[0] if sizes else None
+    if size is not None and size.coming_soon:
+        return 'coming_soon', size
+    return 'out_of_stock', size
+
+
 # ─── Региональные цены ───
 
 class RegionPrice(models.Model):

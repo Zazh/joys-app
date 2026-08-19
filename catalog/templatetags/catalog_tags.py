@@ -97,6 +97,23 @@ def region_price_data(context, size):
     return data
 
 
+@register.simple_tag(takes_context=True)
+def product_card_state(context, product):
+    """Что печатать в карточке товара: цену или статус.
+
+    Возвращает `{'state': ..., 'size': ...}` тем же расчётом, что и кнопка
+    покупки на странице товара (`resolve_buy_state`): карточка брала первый
+    размер и печатала его цену, из-за чего у «скоро в продаже» стояла цена
+    рядом с недоступной покупкой.
+    """
+    from catalog.models import resolve_buy_state
+
+    request = context.get('request')
+    region = getattr(request, 'region', None)
+    state, size = resolve_buy_state(list(product.sizes.all()), region)
+    return {'state': state, 'size': size}
+
+
 @register.simple_tag
 def localized_img(main_image, field='image'):
     """
