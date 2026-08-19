@@ -20,7 +20,12 @@ from pages.models import City, OfflineStore
 
 def _fill_store(store, request):
     """Поля из POST в объект; возвращает текст ошибки или None."""
-    city_name = request.POST.get('city', '').strip()
+    # Город — id из селекта справочника: свободный ввод разводил «Алматы»
+    # и «алматы» по двум записям. Присваиваем до валидации, чтобы форма после
+    # ошибки вернула выбранный город
+    city_id = request.POST.get('city', '').strip()
+    city = City.objects.filter(pk=city_id).first() if city_id.isdigit() else None
+    store.city = city
     store.name = request.POST.get('name', '').strip()
     store.address = request.POST.get('address', '').strip()
     store.map_url = request.POST.get('map_url', '').strip()
@@ -30,13 +35,10 @@ def _fill_store(store, request):
     store.is_active = request.POST.get('is_active') == 'on'
     store.order = int(request.POST.get('order', 0) or 0)
 
-    if not city_name or not store.name or not store.address:
-        # Несохранённый City — чтобы форма вернула введённое имя города;
-        # записи справочника создаются только при успешной валидации
-        store.city = City(name=city_name)
+    # Проверяем локальную переменную, а не store.city: у необязательного к
+    # заполнению, но не-nullable FK чтение пустого значения бросает DoesNotExist
+    if city is None or not store.name or not store.address:
         return 'Город, магазин и адрес обязательны.'
-    # Город текстом — временно, до селекта из справочника (OS-02)
-    store.city, _ = City.objects.get_or_create(name=city_name)
 
     lat_raw = request.POST.get('lat', '').strip().replace(',', '.')
     lng_raw = request.POST.get('lng', '').strip().replace(',', '.')
@@ -69,7 +71,7 @@ class OfflineStoreListView(BackofficeAccessMixin, ListView):
 
         city = self.request.GET.get('city')
         if city:
-            qs = qs.filter(city__name=city)
+            qs = qs.filter(city_id=city)
 
         active = self.request.GET.get('active')
         if active == 'yes':
@@ -90,11 +92,8 @@ class OfflineStoreListView(BackofficeAccessMixin, ListView):
 
 
 def _cities():
-    """Имена городов, у которых есть точки — подсказки фильтра и datalist."""
-    return (
-        OfflineStore.objects.order_by('city__name')
-        .values_list('city__name', flat=True).distinct()
-    )
+    """Справочник целиком — опции селекта в форме и фильтра в списке."""
+    return City.objects.all()
 
 
 def _form_response(request, store, is_new):

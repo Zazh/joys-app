@@ -1,0 +1,36 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}{% if is_new %}Новый город{% else %}Редактировать город{% endif %}{% endblock %}
+
+{% block content %}
+<a href="{% url 'backoffice:city_list' %}" class="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 mb-4">&larr; Все города</a>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl border border-stone-200 p-4 max-w-xl space-y-4">
+        <h3 class="text-sm font-bold">{% if is_new %}Новый город{% else %}Редактировать город{% endif %}</h3>
+
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Название (русский) <span class="text-red-500">*</span></label>
+            <input type="text" name="name_ru" value="{{ city.name_ru|default_if_none:'' }}" placeholder="Алматы" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+            <p class="mt-1 text-[11px] text-stone-400">Без приставки «г.». Это название видят покупатели на русской версии сайта.</p>
+        </div>
+
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Название (қазақша)</label>
+            <input type="text" name="name_kk" value="{{ city.name_kk|default_if_none:'' }}" placeholder="Алматы" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+            <p class="mt-1 text-[11px] text-stone-400">Пусто — на сайте показывается русское название.</p>
+        </div>
+
+        <div>
+            <label class="block text-xs text-stone-500 mb-1">Название (english)</label>
+            <input type="text" name="name_en" value="{{ city.name_en|default_if_none:'' }}" placeholder="Almaty" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+            <p class="mt-1 text-[11px] text-stone-400">Пусто — на сайте показывается русское название.</p>
+        </div>
+
+        <button type="submit" class="px-6 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">
+            {% if is_new %}Создать{% else %}Сохранить{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}

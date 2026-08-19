@@ -1,0 +1,49 @@
+{% extends 'backoffice/base.html' %}
+
+{% block title %}Города{% endblock %}
+
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+    <h2 class="text-base font-bold">Города</h2>
+    <a href="{% url 'backoffice:city_create' %}" class="px-4 py-1.5 bg-stone-900 text-white text-xs rounded-lg hover:bg-stone-800">+ Добавить город</a>
+</div>
+
+<div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead>
+                <tr class="border-b border-stone-100 text-left text-stone-500 bg-stone-50">
+                    <th class="px-4 py-2.5 font-medium">Русский</th>
+                    <th class="px-4 py-2.5 font-medium">Қазақша</th>
+                    <th class="px-4 py-2.5 font-medium">English</th>
+                    <th class="px-4 py-2.5 font-medium text-center">Точек</th>
+                    <th class="px-4 py-2.5 font-medium"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for city in cities %}
+                <tr class="border-b border-stone-50 hover:bg-stone-50">
+                    <td class="px-4 py-2.5 font-medium">{{ city.name_ru }}</td>
+                    <td class="px-4 py-2.5 text-stone-500">{{ city.name_kk|default:"—" }}</td>
+                    <td class="px-4 py-2.5 text-stone-500">{{ city.name_en|default:"—" }}</td>
+                    <td class="px-4 py-2.5 text-center">{{ city.stores_count }}</td>
+                    <td class="px-4 py-2.5">
+                        <div class="flex items-center gap-2">
+                            <a href="{% url 'backoffice:city_edit' pk=city.pk %}" class="text-stone-500 hover:text-stone-800">Ред.</a>
+                            <form method="post" action="{% url 'backoffice:city_delete' pk=city.pk %}" onsubmit="return confirm('Удалить город?')" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-400 hover:text-red-600">Удалить</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-4 py-12 text-center text-stone-400">Городов пока нет</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'backoffice/components/_pagination.html' %}
+{% endblock %}

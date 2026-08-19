@@ -342,11 +342,12 @@ class OfflineStoreCrudTests(TestCase):
         User.objects.create_user(email='manager@example.com', password='x',
                                  role=User.Role.MANAGER)
         self.client.login(email='manager@example.com', password='x')
+        self.almaty = City.objects.create(name='Алматы')
 
-    @staticmethod
-    def payload(**overrides):
+    def payload(self, **overrides):
         data = {
-            'city': 'Алматы', 'name': 'Flirtshop', 'address': 'Ермека Серкебаева, 287Б',
+            'city': str(self.almaty.pk), 'name': 'Flirtshop',
+            'address': 'Ермека Серкебаева, 287Б',
             'map_url': '', 'lat': '', 'lng': '',
             'fulfillment': 'pickup_delivery', 'is_active': 'on', 'order': '0',
         }
@@ -386,8 +387,8 @@ class OfflineStoreCrudTests(TestCase):
         self.assertEqual(OfflineStore.objects.count(), 0)
 
     def test_edit_and_delete(self):
-        store = OfflineStore.objects.create(city=City.objects.create(name='Алматы'),
-                                            name='Shhh', address='Жамбыла, 180е')
+        store = OfflineStore.objects.create(city=self.almaty, name='Shhh',
+                                            address='Жамбыла, 180е')
         self.client.post(reverse('backoffice:store_edit', args=[store.pk]),
                          self.payload(name='Shhh!', address='Жамбыла, 180е'))
         store.refresh_from_db()
@@ -395,32 +396,138 @@ class OfflineStoreCrudTests(TestCase):
         self.client.post(reverse('backoffice:store_delete', args=[store.pk]))
         self.assertEqual(OfflineStore.objects.count(), 0)
 
-    def test_new_city_name_creates_directory_entry(self):
-        """Город из формы заводится в справочнике — точка без города не сохранима."""
+    def test_city_bound_by_id_from_directory(self):
+        """Селект шлёт id — точка привязывается к записи справочника."""
         self.client.post(reverse('backoffice:store_create'), self.payload())
-        self.assertEqual(OfflineStore.objects.get().city.name, 'Алматы')
+        self.assertEqual(OfflineStore.objects.get().city_id, self.almaty.pk)
         self.assertEqual(City.objects.count(), 1)
 
-    def test_existing_city_is_reused(self):
-        """Второй точке того же города новая запись справочника не заводится."""
-        City.objects.create(name='Алматы')
-        self.client.post(reverse('backoffice:store_create'),
-                         self.payload(address='Байтурсынова, 169'))
+    def test_city_text_no_longer_accepted(self):
+        """Имя города вместо id больше не принимается: свободный ввод разводил
+        «Алматы» и «алматы» по двум записям, теперь городов заводит справочник."""
+        response = self.client.post(reverse('backoffice:store_create'),
+                                    self.payload(city='Алматы'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(OfflineStore.objects.count(), 0)
         self.assertEqual(City.objects.count(), 1)
 
-    def test_other_case_makes_second_city_for_now(self):
-        """Фиксируем фактическое поведение до OS-02: get_or_create ищет точным
-        именем, поэтому «алматы» при живом «Алматы» — вторая запись. С селектом
-        города (OS-02) свободный ввод исчезнет вместе с проблемой."""
-        City.objects.create(name='Алматы')
-        self.client.post(reverse('backoffice:store_create'), self.payload(city='алматы'))
-        self.assertEqual(
-            sorted(City.objects.values_list('name', flat=True)), ['Алматы', 'алматы'])
+    def test_unknown_city_id_rejected(self):
+        """Чужой id (город удалили в соседней вкладке) — ошибка, а не 500."""
+        response = self.client.post(reverse('backoffice:store_create'),
+                                    self.payload(city=str(self.almaty.pk + 999)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(OfflineStore.objects.count(), 0)
 
-    def test_invalid_form_keeps_entered_city(self):
-        """Ошибка валидации возвращает введённый город в поле и не плодит
-        записи справочника."""
+    def test_invalid_form_keeps_selected_city(self):
+        """Ошибка валидации возвращает выбранный город в селекте."""
         response = self.client.post(reverse('backoffice:store_create'),
                                     self.payload(name=''))
-        self.assertContains(response, 'value="Алматы"')
+        self.assertContains(response, f'value="{self.almaty.pk}" selected')
+
+    def test_list_filter_by_city_id(self):
+        """Фильтр списка ходит по id, а не по имени."""
+        astana = City.objects.create(name='Астана')
+        OfflineStore.objects.create(city=self.almaty, name='A', address='1')
+        OfflineStore.objects.create(city=astana, name='B', address='2')
+        response = self.client.get(reverse('backoffice:store_list'),
+                                   {'city': str(astana.pk)})
+        self.assertEqual([s.name for s in response.context['stores']], ['B'])
+
+class CityAccessTests(TestCase):
+    """Раздел городов закрыт тем же гейтом, что остальной бэкофис."""
+
+    def setUp(self):
+        self.url = reverse('backoffice:city_list')
+
+    def test_anonymous_redirected_to_login(self):
+        response = self.client.get(self.url)
+        self.assertRedirects(response, f'/backoffice/login/?next={self.url}',
+                             fetch_redirect_response=False)
+
+    def test_customer_forbidden(self):
+        User.objects.create_user(email='buyer@example.com', password='x',
+                                 role=User.Role.CUSTOMER)
+        self.client.login(email='buyer@example.com', password='x')
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_manager_allowed(self):
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+
+class CityCrudTests(TestCase):
+    """CRUD справочника городов: переводы, дубли, PROTECT на занятом городе."""
+
+    def setUp(self):
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+
+    def test_create_with_three_translations(self):
+        self.client.post(reverse('backoffice:city_create'), {
+            'name_ru': 'Алматы', 'name_kk': 'Алматы қаласы', 'name_en': 'Almaty',
+        })
+        city = City.objects.get()
+        self.assertEqual(
+            (city.name_ru, city.name_kk, city.name_en),
+            ('Алматы', 'Алматы қаласы', 'Almaty'),
+        )
+        # Исходная колонка синхронна с русской — по ней ищет FK и JSON-LD
+        self.assertEqual(City.objects.get(name='Алматы').pk, city.pk)
+
+    def test_empty_translations_stored_as_null(self):
+        """Пустые kk/en — NULL, а не '': колонки переводов уникальны, и вторая
+        пустая строка упала бы на constraint (Р-6 при этом работает на обоих)."""
+        self.client.post(reverse('backoffice:city_create'),
+                         {'name_ru': 'Актау', 'name_kk': '', 'name_en': ''})
+        self.client.post(reverse('backoffice:city_create'),
+                         {'name_ru': 'Актобе', 'name_kk': '', 'name_en': ''})
+        self.assertEqual(City.objects.count(), 2)
+        self.assertIsNone(City.objects.get(name_ru='Актау').name_kk)
+
+    def test_edit_changes_translations(self):
+        city = City.objects.create(name='Астана')
+        self.client.post(reverse('backoffice:city_edit', args=[city.pk]), {
+            'name_ru': 'Астана', 'name_kk': 'Астана қаласы', 'name_en': 'Astana',
+        })
+        city.refresh_from_db()
+        self.assertEqual((city.name_kk, city.name_en), ('Астана қаласы', 'Astana'))
+
+    def test_duplicate_name_in_other_case_rejected(self):
+        City.objects.create(name='Алматы')
+        response = self.client.post(reverse('backoffice:city_create'),
+                                    {'name_ru': 'алматы'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(City.objects.count(), 1)
+
+    def test_name_ru_required(self):
+        response = self.client.post(reverse('backoffice:city_create'),
+                                    {'name_ru': '', 'name_en': 'Almaty'})
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(City.objects.count(), 0)
+
+    def test_empty_city_deleted(self):
+        city = City.objects.create(name='Семей')
+        self.client.post(reverse('backoffice:city_delete', args=[city.pk]))
+        self.assertEqual(City.objects.count(), 0)
+
+    def test_city_with_stores_protected(self):
+        """Р-5: удаление города утащило бы точки — PROTECT и понятный текст."""
+        city = City.objects.create(name='Алматы')
+        OfflineStore.objects.create(city=city, name='Flirtshop', address='Абая, 1')
+        response = self.client.post(reverse('backoffice:city_delete', args=[city.pk]),
+                                    follow=True)
+        self.assertEqual(City.objects.count(), 1)
+        self.assertContains(response, 'привязаны точки (1 шт.)')
+
+    def test_list_shows_store_counts(self):
+        city = City.objects.create(name='Алматы')
+        OfflineStore.objects.create(city=city, name='Flirtshop', address='Абая, 1')
+        City.objects.create(name='Астана')
+        response = self.client.get(reverse('backoffice:city_list'))
+        self.assertEqual(
+            {c.name_ru: c.stores_count for c in response.context['cities']},
+            {'Алматы': 1, 'Астана': 0},
+        )
