@@ -110,6 +110,19 @@ class CatalogCardStateTests(TestCase):
         self.assertNotIn(self.COMING_SOON, html)
 
 
+class CatalogPaginationTests(TestCase):
+    """Каталог отдаёт всю линейку одной страницей — пагинации нет."""
+
+    def test_all_products_on_one_page(self):
+        category = Category.objects.create(name='Тест', slug='test-cat')
+        for i in range(25):  # больше прежнего paginate_by = 24
+            Product.objects.create(name=f'Товар {i}', slug=f'p-{i}',
+                                   category=category, is_active=True)
+        response = self.client.get(reverse('catalog:catalog'))
+        self.assertEqual(len(response.context['products']), 25)
+        self.assertFalse(response.context.get('is_paginated'))
+
+
 class ProductHelpLinksTests(TestCase):
     """Справка на странице товара: настройки категории из бэкофиса."""
 

@@ -113,18 +113,6 @@
             {% endfor %}
         </div>
 
-        {% if is_paginated %}
-        <div class="col-span-full lg:col-span-14 flex justify-center items-center gap-6 pb-12">
-            {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}" class="btn-cat font-benzin">{% trans "Назад" %}</a>
-            {% endif %}
-            <span class="text-sm text-stone-400">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="btn-cat font-benzin">{% trans "Вперёд" %}</a>
-            {% endif %}
-        </div>
-        {% endif %}
-
         <div class="col-span-full lg:col-span-9 lg:col-start-2 px-4 lg:px-0">
             {% if faqs %}
             <div class="pt-12 mb-14 xl:pt-22">

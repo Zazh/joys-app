@@ -18,7 +18,9 @@ class CatalogListView(ListView):
     model = Product
     template_name = 'pages/catalog.html'
     context_object_name = 'products'
-    paginate_by = 24
+    # Пагинации нет: линейка помещается на одну страницу, отбор — фильтром
+    # категорий (решение владельца). Заодно в ItemList JSON-LD попадает весь
+    # список, а не первая страница
 
     def get_queryset(self):
         region = getattr(self.request, 'region', None)
