@@ -229,7 +229,9 @@ class PageDetailView(DetailView):
 
         stores = None
         if page.slug == 'partners':
-            stores = list(OfflineStore.objects.filter(is_active=True))
+            stores = list(
+                OfflineStore.objects.filter(is_active=True).select_related('city')
+            )
             ctx.update(self._stores_context(stores))
 
         ctx['jsonld_blocks'] = jld.serialize_jsonld(
@@ -252,7 +254,7 @@ class PageDetailView(DetailView):
         """
         counts = {}
         for store in stores:
-            counts[store.city] = counts.get(store.city, 0) + 1
+            counts[store.city.name] = counts.get(store.city.name, 0) + 1
         ordered_cities = sorted(counts, key=lambda city: -counts[city])
         return {
             'page_type': 'partners',
@@ -260,14 +262,14 @@ class PageDetailView(DetailView):
                 {
                     'name': city,
                     'count': counts[city],
-                    'stores': [s for s in stores if s.city == city],
+                    'stores': [s for s in stores if s.city.name == city],
                 }
                 for city in ordered_cities
             ],
             'stores_json': [
                 {
                     'id': store.pk,
-                    'city': store.city,
+                    'city': store.city.name,
                     'name': store.name,
                     'address': store.address,
                     'lat': store.geo['lat'] if store.geo else None,

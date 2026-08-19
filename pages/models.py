@@ -631,6 +631,26 @@ class ContactSettings(models.Model):
         return [link for link in links if link]
 
 
+class City(models.Model):
+    """Город оффлайн-точки: справочник вместо текстового поля у точки.
+
+    Названия переводятся (modeltranslation, ru/kk/en) — чипы и заголовки
+    секций на /partners/ печатаются на языке страницы. Города ведёт бэкофис,
+    точка выбирает город из списка: свободный ввод давал «Алматы» и «алматы»
+    двумя разными чипами.
+    """
+
+    name = models.CharField('Название', max_length=100, unique=True)
+
+    class Meta:
+        verbose_name = 'Город'
+        verbose_name_plural = 'Города'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class OfflineStore(models.Model):
     """Оффлайн-точка продаж: магазин партнёра на странице /partners/.
 
@@ -647,9 +667,10 @@ class OfflineStore(models.Model):
     # ?m= с зумом мельче — центр города из ссылки на список филиалов, а не точка
     MIN_CENTER_ZOOM = 14
 
-    city = models.CharField(
-        'Город', max_length=100,
-        help_text='Без приставки «г.»: Алматы. Чипы городов на странице собираются из этого поля',
+    city = models.ForeignKey(
+        City, on_delete=models.PROTECT, related_name='stores',
+        verbose_name='Город',
+        help_text='Нет нужного города — добавьте его в разделе «Города»',
     )
     name = models.CharField('Магазин', max_length=200)
     address = models.CharField(
@@ -680,7 +701,7 @@ class OfflineStore(models.Model):
     class Meta:
         verbose_name = 'Оффлайн точка'
         verbose_name_plural = 'Оффлайн точки'
-        ordering = ['city', 'order', 'name', 'address']
+        ordering = ['city__name', 'order', 'name', 'address']
         indexes = [
             models.Index(fields=['is_active', 'city']),
         ]

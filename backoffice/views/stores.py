@@ -15,12 +15,12 @@ from django.views import View
 from django.views.generic import ListView
 
 from backoffice.mixins import BackofficeAccessMixin
-from pages.models import OfflineStore
+from pages.models import City, OfflineStore
 
 
 def _fill_store(store, request):
     """Поля из POST в объект; возвращает текст ошибки или None."""
-    store.city = request.POST.get('city', '').strip()
+    city_name = request.POST.get('city', '').strip()
     store.name = request.POST.get('name', '').strip()
     store.address = request.POST.get('address', '').strip()
     store.map_url = request.POST.get('map_url', '').strip()
@@ -30,8 +30,13 @@ def _fill_store(store, request):
     store.is_active = request.POST.get('is_active') == 'on'
     store.order = int(request.POST.get('order', 0) or 0)
 
-    if not store.city or not store.name or not store.address:
+    if not city_name or not store.name or not store.address:
+        # Несохранённый City — чтобы форма вернула введённое имя города;
+        # записи справочника создаются только при успешной валидации
+        store.city = City(name=city_name)
         return 'Город, магазин и адрес обязательны.'
+    # Город текстом — временно, до селекта из справочника (OS-02)
+    store.city, _ = City.objects.get_or_create(name=city_name)
 
     lat_raw = request.POST.get('lat', '').strip().replace(',', '.')
     lng_raw = request.POST.get('lng', '').strip().replace(',', '.')
@@ -55,7 +60,8 @@ class OfflineStoreListView(BackofficeAccessMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        qs = OfflineStore.objects.order_by('city', 'order', 'name', 'address')
+        qs = (OfflineStore.objects.select_related('city')
+              .order_by('city__name', 'order', 'name', 'address'))
 
         q = self.request.GET.get('q', '').strip()
         if q:
@@ -63,7 +69,7 @@ class OfflineStoreListView(BackofficeAccessMixin, ListView):
 
         city = self.request.GET.get('city')
         if city:
-            qs = qs.filter(city=city)
+            qs = qs.filter(city__name=city)
 
         active = self.request.GET.get('active')
         if active == 'yes':
@@ -75,10 +81,7 @@ class OfflineStoreListView(BackofficeAccessMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['cities'] = (
-            OfflineStore.objects.order_by('city')
-            .values_list('city', flat=True).distinct()
-        )
+        ctx['cities'] = _cities()
         ctx['no_coords_count'] = OfflineStore.objects.filter(lat__isnull=True).count()
         ctx['current_q'] = self.request.GET.get('q', '')
         ctx['current_city'] = self.request.GET.get('city', '')
@@ -87,9 +90,10 @@ class OfflineStoreListView(BackofficeAccessMixin, ListView):
 
 
 def _cities():
+    """Имена городов, у которых есть точки — подсказки фильтра и datalist."""
     return (
-        OfflineStore.objects.order_by('city')
-        .values_list('city', flat=True).distinct()
+        OfflineStore.objects.order_by('city__name')
+        .values_list('city__name', flat=True).distinct()
     )
 
 

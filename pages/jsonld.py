@@ -117,9 +117,11 @@ def build_offline_stores_jsonld(request, page, stores, description=''):
             'address': {
                 '@type': 'PostalAddress',
                 # Единственная точка вне Казахстана — Бишкек; появится другая
-                # страна — точке нужно отдельное поле, а не третья строка тут
-                'addressCountry': 'KG' if store.city == 'Бишкек' else 'KZ',
-                'addressLocality': store.city,
+                # страна — точке нужно отдельное поле, а не третья строка тут.
+                # Сверка по name_ru, а не по локализованному name: на /en/ город
+                # может называться Bishkek, страна от языка страницы не зависит
+                'addressCountry': 'KG' if store.city.name_ru == 'Бишкек' else 'KZ',
+                'addressLocality': store.city.name,
                 'streetAddress': store.address,
             },
         }

@@ -10,7 +10,7 @@ from django.urls import reverse
 from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm, ContactsPageForm
 from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
-from pages.models import ContactSettings, OfflineStore, Page
+from pages.models import City, ContactSettings, OfflineStore, Page
 
 User = get_user_model()
 
@@ -386,11 +386,41 @@ class OfflineStoreCrudTests(TestCase):
         self.assertEqual(OfflineStore.objects.count(), 0)
 
     def test_edit_and_delete(self):
-        store = OfflineStore.objects.create(city='Алматы', name='Shhh',
-                                            address='Жамбыла, 180е')
+        store = OfflineStore.objects.create(city=City.objects.create(name='Алматы'),
+                                            name='Shhh', address='Жамбыла, 180е')
         self.client.post(reverse('backoffice:store_edit', args=[store.pk]),
                          self.payload(name='Shhh!', address='Жамбыла, 180е'))
         store.refresh_from_db()
         self.assertEqual(store.name, 'Shhh!')
         self.client.post(reverse('backoffice:store_delete', args=[store.pk]))
         self.assertEqual(OfflineStore.objects.count(), 0)
+
+    def test_new_city_name_creates_directory_entry(self):
+        """Город из формы заводится в справочнике — точка без города не сохранима."""
+        self.client.post(reverse('backoffice:store_create'), self.payload())
+        self.assertEqual(OfflineStore.objects.get().city.name, 'Алматы')
+        self.assertEqual(City.objects.count(), 1)
+
+    def test_existing_city_is_reused(self):
+        """Второй точке того же города новая запись справочника не заводится."""
+        City.objects.create(name='Алматы')
+        self.client.post(reverse('backoffice:store_create'),
+                         self.payload(address='Байтурсынова, 169'))
+        self.assertEqual(City.objects.count(), 1)
+
+    def test_other_case_makes_second_city_for_now(self):
+        """Фиксируем фактическое поведение до OS-02: get_or_create ищет точным
+        именем, поэтому «алматы» при живом «Алматы» — вторая запись. С селектом
+        города (OS-02) свободный ввод исчезнет вместе с проблемой."""
+        City.objects.create(name='Алматы')
+        self.client.post(reverse('backoffice:store_create'), self.payload(city='алматы'))
+        self.assertEqual(
+            sorted(City.objects.values_list('name', flat=True)), ['Алматы', 'алматы'])
+
+    def test_invalid_form_keeps_entered_city(self):
+        """Ошибка валидации возвращает введённый город в поле и не плодит
+        записи справочника."""
+        response = self.client.post(reverse('backoffice:store_create'),
+                                    self.payload(name=''))
+        self.assertContains(response, 'value="Алматы"')
+        self.assertEqual(City.objects.count(), 0)

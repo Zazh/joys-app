@@ -13,7 +13,7 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from pages.models import OfflineStore, Page
+from pages.models import City, OfflineStore, Page
 
 # Токены в порядке документа. <a> внутри <strong> достаётся из содержимого
 # strong отдельным проходом: альтернатива срабатывает по позиции, и вложенную
@@ -123,6 +123,7 @@ class Command(BaseCommand):
 
         stores, no_coords = [], []
         order_in_city = {}
+        city_objects = {}
         for point in points:
             lat = lng = None
             pair = OfflineStore.coords_from_2gis(point['url'])
@@ -135,8 +136,12 @@ class Command(BaseCommand):
             if lat is None:
                 no_coords.append(point)
             order_in_city[point['city']] = order_in_city.get(point['city'], 0) + 10
+            if point['city'] not in city_objects:
+                city_objects[point['city']], _ = City.objects.get_or_create(
+                    name=point['city'])
             stores.append(OfflineStore(
-                city=point['city'], name=point['name'], address=point['address'],
+                city=city_objects[point['city']],
+                name=point['name'], address=point['address'],
                 lat=lat, lng=lng, map_url=point['url'],
                 fulfillment=point['fulfillment'], order=order_in_city[point['city']],
             ))
@@ -147,7 +152,7 @@ class Command(BaseCommand):
 
         cities = {}
         for store in stores:
-            cities[store.city] = cities.get(store.city, 0) + 1
+            cities[store.city.name] = cities.get(store.city.name, 0) + 1
         self.stdout.write(self.style.SUCCESS(f'Импортировано точек: {len(stores)}'))
         for city_name, count in sorted(cities.items(), key=lambda kv: -kv[1]):
             self.stdout.write(f'  {city_name}: {count}')

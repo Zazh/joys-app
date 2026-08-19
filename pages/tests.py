@@ -16,7 +16,7 @@ from django.utils import translation
 
 from .context_processors import CONTACTS_CACHE_KEY, contacts
 from .management.commands.import_offline_stores import parse_partner_body
-from .models import ContactSettings, OfflineStore, Page
+from .models import City, ContactSettings, OfflineStore, Page
 
 
 class ContactSettingsFormatTests(TestCase):
@@ -428,6 +428,34 @@ class OfflineStoreCoordsTests(TestCase):
         self.assertEqual(OfflineStore.coords_from_2gis(url), (42.872003, 74.599509))
 
 
+class CityModelTests(TestCase):
+    """Справочник городов: печать имени и уникальность названия."""
+
+    def test_str_is_name(self):
+        """__str__ точки печатает город через City — «Flirtshop — Алматы, …»."""
+        city = City.objects.create(name='Алматы')
+        self.assertEqual(str(city), 'Алматы')
+        store = OfflineStore.objects.create(
+            city=city, name='Flirtshop', address='Ермека Серкебаева, 287Б')
+        self.assertEqual(str(store), 'Flirtshop — Алматы, Ермека Серкебаева, 287Б')
+
+    def test_name_is_unique(self):
+        """Два города с одним названием — два одинаковых чипа на /partners/."""
+        City.objects.create(name='Алматы')
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            City.objects.create(name='Алматы')
+
+    def test_empty_translation_falls_back_to_russian(self):
+        """Р-6: незаполненный перевод не прячет город — отдаётся русское имя."""
+        city = City.objects.create(name='Алматы')
+        city.name_kk = 'Алматы қаласы'
+        city.save()
+        with translation.override('kk'):
+            self.assertEqual(City.objects.get(pk=city.pk).name, 'Алматы қаласы')
+        with translation.override('en'):
+            self.assertEqual(City.objects.get(pk=city.pk).name, 'Алматы')
+
+
 PARTNER_BODY_SAMPLE = '''
 <h3><strong>Адреса наших партнеров</strong></h3>
 <h3><strong>Алматы:</strong></h3>
@@ -471,6 +499,10 @@ class ImportOfflineStoresTests(TestCase):
         self.assertEqual(OfflineStore.objects.count(), 3)
         store = OfflineStore.objects.get(address='Ермека Серкебаева, 287Б')
         self.assertEqual((float(store.lat), float(store.lng)), (43.204689, 76.898728))
+        # Города импорт заводит сам — по одной записи на <h3>, не по точке
+        self.assertEqual(store.city.name, 'Алматы')
+        self.assertEqual(
+            sorted(City.objects.values_list('name', flat=True)), ['Актау', 'Алматы'])
 
     def test_command_refuses_second_run_without_replace(self):
         """Повторный запуск затёр бы правки бэкофиса — без --replace отказ."""
@@ -489,19 +521,22 @@ class PartnersPageTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.page = Page.objects.create(slug='partners', title='Оффлайн магазины', body='')
+        cls.almaty = City.objects.create(name='Алматы')
+        cls.atyrau = City.objects.create(name='Атырау')
+        cls.astana = City.objects.create(name='Астана')
         OfflineStore.objects.create(
-            city='Алматы', name='Flirtshop', address='Ермека Серкебаева, 287Б',
+            city=cls.almaty, name='Flirtshop', address='Ермека Серкебаева, 287Б',
             lat=Decimal('43.204689'), lng=Decimal('76.898728'),
             map_url='https://2gis.kz/almaty/firm/2',
         )
         OfflineStore.objects.create(
-            city='Алматы', name='Joys Toys', address='Байтурсынова, 169',
+            city=cls.almaty, name='Joys Toys', address='Байтурсынова, 169',
             lat=Decimal('43.231812'), lng=Decimal('76.933591'),
         )
         # Без координат: в списке есть, на карте нет, geo в JSON-LD не уходит
-        OfflineStore.objects.create(city='Атырау', name='LOVE MARKET', address='Абая, 131')
+        OfflineStore.objects.create(city=cls.atyrau, name='LOVE MARKET', address='Абая, 131')
         OfflineStore.objects.create(
-            city='Астана', name='Скрытая', address='Никуда, 1', is_active=False,
+            city=cls.astana, name='Скрытая', address='Никуда, 1', is_active=False,
         )
 
     def _get(self, lang='ru'):

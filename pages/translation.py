@@ -1,6 +1,6 @@
 from modeltranslation.translator import register, TranslationOptions
 
-from .models import PageCategory, Page, BlogCategory, BlogPost, MenuItem, HeroSection, FeatureSlide, PromoBlock, ServicePage, ContactSettings
+from .models import PageCategory, Page, BlogCategory, BlogPost, MenuItem, HeroSection, FeatureSlide, PromoBlock, ServicePage, ContactSettings, City
 
 
 @register(PageCategory)
@@ -51,3 +51,8 @@ class ServicePageTO(TranslationOptions):
 @register(ContactSettings)
 class ContactSettingsTO(TranslationOptions):
     fields = ('legal_name', 'bin_label', 'address_locality', 'address_street', 'work_hours')
+
+
+@register(City)
+class CityTO(TranslationOptions):
+    fields = ('name',)
