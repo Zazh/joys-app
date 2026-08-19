@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.models import (
     ServicePage, Page, PageCategory, BlogPost, BlogCategory,
@@ -21,7 +21,7 @@ CUSTOM_EDITORS = {CONTACTS_PAGE_SLUG: 'backoffice:contacts'}
 
 # ─── Служебные страницы ───
 
-class ServicePageListView(BackofficeAccessMixin, ListView):
+class ServicePageListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/pages/service_list.html'
     context_object_name = 'pages'
 
@@ -29,7 +29,7 @@ class ServicePageListView(BackofficeAccessMixin, ListView):
         return ServicePage.objects.order_by('slug')
 
 
-class ServicePageEditView(BackofficeAccessMixin, View):
+class ServicePageEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         page = get_object_or_404(ServicePage, pk=pk)
         return TemplateResponse(request, 'backoffice/pages/service_form.html', {'page': page})
@@ -55,7 +55,7 @@ class ServicePageEditView(BackofficeAccessMixin, View):
 
 # ─── Статические страницы ───
 
-class PageListView(BackofficeAccessMixin, ListView):
+class PageListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/pages/page_list.html'
     context_object_name = 'pages'
     paginate_by = 25
@@ -95,7 +95,7 @@ class PageListView(BackofficeAccessMixin, ListView):
         return ctx
 
 
-class PageEditView(BackofficeAccessMixin, View):
+class PageEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         page = get_object_or_404(Page.objects.select_related('category'), pk=pk)
         if own_section := self._own_section(request, page):
@@ -149,7 +149,7 @@ class PageEditView(BackofficeAccessMixin, View):
             page.og_image = request.FILES['og_image']
 
 
-class PageCreateView(BackofficeAccessMixin, View):
+class PageCreateView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         return TemplateResponse(request, 'backoffice/pages/page_form.html', {
             'page': None,
@@ -173,7 +173,7 @@ class PageCreateView(BackofficeAccessMixin, View):
 
 # ─── Блог ───
 
-class BlogPostListView(BackofficeAccessMixin, ListView):
+class BlogPostListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/pages/blog_list.html'
     context_object_name = 'posts'
     paginate_by = 25
@@ -208,7 +208,7 @@ class BlogPostListView(BackofficeAccessMixin, ListView):
         return ctx
 
 
-class BlogPostEditView(BackofficeAccessMixin, View):
+class BlogPostEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         post = get_object_or_404(BlogPost.objects.select_related('category'), pk=pk)
         return TemplateResponse(request, 'backoffice/pages/blog_form.html', {
@@ -250,7 +250,7 @@ class BlogPostEditView(BackofficeAccessMixin, View):
             post.published_at = timezone.now()
 
 
-class BlogPostCreateView(BackofficeAccessMixin, View):
+class BlogPostCreateView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         return TemplateResponse(request, 'backoffice/pages/blog_form.html', {
             'post': None,

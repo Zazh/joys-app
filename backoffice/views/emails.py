@@ -4,11 +4,11 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django.views.generic import ListView
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 from emails.models import EmailLog
 
 
-class EmailLogListView(BackofficeAccessMixin, ListView):
+class EmailLogListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/emails/list.html'
     context_object_name = 'logs'
     paginate_by = 25
@@ -53,14 +53,14 @@ class EmailLogListView(BackofficeAccessMixin, ListView):
         return ctx
 
 
-class EmailLogDetailView(BackofficeAccessMixin, View):
+class EmailLogDetailView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         from django.shortcuts import render
         log = get_object_or_404(EmailLog, pk=pk)
         return render(request, 'backoffice/emails/detail.html', {'log': log})
 
 
-class EmailLogRetryView(BackofficeAccessMixin, View):
+class EmailLogRetryView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk):
         log = get_object_or_404(EmailLog, pk=pk)
         if log.status != EmailLog.Status.FAILED:

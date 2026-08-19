@@ -44,6 +44,7 @@ def _form_response(request, city, is_new):
 
 class CityListView(BackofficeAccessMixin, ListView):
     allow_store_manager = True
+    allow_manager = False
     template_name = 'backoffice/cities/list.html'
     context_object_name = 'cities'
     paginate_by = 50
@@ -54,6 +55,7 @@ class CityListView(BackofficeAccessMixin, ListView):
 
 class CityCreateView(BackofficeAccessMixin, View):
     allow_store_manager = True
+    allow_manager = False
 
     def get(self, request):
         return _form_response(request, City(), is_new=True)
@@ -80,6 +82,7 @@ class CityCreateView(BackofficeAccessMixin, View):
 
 class CityEditView(BackofficeAccessMixin, View):
     allow_store_manager = True
+    allow_manager = False
 
     def get(self, request, pk):
         return _form_response(request, get_object_or_404(City, pk=pk), is_new=False)
@@ -101,6 +104,7 @@ class CityEditView(BackofficeAccessMixin, View):
 
 class CityDeleteView(BackofficeAccessMixin, View):
     allow_store_manager = True
+    allow_manager = False
 
     def post(self, request, pk):
         city = get_object_or_404(City, pk=pk)

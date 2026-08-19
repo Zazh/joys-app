@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.views import View
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 from pages.models import HeroSection, HeroCard, FeatureSlide, PromoBlock, PromoImage
 from modals.models import InteractiveModal, ModalStep
 from inquiries.models import InquiryForm
@@ -13,7 +13,7 @@ from catalog.models import Product
 
 # ─── Обзор главной ───
 
-class HomepageOverviewView(BackofficeAccessMixin, View):
+class HomepageOverviewView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         hero = HeroSection.objects.prefetch_related('cards').first()
         features = FeatureSlide.objects.all()
@@ -33,7 +33,7 @@ class HomepageOverviewView(BackofficeAccessMixin, View):
 
 # ─── Hero-секция ───
 
-class HeroEditView(BackofficeAccessMixin, View):
+class HeroEditView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         hero = HeroSection.objects.prefetch_related('cards__product').first()
         if not hero:
@@ -68,7 +68,7 @@ class HeroEditView(BackofficeAccessMixin, View):
         return redirect('backoffice:homepage_hero')
 
 
-class HeroCardUploadView(BackofficeAccessMixin, View):
+class HeroCardUploadView(SeniorStaffRequiredMixin, View):
     def post(self, request):
         hero = HeroSection.objects.first()
         if not hero:
@@ -88,7 +88,7 @@ class HeroCardUploadView(BackofficeAccessMixin, View):
         return redirect('backoffice:homepage_hero')
 
 
-class HeroCardUpdateView(BackofficeAccessMixin, View):
+class HeroCardUpdateView(SeniorStaffRequiredMixin, View):
     """Обновить существующую карточку: заменить image, count_image, порядок."""
     def post(self, request, card_pk):
         card = get_object_or_404(HeroCard, pk=card_pk)
@@ -108,7 +108,7 @@ class HeroCardUpdateView(BackofficeAccessMixin, View):
         return redirect('backoffice:homepage_hero')
 
 
-class HeroCardDeleteView(BackofficeAccessMixin, View):
+class HeroCardDeleteView(SeniorStaffRequiredMixin, View):
     def post(self, request):
         card_id = request.POST.get('card_id')
         if card_id:
@@ -119,7 +119,7 @@ class HeroCardDeleteView(BackofficeAccessMixin, View):
 
 # ─── Feature-слайды ───
 
-class FeatureSlideListView(BackofficeAccessMixin, View):
+class FeatureSlideListView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         slides = FeatureSlide.objects.all()
         return TemplateResponse(request, 'backoffice/homepage/feature_list.html', {
@@ -127,7 +127,7 @@ class FeatureSlideListView(BackofficeAccessMixin, View):
         })
 
 
-class FeatureSlideEditView(BackofficeAccessMixin, View):
+class FeatureSlideEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         slide = get_object_or_404(FeatureSlide, pk=pk)
         return TemplateResponse(request, 'backoffice/homepage/feature_form.html', {
@@ -174,7 +174,7 @@ class FeatureSlideEditView(BackofficeAccessMixin, View):
             slide.video_poster = request.FILES['video_poster']
 
 
-class FeatureSlideCreateView(BackofficeAccessMixin, View):
+class FeatureSlideCreateView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         return TemplateResponse(request, 'backoffice/homepage/feature_form.html', {
             'slide': None,
@@ -193,7 +193,7 @@ class FeatureSlideCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:homepage_feature_edit', pk=slide.pk)
 
 
-class FeatureSlideDeleteView(BackofficeAccessMixin, View):
+class FeatureSlideDeleteView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk):
         slide = get_object_or_404(FeatureSlide, pk=pk)
         title = slide.title_ru
@@ -204,7 +204,7 @@ class FeatureSlideDeleteView(BackofficeAccessMixin, View):
 
 # ─── Промо-блоки ───
 
-class PromoBlockEditView(BackofficeAccessMixin, View):
+class PromoBlockEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         promo = get_object_or_404(PromoBlock.objects.prefetch_related('images'), pk=pk)
         modal = InteractiveModal.objects.filter(slug=promo.slug).first()
@@ -238,7 +238,7 @@ class PromoBlockEditView(BackofficeAccessMixin, View):
         return redirect('backoffice:homepage_promo_edit', pk=promo.pk)
 
 
-class PromoGalleryUploadView(BackofficeAccessMixin, View):
+class PromoGalleryUploadView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk):
         promo = get_object_or_404(PromoBlock, pk=pk)
         images = request.FILES.getlist('images')
@@ -251,7 +251,7 @@ class PromoGalleryUploadView(BackofficeAccessMixin, View):
         return redirect('backoffice:homepage_promo_edit', pk=promo.pk)
 
 
-class PromoGalleryDeleteView(BackofficeAccessMixin, View):
+class PromoGalleryDeleteView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk):
         image_id = request.POST.get('image_id')
         if image_id:
@@ -262,7 +262,7 @@ class PromoGalleryDeleteView(BackofficeAccessMixin, View):
 
 # ─── Модалки (отдельный раздел) ───
 
-class ModalListView(BackofficeAccessMixin, View):
+class ModalListView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         modals = list(InteractiveModal.objects.prefetch_related('steps').all())
         promo_map = {}
@@ -275,7 +275,7 @@ class ModalListView(BackofficeAccessMixin, View):
         })
 
 
-class ModalEditView(BackofficeAccessMixin, View):
+class ModalEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         modal = get_object_or_404(
             InteractiveModal.objects.prefetch_related('steps', 'steps__inquiry_form'),
@@ -329,7 +329,7 @@ class ModalEditView(BackofficeAccessMixin, View):
         return redirect('backoffice:modal_edit', pk=modal.pk)
 
 
-class ModalStepCreateView(BackofficeAccessMixin, View):
+class ModalStepCreateView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk):
         modal = get_object_or_404(InteractiveModal, pk=pk)
         order = modal.steps.count()
@@ -339,7 +339,7 @@ class ModalStepCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:modal_edit', pk=modal.pk)
 
 
-class ModalStepDeleteView(BackofficeAccessMixin, View):
+class ModalStepDeleteView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk, step_pk):
         ModalStep.objects.filter(pk=step_pk, modal_id=pk).delete()
         messages.success(request, 'Шаг удалён.')
@@ -348,7 +348,7 @@ class ModalStepDeleteView(BackofficeAccessMixin, View):
 
 # ─── Квиз ───
 
-class QuizOverviewView(BackofficeAccessMixin, View):
+class QuizOverviewView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         questions = QuizQuestion.objects.prefetch_related('options').all()
         rules = QuizRule.objects.select_related('product').all()
@@ -368,7 +368,7 @@ class QuizOverviewView(BackofficeAccessMixin, View):
         })
 
 
-class QuizQuestionSaveView(BackofficeAccessMixin, View):
+class QuizQuestionSaveView(SeniorStaffRequiredMixin, View):
     """Сохранить все вопросы + варианты inline."""
     def post(self, request):
         for q in QuizQuestion.objects.prefetch_related('options').all():
@@ -395,7 +395,7 @@ class QuizQuestionSaveView(BackofficeAccessMixin, View):
         return redirect('backoffice:quiz_overview')
 
 
-class QuizResultTextSaveView(BackofficeAccessMixin, View):
+class QuizResultTextSaveView(SeniorStaffRequiredMixin, View):
     def post(self, request):
         rt = QuizResultText.load()
         rt.title_ru = request.POST.get('title_ru', '').strip()
@@ -412,7 +412,7 @@ class QuizResultTextSaveView(BackofficeAccessMixin, View):
         return redirect('backoffice:quiz_overview')
 
 
-class QuizRuleCreateView(BackofficeAccessMixin, View):
+class QuizRuleCreateView(SeniorStaffRequiredMixin, View):
     def post(self, request):
         product_id = request.POST.get('product')
         if not product_id:
@@ -431,14 +431,14 @@ class QuizRuleCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:quiz_overview')
 
 
-class QuizRuleDeleteView(BackofficeAccessMixin, View):
+class QuizRuleDeleteView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk):
         QuizRule.objects.filter(pk=pk).delete()
         messages.success(request, 'Правило удалено.')
         return redirect('backoffice:quiz_overview')
 
 
-class QuizBackgroundSaveView(BackofficeAccessMixin, View):
+class QuizBackgroundSaveView(SeniorStaffRequiredMixin, View):
     def post(self, request):
         for bg in QuizBackground.objects.all():
             prefix = f'bg_{bg.pk}_'

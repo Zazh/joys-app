@@ -33,7 +33,11 @@
                 <tr class="hover:bg-stone-50">
                     {% if forloop.first %}
                     <td class="px-4 py-2 font-medium" rowspan="{{ item.sizes|length }}">
+                        {% if request.user.is_senior_staff %}
                         <a href="{% url 'backoffice:product_edit' pk=item.product.pk %}" class="hover:text-stone-600">{{ item.product.name }}</a>
+                        {% else %}
+                        {{ item.product.name }}
+                        {% endif %}
                     </td>
                     {% endif %}
                     <td class="px-4 py-2 text-stone-600">{{ sd.size.name }}</td>

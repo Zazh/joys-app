@@ -5,7 +5,7 @@ from django.template.response import TemplateResponse
 from django.views import View
 from django.views.generic import ListView
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 from catalog.models import (
     Category, Product, ProductSize, RegionPrice, Stock,
     ProductMainImage, ProductPackageImage, ProductIndividualImage,
@@ -16,7 +16,7 @@ from regions.models import Region
 
 # ─── Товары ───
 
-class ProductListView(BackofficeAccessMixin, ListView):
+class ProductListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/catalog/product_list.html'
     context_object_name = 'products'
     paginate_by = 25
@@ -57,7 +57,7 @@ class ProductListView(BackofficeAccessMixin, ListView):
         return ctx
 
 
-class ProductEditView(BackofficeAccessMixin, View):
+class ProductEditView(SeniorStaffRequiredMixin, View):
     """Редактирование товара."""
 
     def get(self, request, pk):
@@ -250,7 +250,7 @@ class ProductEditView(BackofficeAccessMixin, View):
         }
 
 
-class ProductCreateView(BackofficeAccessMixin, View):
+class ProductCreateView(SeniorStaffRequiredMixin, View):
     """Создание товара."""
 
     def get(self, request):
@@ -310,7 +310,7 @@ class ProductCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:product_edit', pk=product.pk)
 
 
-class ProductSizeCreateView(BackofficeAccessMixin, View):
+class ProductSizeCreateView(SeniorStaffRequiredMixin, View):
     """Добавить новый размер."""
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
@@ -339,7 +339,7 @@ class ProductSizeCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:product_edit', pk=pk)
 
 
-class ProductSizeDeleteView(BackofficeAccessMixin, View):
+class ProductSizeDeleteView(SeniorStaffRequiredMixin, View):
     """Удалить размер."""
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
@@ -351,7 +351,7 @@ class ProductSizeDeleteView(BackofficeAccessMixin, View):
         return redirect('backoffice:product_edit', pk=pk)
 
 
-class ProductToggleActiveView(BackofficeAccessMixin, View):
+class ProductToggleActiveView(SeniorStaffRequiredMixin, View):
     """Быстрое вкл/выкл товара."""
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
@@ -360,7 +360,7 @@ class ProductToggleActiveView(BackofficeAccessMixin, View):
         return redirect('backoffice:product_list')
 
 
-class ProductImageUploadView(BackofficeAccessMixin, View):
+class ProductImageUploadView(SeniorStaffRequiredMixin, View):
     """Загрузка изображений товара."""
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
@@ -389,7 +389,7 @@ class ProductImageUploadView(BackofficeAccessMixin, View):
         return redirect('backoffice:product_edit', pk=pk)
 
 
-class ProductImageDeleteView(BackofficeAccessMixin, View):
+class ProductImageDeleteView(SeniorStaffRequiredMixin, View):
     """Удаление изображения товара."""
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
@@ -408,7 +408,7 @@ class ProductImageDeleteView(BackofficeAccessMixin, View):
         return redirect('backoffice:product_edit', pk=pk)
 
 
-class ProductImageCoverView(BackofficeAccessMixin, View):
+class ProductImageCoverView(SeniorStaffRequiredMixin, View):
     """Установить обложку."""
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
@@ -423,7 +423,7 @@ class ProductImageCoverView(BackofficeAccessMixin, View):
 
 # ─── Характеристики (справочник) ───
 
-class CharacteristicListView(BackofficeAccessMixin, View):
+class CharacteristicListView(SeniorStaffRequiredMixin, View):
     """Справочник характеристик."""
     def get(self, request):
         chars = Characteristic.objects.select_related('unit').annotate(
@@ -436,7 +436,7 @@ class CharacteristicListView(BackofficeAccessMixin, View):
         })
 
 
-class CharacteristicCreateView(BackofficeAccessMixin, View):
+class CharacteristicCreateView(SeniorStaffRequiredMixin, View):
     """Создать характеристику."""
     def post(self, request):
         name_ru = request.POST.get('name_ru', '').strip()
@@ -455,7 +455,7 @@ class CharacteristicCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:characteristic_list')
 
 
-class CharacteristicEditView(BackofficeAccessMixin, View):
+class CharacteristicEditView(SeniorStaffRequiredMixin, View):
     """Редактировать характеристику."""
     def get(self, request, pk):
         char = get_object_or_404(Characteristic.objects.select_related('unit'), pk=pk)
@@ -477,7 +477,7 @@ class CharacteristicEditView(BackofficeAccessMixin, View):
         return redirect('backoffice:characteristic_list')
 
 
-class CharacteristicDeleteView(BackofficeAccessMixin, View):
+class CharacteristicDeleteView(SeniorStaffRequiredMixin, View):
     """Удалить характеристику."""
     def post(self, request, pk):
         char = get_object_or_404(Characteristic, pk=pk)
@@ -488,7 +488,7 @@ class CharacteristicDeleteView(BackofficeAccessMixin, View):
 
 # ─── Категории ───
 
-class CategoryListView(BackofficeAccessMixin, ListView):
+class CategoryListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/catalog/category_list.html'
     context_object_name = 'categories'
 
@@ -509,7 +509,7 @@ def _category_form_context(category):
     }
 
 
-class CategoryEditView(BackofficeAccessMixin, View):
+class CategoryEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         category = get_object_or_404(Category, pk=pk)
         return TemplateResponse(
@@ -550,7 +550,7 @@ class CategoryEditView(BackofficeAccessMixin, View):
         return redirect('backoffice:category_edit', pk=category.pk)
 
 
-class CategoryCreateView(BackofficeAccessMixin, View):
+class CategoryCreateView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         return TemplateResponse(
             request, 'backoffice/catalog/category_form.html',

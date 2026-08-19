@@ -6,11 +6,11 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 from quiz.models import QuizSubmission, QuizRule
 
 
-class QuizAnalyticsView(BackofficeAccessMixin, TemplateView):
+class QuizAnalyticsView(SeniorStaffRequiredMixin, TemplateView):
     template_name = 'backoffice/quiz/analytics.html'
 
     def get_context_data(self, **kwargs):

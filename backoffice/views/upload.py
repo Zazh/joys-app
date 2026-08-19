@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views import View
 from PIL import Image, UnidentifiedImageError
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 
 # SVG сознательно не принимаем: файл отдаётся как image/svg+xml и может
 # содержать <script>, который выполнится в origin сайта. Через это менеджер
@@ -19,7 +19,7 @@ ALLOWED_FORMATS = {'JPEG', 'PNG', 'GIF', 'WEBP'}
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024
 
 
-class ImageUploadView(BackofficeAccessMixin, View):
+class ImageUploadView(SeniorStaffRequiredMixin, View):
     """TinyMCE image upload handler."""
 
     def post(self, request):

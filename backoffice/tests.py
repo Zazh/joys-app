@@ -14,6 +14,7 @@ from backoffice import urls as backoffice_urls
 from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm, ContactsPageForm
 from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
+from catalog.models import Category, Product, ProductSize
 from pages.models import City, ContactSettings, OfflineStore, Page
 
 User = get_user_model()
@@ -317,9 +318,10 @@ class LegacyPageEditorTests(TestCase):
     def setUp(self):
         self.page = Page.objects.create(slug=CONTACTS_PAGE_SLUG, title='Контакты', body='')
         self.other = Page.objects.create(slug='about', title='О компании', body='текст')
-        User.objects.create_user(email='manager@example.com', password='x',
-                                 role=User.Role.MANAGER)
-        self.client.login(email='manager@example.com', password='x')
+        # Контент — раздел senior (Р-9), обычный менеджер сюда больше не заходит
+        User.objects.create_user(email='senior@example.com', password='x',
+                                 role=User.Role.SUPER_MANAGER)
+        self.client.login(email='senior@example.com', password='x')
 
     def test_hidden_from_page_list(self):
         html = self.client.get(reverse('backoffice:page_list')).content.decode()
@@ -343,9 +345,9 @@ class OfflineStoreCrudTests(TestCase):
     """CRUD оффлайн-точек: доступ и автозаполнение координат из ссылки 2ГИС."""
 
     def setUp(self):
-        User.objects.create_user(email='manager@example.com', password='x',
-                                 role=User.Role.MANAGER)
-        self.client.login(email='manager@example.com', password='x')
+        User.objects.create_user(email='senior@example.com', password='x',
+                                 role=User.Role.SUPER_MANAGER)
+        self.client.login(email='senior@example.com', password='x')
         self.almaty = City.objects.create(name='Алматы')
 
     def payload(self, **overrides):
@@ -483,10 +485,17 @@ class CityAccessTests(TestCase):
         self.client.login(email='buyer@example.com', password='x')
         self.assertEqual(self.client.get(self.url).status_code, 403)
 
-    def test_manager_allowed(self):
+    def test_manager_forbidden(self):
+        """Города ушли из разделов обычного менеджера (Р-9)."""
         User.objects.create_user(email='manager@example.com', password='x',
                                  role=User.Role.MANAGER)
         self.client.login(email='manager@example.com', password='x')
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_senior_allowed(self):
+        User.objects.create_user(email='senior@example.com', password='x',
+                                 role=User.Role.SUPER_MANAGER)
+        self.client.login(email='senior@example.com', password='x')
         self.assertEqual(self.client.get(self.url).status_code, 200)
 
 
@@ -494,9 +503,9 @@ class CityCrudTests(TestCase):
     """CRUD справочника городов: переводы, дубли, PROTECT на занятом городе."""
 
     def setUp(self):
-        User.objects.create_user(email='manager@example.com', password='x',
-                                 role=User.Role.MANAGER)
-        self.client.login(email='manager@example.com', password='x')
+        User.objects.create_user(email='senior@example.com', password='x',
+                                 role=User.Role.SUPER_MANAGER)
+        self.client.login(email='senior@example.com', password='x')
 
     def test_create_with_three_translations(self):
         self.client.post(reverse('backoffice:city_create'), {
@@ -602,6 +611,17 @@ STORE_MANAGER_ALLOWED = {
     'city_list', 'city_create', 'city_edit', 'city_delete',
 }
 
+# Разделы обычного менеджера (Р-9): контент сайта, точки, города, команда и
+# письма ушли к супер-менеджеру и владельцу
+MANAGER_ALLOWED = {
+    'login', 'logout', 'dashboard', 'contacts',
+    'order_list', 'order_detail', 'order_status',
+    'inquiry_list', 'inquiry_detail', 'inquiry_toggle',
+    'qrcode_list', 'qrcode_create', 'qrcode_detail', 'qrcode_delete', 'qrcode_download',
+    'stock_list', 'stock_update',
+    'review_list', 'review_toggle', 'review_sync',
+}
+
 
 class BackofficeRoleMatrixTests(TestCase):
     """Матрица доступа циклом по всем маршрутам бэкофиса."""
@@ -618,8 +638,8 @@ class BackofficeRoleMatrixTests(TestCase):
     def test_allowlist_names_exist(self):
         """Переименовали маршрут — allowlist не должен молча протухнуть."""
         names = {name for name, _ in self.routes}
-        self.assertTrue(STORE_MANAGER_ALLOWED <= names,
-                        STORE_MANAGER_ALLOWED - names)
+        for allowed in (STORE_MANAGER_ALLOWED, MANAGER_ALLOWED):
+            self.assertTrue(allowed <= names, allowed - names)
 
     def test_store_manager_forbidden_outside_allowlist(self):
         self.login_as(User.Role.STORE_MANAGER)
@@ -630,6 +650,25 @@ class BackofficeRoleMatrixTests(TestCase):
                 # GET хватает и POST-only вьюхам: 403 приходит из dispatch
                 # раньше разбора метода
                 self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_manager_forbidden_outside_allowlist(self):
+        """Контент, точки, города, пользователи и письма — не его разделы."""
+        self.login_as(User.Role.MANAGER)
+        for name, url in self.routes:
+            if name in MANAGER_ALLOWED:
+                continue
+            with self.subTest(url=name):
+                self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_senior_keeps_everything(self):
+        """Р-7 для senior: сужение прав менеджера его не задело."""
+        self.login_as(User.Role.SUPER_MANAGER)
+        for name in ('product_list', 'page_list', 'blog_list', 'store_list',
+                     'city_list', 'redirect_list', 'user_list', 'email_log_list',
+                     'homepage_overview', 'modal_list', 'quiz_overview'):
+            with self.subTest(url=name):
+                self.assertEqual(
+                    self.client.get(reverse(f'backoffice:{name}')).status_code, 200)
 
     def test_customer_forbidden_everywhere(self):
         self.login_as(User.Role.CUSTOMER)
@@ -722,18 +761,30 @@ class BackofficeLoginRedirectTests(TestCase):
         self.assertRedirects(self.client.get(self.url), reverse('backoffice:store_list'))
 
 
-class ManagerKeepsAccessTests(TestCase):
-    """Р-7: у обычного менеджера ничего не отобрали появлением новой роли."""
+class ManagerScopeTests(TestCase):
+    """Р-9: у обычного менеджера остаются ровно семь разделов."""
 
     def setUp(self):
         User.objects.create_user(email='manager@example.com', password='x',
                                  role=User.Role.MANAGER)
         self.client.login(email='manager@example.com', password='x')
 
-    def test_sections_open(self):
-        for name in ('store_list', 'city_list', 'order_list'):
+    def test_own_sections_open(self):
+        for name in ('dashboard', 'order_list', 'inquiry_list', 'contacts',
+                     'qrcode_list', 'stock_list', 'review_list'):
             with self.subTest(url=name):
                 self.assertEqual(self.client.get(reverse(f'backoffice:{name}')).status_code, 200)
+
+    def test_content_and_team_closed(self):
+        for name in ('product_list', 'page_list', 'blog_list', 'homepage_overview',
+                     'redirect_list', 'store_list', 'city_list',
+                     'user_list', 'email_log_list'):
+            with self.subTest(url=name):
+                self.assertEqual(self.client.get(reverse(f'backoffice:{name}')).status_code, 403)
+
+    def test_image_upload_closed(self):
+        """Загрузка картинок — часть контент-редактора, значит тоже senior."""
+        self.assertEqual(self.client.post(reverse('backoffice:upload_image')).status_code, 403)
 
     def test_senior_sections_still_closed(self):
         self.assertEqual(self.client.get(reverse('backoffice:user_create')).status_code, 403)
@@ -761,11 +812,23 @@ class SidebarByRoleTests(TestCase):
                 # остальных ссылок, подстрокой его не проверить
                 self.assertNotIn('href="%s"' % reverse('backoffice:' + hidden), html)
 
-    def test_manager_keeps_previous_sections(self):
+    def test_manager_sees_seven_sections(self):
         html = self.sidebar_of(User.Role.MANAGER, 'order_list')
-        for link in ('dashboard', 'order_list', 'inquiry_list', 'stock_list'):
+        for link in ('dashboard', 'order_list', 'inquiry_list', 'contacts',
+                     'qrcode_list', 'stock_list', 'review_list'):
             with self.subTest(link=link):
-                self.assertIn(reverse(f'backoffice:{link}'), html)
+                self.assertIn('href="%s"' % reverse('backoffice:' + link), html)
+        for hidden in ('product_list', 'page_list', 'store_list', 'city_list',
+                       'redirect_list', 'user_list'):
+            with self.subTest(link=hidden):
+                self.assertNotIn('href="%s"' % reverse('backoffice:' + hidden), html)
+
+    def test_senior_sees_content_and_team(self):
+        html = self.sidebar_of(User.Role.SUPER_MANAGER, 'dashboard')
+        for link in ('product_list', 'page_list', 'store_list', 'city_list',
+                     'redirect_list', 'user_list', 'email_log_list'):
+            with self.subTest(link=link):
+                self.assertIn('href="%s"' % reverse('backoffice:' + link), html)
 
 
 class StoreManagerUserCreationTests(TestCase):
@@ -808,3 +871,29 @@ class StoreManagerUserCreationTests(TestCase):
         })
         self.assertEqual(response.status_code, 403)
         self.assertFalse(User.objects.filter(email='sneaky@example.com').exists())
+
+
+class StockProductLinkTests(TestCase):
+    """Со «Склада» менеджер не должен уходить по ссылке в закрытую карточку товара."""
+
+    def setUp(self):
+        self.url = reverse('backoffice:stock_list')
+        category = Category.objects.create(name='Тест', slug='test')
+        self.product = Product.objects.create(
+            name='Тестовый товар', slug='test-product', category=category)
+        ProductSize.objects.create(product=self.product, name='M', sku='SKU-M', price=1000)
+        self.product_url = reverse('backoffice:product_edit', args=[self.product.pk])
+
+    def stock_html(self, role):
+        email = f'{role}@example.com'
+        User.objects.create_user(email=email, password='x', role=role)
+        self.client.login(email=email, password='x')
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('Тестовый товар', html)  # строка товара вообще есть
+        return html
+
+    def test_manager_sees_plain_name(self):
+        self.assertNotIn(self.product_url, self.stock_html(User.Role.MANAGER))
+
+    def test_senior_sees_link(self):
+        self.assertIn(self.product_url, self.stock_html(User.Role.SUPER_MANAGER))

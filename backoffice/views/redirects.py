@@ -5,11 +5,11 @@ from django.template.response import TemplateResponse
 from django.views import View
 from django.views.generic import ListView
 
-from backoffice.mixins import BackofficeAccessMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 from redirects.models import Redirect
 
 
-class RedirectListView(BackofficeAccessMixin, ListView):
+class RedirectListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/redirects/list.html'
     context_object_name = 'redirects'
     paginate_by = 25
@@ -41,7 +41,7 @@ class RedirectListView(BackofficeAccessMixin, ListView):
         return ctx
 
 
-class RedirectCreateView(BackofficeAccessMixin, View):
+class RedirectCreateView(SeniorStaffRequiredMixin, View):
     def get(self, request):
         return TemplateResponse(request, 'backoffice/redirects/form.html', {'redir': None})
 
@@ -63,7 +63,7 @@ class RedirectCreateView(BackofficeAccessMixin, View):
         return redirect('backoffice:redirect_list')
 
 
-class RedirectEditView(BackofficeAccessMixin, View):
+class RedirectEditView(SeniorStaffRequiredMixin, View):
     def get(self, request, pk):
         redir = get_object_or_404(Redirect, pk=pk)
         return TemplateResponse(request, 'backoffice/redirects/form.html', {'redir': redir})
@@ -80,7 +80,7 @@ class RedirectEditView(BackofficeAccessMixin, View):
         return redirect('backoffice:redirect_list')
 
 
-class RedirectDeleteView(BackofficeAccessMixin, View):
+class RedirectDeleteView(SeniorStaffRequiredMixin, View):
     def post(self, request, pk):
         redir = get_object_or_404(Redirect, pk=pk)
         redir.delete()

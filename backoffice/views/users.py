@@ -6,10 +6,10 @@ from django.views.generic import ListView, DetailView
 
 from accounts.models import User
 from allauth.socialaccount.models import SocialAccount
-from backoffice.mixins import BackofficeAccessMixin, SeniorStaffRequiredMixin
+from backoffice.mixins import SeniorStaffRequiredMixin
 
 
-class UserListView(BackofficeAccessMixin, ListView):
+class UserListView(SeniorStaffRequiredMixin, ListView):
     template_name = 'backoffice/users/list.html'
     context_object_name = 'users'
     paginate_by = 25
@@ -58,7 +58,7 @@ class UserListView(BackofficeAccessMixin, ListView):
         return ctx
 
 
-class UserDetailView(BackofficeAccessMixin, DetailView):
+class UserDetailView(SeniorStaffRequiredMixin, DetailView):
     template_name = 'backoffice/users/detail.html'
     context_object_name = 'u'
 

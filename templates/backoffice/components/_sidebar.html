@@ -86,6 +86,7 @@
         </a>
         {% endif %}
 
+        {% if request.user.is_senior_staff or request.user.is_store_manager %}
         <div class="mt-3 pt-3 border-t border-stone-700">
             <p class="px-3 mb-1 text-[10px] uppercase tracking-wider text-stone-500">Точки</p>
         </div>
@@ -104,8 +105,9 @@
             </svg>
             Города
         </a>
+        {% endif %}
 
-        {% if request.user.is_full_staff %}
+        {% if request.user.is_senior_staff %}
         <div class="mt-3 pt-3 border-t border-stone-700">
             <p class="px-3 mb-1 text-[10px] uppercase tracking-wider text-stone-500">Контент</p>
         </div>
