@@ -15,6 +15,7 @@ from backoffice.forms import TRANSLATED_FIELDS, ContactSettingsForm, ContactsPag
 from backoffice.views.contacts import CONTACTS_PAGE_SLUG
 from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
 from catalog.models import Category, Product, ProductSize
+from inquiries.models import InquiryForm, InquirySubmission
 from pages.models import City, ContactSettings, OfflineStore, Page
 
 User = get_user_model()
@@ -609,6 +610,7 @@ STORE_MANAGER_ALLOWED = {
     'login', 'logout',
     'store_list', 'store_create', 'store_edit', 'store_delete',
     'city_list', 'city_create', 'city_edit', 'city_delete',
+    'inquiry_list', 'inquiry_detail', 'inquiry_toggle',
 }
 
 # Разделы обычного менеджера (Р-9): контент сайта, точки, города, команда и
@@ -727,8 +729,8 @@ class StoreManagerAccessTests(TestCase):
         self.client.post(reverse('backoffice:city_delete', args=[city.pk]))
         self.assertFalse(City.objects.filter(pk=city.pk).exists())
 
-    def test_badges_not_counted(self):
-        """Счётчики заказов и заявок — данные чужих для роли разделов."""
+    def test_orders_badge_not_counted(self):
+        """Счётчик заказов — данные чужого для роли раздела."""
         response = self.client.get(reverse('backoffice:store_list'))
         self.assertNotIn('bo_pending_orders', response.context)
 
@@ -747,9 +749,9 @@ class BackofficeLoginRedirectTests(TestCase):
         User.objects.create_user(email=email, password='x', role=role)
         return self.client.post(self.url, {'email': email, 'password': 'x'})
 
-    def test_store_manager_lands_on_stores(self):
+    def test_store_manager_lands_on_inquiries(self):
         self.assertRedirects(self.start_page(User.Role.STORE_MANAGER),
-                             reverse('backoffice:store_list'))
+                             reverse('backoffice:inquiry_list'))
 
     def test_manager_lands_on_dashboard(self):
         self.assertRedirects(self.start_page(User.Role.MANAGER),
@@ -758,7 +760,7 @@ class BackofficeLoginRedirectTests(TestCase):
     def test_logged_in_store_manager_reopening_login(self):
         """Закладка на форму входа не должна уводить роль в закрытый дашборд."""
         self.start_page(User.Role.STORE_MANAGER)
-        self.assertRedirects(self.client.get(self.url), reverse('backoffice:store_list'))
+        self.assertRedirects(self.client.get(self.url), reverse('backoffice:inquiry_list'))
 
 
 class ManagerScopeTests(TestCase):
@@ -806,6 +808,7 @@ class SidebarByRoleTests(TestCase):
         html = self.sidebar_of(User.Role.STORE_MANAGER, 'store_list')
         self.assertIn(reverse('backoffice:store_list'), html)
         self.assertIn(reverse('backoffice:city_list'), html)
+        self.assertIn(reverse('backoffice:inquiry_list'), html)
         for hidden in ('order_list', 'product_list', 'dashboard'):
             with self.subTest(link=hidden):
                 # href целиком: адрес дашборда /backoffice/ — префикс всех
@@ -897,3 +900,57 @@ class StockProductLinkTests(TestCase):
 
     def test_senior_sees_link(self):
         self.assertIn(self.product_url, self.stock_html(User.Role.SUPER_MANAGER))
+
+
+class PartnerInquiriesScopeTests(TestCase):
+    """«Менеджер точек» ведёт только заявки формы «Стать партнёром» (Р-10)."""
+
+    def setUp(self):
+        self.partner_form = InquiryForm.objects.create(
+            slug='partner-request', title='Стать партнёром')
+        self.tattoo_form = InquiryForm.objects.create(
+            slug='tattoo-request', title='Заявка на тату')
+        self.partner = InquirySubmission.objects.create(form=self.partner_form)
+        self.tattoo = InquirySubmission.objects.create(form=self.tattoo_form)
+        User.objects.create_user(email='points@example.com', password='x',
+                                 role=User.Role.STORE_MANAGER)
+        self.client.login(email='points@example.com', password='x')
+
+    def test_list_shows_only_partner_requests(self):
+        response = self.client.get(reverse('backoffice:inquiry_list'))
+        self.assertEqual(list(response.context['submissions']), [self.partner])
+        self.assertEqual([f.slug for f in response.context['forms']], ['partner-request'])
+
+    def test_own_detail_open(self):
+        response = self.client.get(reverse('backoffice:inquiry_detail', args=[self.partner.pk]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_foreign_detail_hidden(self):
+        response = self.client.get(reverse('backoffice:inquiry_detail', args=[self.tattoo.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_foreign_toggle_rejected(self):
+        """Отметить обработанной чужую заявку нельзя и POST-ом мимо списка."""
+        response = self.client.post(reverse('backoffice:inquiry_toggle', args=[self.tattoo.pk]))
+        self.assertEqual(response.status_code, 404)
+        self.tattoo.refresh_from_db()
+        self.assertFalse(self.tattoo.is_processed)
+
+    def test_own_toggle_works(self):
+        self.client.post(reverse('backoffice:inquiry_toggle', args=[self.partner.pk]))
+        self.partner.refresh_from_db()
+        self.assertTrue(self.partner.is_processed)
+
+    def test_badge_counts_only_partner_requests(self):
+        response = self.client.get(reverse('backoffice:inquiry_list'))
+        self.assertEqual(response.context['bo_unprocessed_inquiries'], 1)
+        self.assertNotIn('bo_pending_orders', response.context)
+
+    def test_manager_sees_all_forms(self):
+        self.client.logout()
+        User.objects.create_user(email='manager@example.com', password='x',
+                                 role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+        response = self.client.get(reverse('backoffice:inquiry_list'))
+        self.assertEqual(set(response.context['submissions']), {self.partner, self.tattoo})
+        self.assertEqual(response.context['bo_unprocessed_inquiries'], 2)

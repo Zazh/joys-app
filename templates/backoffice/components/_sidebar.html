@@ -28,6 +28,9 @@
             Заказы
             {% if bo_pending_orders %}<span class="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-red-500 text-white rounded-full leading-none">{{ bo_pending_orders }}</span>{% endif %}
         </a>
+        {% endif %}
+
+        {% if request.user.is_full_staff or request.user.is_store_manager %}
         <a href="{% url 'backoffice:inquiry_list' %}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if 'inquiry' in request.resolver_match.url_name %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -36,6 +39,9 @@
             Заявки
             {% if bo_unprocessed_inquiries %}<span class="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-red-500 text-white rounded-full leading-none">{{ bo_unprocessed_inquiries }}</span>{% endif %}
         </a>
+        {% endif %}
+
+        {% if request.user.is_full_staff %}
         <a href="{% url 'backoffice:contacts' %}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {% if request.resolver_match.url_name == 'contacts' %}bg-stone-700 text-white{% else %}text-stone-300 hover:bg-stone-800 hover:text-white{% endif %}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">

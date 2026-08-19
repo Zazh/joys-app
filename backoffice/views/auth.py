@@ -6,9 +6,9 @@ from backoffice.ratelimit import is_rate_limited, record_failed_attempt, clear_a
 
 
 def _start_page(user):
-    """Стартовая страница роли: дашборд закрыт «Менеджеру точек»."""
+    """Стартовая страница роли: дашборд закрыт «Менеджеру точек» (Р-10)."""
     if user.is_store_manager:
-        return 'backoffice:store_list'
+        return 'backoffice:inquiry_list'
     return 'backoffice:dashboard'
 
 
