@@ -151,12 +151,15 @@
 
       <!-- Колонка 1: Бургер-меню (col 1-3 mobile / col 1 desktop) -->
       <div class="w-[25%] flex items-center">
+        {# На заглушке паузы (pause_stub, только HomeView при SHOP_PAUSED) навигации нет; nav.js переживает отсутствие кнопки (guard на null) #}
+        {% if not pause_stub %}
         <button id="menuBtn" class="btn-menu" type="button" aria-label="MenuButton">
           <span class="line-item line-top     [ top-0 left-0 ]"></span>
           <span class="line-item line-mid-1   [ lg:top-4 left-0 ]"></span>
           <span class="line-item line-mid-2   [ lg:top-4 left-0 ]"></span>
           <span class="line-item line-bottom  [ bottom-0 left-0 ]"></span>
         </button>
+        {% endif %}
       </div>
 
       <!-- Колонка 2: Логотип -->
@@ -174,6 +177,7 @@
         <!-- ⚠️ Сейчас ВНУТРИ div header_right — на home скрыты вместе с ним -->
         <!-- Чтобы видеть на всех страницах — вынести за пределы этого div, -->
         <!-- прямым потомком <header> (после закрывающего </section> main-grid) -->
+        {% if not pause_stub %}
         <div class="ml-auto flex items-center gap-4 md:gap-6">
             <!-- Избранное -->
             <div>
@@ -196,6 +200,7 @@
                 </button>
             </div>
         </div>
+        {% endif %}
 
       </div>
     <!-- END main-grid -->
@@ -205,6 +210,7 @@
 
   <!-- BEGIN mainNav: выпадающее меню по клику на бургер -->
   <!-- mobile: 90% ширины, desktop/tablet: auto ширина, полная высота -->
+  {% if not pause_stub %}
   <div class="hidden flex-1 flex-col overflow-hidden w-full max-w-120" id="mainNav">
     <nav class="main-nav" role="navigation">
         <ul class="main-nav__list" role="menubar">
@@ -281,6 +287,7 @@
         </div>
     </div>
   </div>
+  {% endif %}
   <!-- END mainNav -->
 </section>
 

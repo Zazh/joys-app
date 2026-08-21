@@ -548,8 +548,24 @@ class ShopPausedTests(TestCase):
         response = self.client.post('/orders/checkout/', {})
         self.assertRedirects(response, '/ru/', fetch_redirect_response=False)
 
+    def test_pause_stub_hides_navigation(self):
+        # На заглушке нет навигации: бургер, иконки корзины/избранного,
+        # mainNav, меню и контакты футера скрыты; правовой блок и юрлицо живут
+        response = self.client.get('/ru/')
+        self.assertNotContains(response, 'id="menuBtn"')
+        self.assertNotContains(response, 'id="mainNav"')
+        self.assertNotContains(response, 'data-open-modal="modalFavorites"')
+        self.assertNotContains(response, 'data-open-modal="modalCart"')
+        self.assertNotContains(response, '>Меню</h2>')
+        self.assertNotContains(response, 'contact-links')
+        self.assertContains(response, '>Правовая информация</h2>')
+
     @override_settings(SHOP_PAUSED=False)
     def test_flag_off_home_is_normal(self):
         response = self.client.get('/ru/')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'pages/home.html')
+        # Навигация на месте: гейт pause_stub не задел обычный режим
+        self.assertContains(response, 'id="menuBtn"')
+        self.assertContains(response, 'id="mainNav"')
+        self.assertContains(response, '>Меню</h2>')

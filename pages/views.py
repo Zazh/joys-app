@@ -37,6 +37,10 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['page_type'] = 'home'
+        # Заглушка паузы — без навигации: base.html и футер по этому флагу
+        # прячут бургер, иконки корзины/избранного, mainNav, меню и контакты
+        # футера (остаются логотип, правовой блок и юрлицо)
+        ctx['pause_stub'] = settings.SHOP_PAUSED
         hero = (
             HeroSection.objects
             .filter(is_active=True)
