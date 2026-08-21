@@ -2195,6 +2195,63 @@ class CartUnavailableLabelTest(PaymentTestBase):
         self.assertEqual(data['cart_count'], 3)
 
 
+# ─── Язык ответов /orders/ (серверная половина JC-01) ───
+
+class OrdersAcceptLanguageTest(PaymentTestBase):
+    """`/orders/…` живёт вне `i18n_patterns`: язык ответа выбирает
+    `LocaleMiddleware` по заголовку `Accept-Language` — ровно поэтому три
+    GET-а фронта его шлют (`cart.js`, `favorites.js`, `profile.js`, JC-01).
+    Тест держит серверную половину контракта: перестанет ответ зависеть от
+    заголовка — покупатель на `/en/` снова получит `product_url` вида
+    `/ru/…` и кликом по карточке корзины сменит себе язык сайта.
+    """
+
+    def setUp(self):
+        from orders.models import CartItem, FavoriteItem
+
+        cache.clear()
+        self.client.login(email='test@example.com', password='test12345')
+        self.client.cookies['drjoys_region'] = 'kz'
+        CartItem.objects.create(user=self.user, size=self.size_m, qty=1)
+        FavoriteItem.objects.create(user=self.user, product=self.product)
+        Stock.objects.get_or_create(
+            size=self.size_m, region=self.region_kz,
+            defaults={'quantity': 10, 'reserved': 0},
+        )
+
+    def _first(self, url, lang=None):
+        headers = {'HTTP_ACCEPT_LANGUAGE': lang} if lang else {}
+        return self.client.get(url, **headers).json()['items'][0]
+
+    def test_cart_product_url_follows_header(self):
+        for lang in ('en', 'kk'):
+            with self.subTest(lang=lang):
+                url = self._first('/orders/cart/', lang)['product_url']
+                self.assertTrue(url.startswith(f'/{lang}/'), url)
+
+    def test_favorites_product_url_follows_header(self):
+        url = self._first('/orders/favorites/', 'kk')['product_url']
+        self.assertTrue(url.startswith('/kk/'), url)
+
+    def test_unavailable_label_is_translated(self):
+        """Метка недоступной позиции приходит тем же путём, что и ссылка."""
+        ProductSize.objects.filter(pk=self.size_m.pk).update(coming_soon=True)
+        item = self._first('/orders/cart/', 'en')
+        self.assertEqual(item['unavailable_label'], 'Coming soon')
+
+    def test_without_header_answer_is_russian(self):
+        url = self._first('/orders/cart/')['product_url']
+        self.assertTrue(url.startswith('/ru/'), url)
+
+    def test_cookie_beats_header(self):
+        """Порядок `LocaleMiddleware`: префикс URL → кука → заголовок. Кука
+        сильнее — браузерные сценарии языка воспроизводятся только с
+        очищенной `django_language` (грабля Handoff блока 1 js-cleanup)."""
+        self.client.cookies['django_language'] = 'ru'
+        url = self._first('/orders/cart/', 'en')['product_url']
+        self.assertTrue(url.startswith('/ru/'), url)
+
+
 # ─── Суммы корзины одной функцией ───
 
 class CartTotalsTest(TestCase):
