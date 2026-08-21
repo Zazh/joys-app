@@ -255,7 +255,8 @@ class OrderHistoryView(APIView):
 
 class CheckoutView(View):
     """GET — страница оформления.
-    POST — создать заказ (form или JSON API).
+    POST — создать заказ формой. Второй реализации у оформления нет: JSON-ветка
+    удалена вместе со своим единственным клиентом — модалкой доставки (JC-06).
     """
 
     def get(self, request):

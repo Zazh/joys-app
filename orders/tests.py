@@ -1738,9 +1738,16 @@ def order_number_to_invoice(name):
 
 # ─── Заказ без онлайн-оплаты (Халык выключен флагом) ───
 
+@override_settings(HALYK_ENABLED=False)
 class ManualOrderFallbackTest(PaymentTestBase):
     """Пока HALYK_ENABLED=False, заказ КЗ — заявка менеджеру: без редиректа
-    на оплату, без срока истечения, крон его не отменяет."""
+    на оплату, без срока истечения, крон его не отменяет.
+
+    Флаг пиннится явно — тем же приёмом и по той же причине, что в
+    `CheckoutWithdrawnItemTest`: у фикстурного kz `payment_gateway='halyk'`,
+    и в день, когда Халык включат, форменный чекаут этого класса ушёл бы
+    в сеть к банку вместо красного теста.
+    """
 
     def test_manual_order_survives_release_command(self):
         from io import StringIO

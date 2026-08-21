@@ -74,4 +74,3 @@ class OrderSerializer(serializers.Serializer):
 
     def get_currency_symbol(self, obj):
         return obj.region.currency_symbol if obj.region else '₸'
-
