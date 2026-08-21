@@ -75,11 +75,3 @@ class OrderSerializer(serializers.Serializer):
     def get_currency_symbol(self, obj):
         return obj.region.currency_symbol if obj.region else '₸'
 
-
-class CheckoutSerializer(serializers.Serializer):
-    first_name = serializers.CharField(max_length=100)
-    last_name = serializers.CharField(max_length=100)
-    phone = serializers.CharField(max_length=30)
-    email = serializers.EmailField(required=False, allow_blank=True)
-    city = serializers.CharField(max_length=200)
-    address = serializers.CharField(max_length=500)

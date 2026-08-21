@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock
 from django.core.cache import cache
 from django.db import transaction
 from django.test import TestCase, RequestFactory, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
@@ -1759,10 +1760,13 @@ class ManualOrderFallbackTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PENDING)
         self.assertEqual(expired.status, Order.Status.EXPIRED)
 
-    def test_checkout_json_returns_thanks_without_payment_url(self):
-        """Полный путь чекаута: заказ создан, payment_url нет (JS покажет
-        «Спасибо»), expires_at пуст — заявка не истечёт."""
+    def _fill_cart(self):
+        """Залогиненный покупатель с товаром в корзине и стоком в КЗ."""
         from orders.models import CartItem
+
+        # Регион приходит из кеша (regions/middleware), а он общий на прогон:
+        # чужой закешированный дефолт увёл бы country в расхождение с region
+        cache.clear()
         self.client.login(email='test@example.com', password='test12345')
         # Авторизованный пользователь — корзина в БД, не в сессии
         CartItem.objects.create(user=self.user, size=self.size_m, qty=2)
@@ -1770,6 +1774,45 @@ class ManualOrderFallbackTest(PaymentTestBase):
             size=self.size_m, region=self.region_kz,
             defaults={'quantity': 100, 'reserved': 0},
         )
+
+    def test_checkout_form_creates_order_without_payment_url(self):
+        """Полный путь чекаута формой: заказ создан, payment_url нет —
+        покупателя уводит на «Спасибо», expires_at пуст (заявка не истечёт).
+
+        До JC-06 этот инвариант проверялся на JSON-ветке checkout; ветка
+        удалена вместе с её единственным браузерным клиентом, а инвариант
+        живёт — теперь на форменном, единственном пути денег.
+        """
+        self._fill_cart()
+
+        response = self.client.post(
+            '/orders/checkout/',
+            data={
+                'country': self.region_kz.code,
+                'city': 'Алматы', 'street': 'ул. Абая', 'house': '1', 'apt': '',
+                'first_name': 'Тест', 'last_name': 'Тестов',
+                'phone': '+77001234567', 'email': 'test@example.com',
+            },
+        )
+
+        order = Order.objects.latest('created_at')
+        self.assertRedirects(response, reverse(
+            'orders:checkout_success', kwargs={'order_number': order.number},
+        ))
+        self.assertEqual(order.status, Order.Status.PENDING)
+        self.assertIsNone(order.expires_at)
+        self.assertEqual(order.payment_gateway, '')
+
+    def test_checkout_json_body_no_longer_handled_as_api(self):
+        """JSON-ветки checkout больше нет: тело application/json обрабатывает
+        обычная форменная ветка — HTML-ответ вместо JSON, и заказ не создаётся.
+
+        Проверяем по типу ответа, а не по статусу: статус — деталь рендера
+        страницы с ошибкой, а исчезновение ветки — это именно отсутствие
+        JSON-тела (`{'ok': False, ...}`) и 401 у неавторизованного.
+        """
+        self._fill_cart()
+        before = Order.objects.count()
 
         response = self.client.post(
             '/orders/checkout/',
@@ -1780,14 +1823,9 @@ class ManualOrderFallbackTest(PaymentTestBase):
             }),
             content_type='application/json',
         )
-        data = response.json()
-        self.assertTrue(data['ok'], data)
-        self.assertNotIn('payment_url', data)
 
-        order = Order.objects.get(number=data['order_number'])
-        self.assertEqual(order.status, Order.Status.PENDING)
-        self.assertIsNone(order.expires_at)
-        self.assertEqual(order.payment_gateway, '')
+        self.assertNotIn('application/json', response['Content-Type'])
+        self.assertEqual(Order.objects.count(), before)
 
 
 # ─── Оформление заказа: регион берётся из cookie ───

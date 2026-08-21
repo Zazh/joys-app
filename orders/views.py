@@ -26,7 +26,7 @@ from .gateways.base import CallbackRejected
 from .models import Order, OrderItem
 from .serializers import (
     CartAddSerializer, CartRemoveSerializer, CartUpdateSerializer,
-    FavoriteToggleSerializer, CheckoutSerializer, OrderSerializer,
+    FavoriteToggleSerializer, OrderSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -294,8 +294,6 @@ class CheckoutView(View):
         if settings.SHOP_PAUSED:
             return redirect('home')
 
-        if 'application/json' in (request.content_type or ''):
-            return self._handle_json_checkout(request)
         return self._handle_form_checkout(request)
 
     def _handle_form_checkout(self, request):
@@ -370,77 +368,6 @@ class CheckoutView(View):
                 'orders:checkout_success',
                 kwargs={'order_number': order.number},
             ))
-
-    def _handle_json_checkout(self, request):
-        """POST JSON API."""
-        import json
-
-        if not request.user.is_authenticated:
-            from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': 'auth_required'}, status=401)
-
-        try:
-            data = json.loads(request.body)
-        except (json.JSONDecodeError, ValueError):
-            from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': 'Invalid JSON'}, status=400)
-
-        serializer = CheckoutSerializer(data=data)
-        if not serializer.is_valid():
-            from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'errors': serializer.errors}, status=400)
-
-        cart = Cart(request)
-        if not cart:
-            from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': _('Корзина пуста')}, status=400)
-
-        d = serializer.validated_data
-        region = request.region
-        if not region:
-            from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': _('Регион не определён')}, status=400)
-
-        cart_items = cart.get_items()
-        if not cart_items:
-            from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': _('Товары в корзине не найдены')}, status=400)
-
-        total = sum(i['subtotal'] for i in cart_items)
-
-        try:
-            order = self._create_order(
-                request, region, d['first_name'], d['last_name'], d['phone'],
-                d.get('email', ''), d['city'], d['address'], total, cart_items,
-            )
-        except ValueError as e:
-            from django.http import JsonResponse
-            return JsonResponse({'ok': False, 'error': str(e)}, status=400)
-
-        self._update_user_profile(request.user, d['first_name'], d['last_name'], d['phone'])
-
-        payment_url = self._register_payment(request, order, cart)
-        from django.http import JsonResponse
-        if payment_url is None:
-            return JsonResponse({
-                'ok': False,
-                'error': _('Ошибка платёжной системы. Попробуйте позже.'),
-            }, status=502)
-        elif payment_url:
-            return JsonResponse({
-                'ok': True,
-                'order_number': order.number,
-                'total': str(total),
-                'payment_url': payment_url,
-            })
-        else:
-            cart.clear()
-            send_order_created_email(order)
-            return JsonResponse({
-                'ok': True,
-                'order_number': order.number,
-                'total': str(total),
-            })
 
     # ─── Общие helpers ───
 
