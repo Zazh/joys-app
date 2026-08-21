@@ -553,8 +553,9 @@ class ShopPausedTests(TestCase):
         self.assertRedirects(response, '/ru/', fetch_redirect_response=False)
 
     def test_pause_stub_hides_navigation(self):
-        # На заглушке нет навигации: бургер, иконки корзины/избранного,
-        # mainNav, меню и контакты футера скрыты; правовой блок и юрлицо живут
+        # На заглушке нет навигации и футера: бургер, иконки корзины/избранного,
+        # mainNav скрыты, футер не рендерится целиком (ни меню, ни правового
+        # блока, ни копирайта с юрлицом)
         response = self.client.get('/ru/')
         self.assertNotContains(response, 'id="menuBtn"')
         self.assertNotContains(response, 'id="mainNav"')
@@ -562,10 +563,11 @@ class ShopPausedTests(TestCase):
         self.assertNotContains(response, 'data-open-modal="modalCart"')
         self.assertNotContains(response, '>Меню</h2>')
         self.assertNotContains(response, 'contact-links')
-        self.assertContains(response, '>Правовая информация</h2>')
+        self.assertNotContains(response, '<footer')
+        self.assertNotContains(response, 'Все права защищены')
 
     def test_legal_pages_stay_alive_but_hide_navigation(self):
-        # Правовые страницы доступны по ссылкам с заглушки, но без навигации:
+        # Правовые страницы живы (по прямой ссылке), но без навигации и футера:
         # уйти с них можно только логотипом — обратно на заглушку
         response = self.client.get('/ru/privacy/')
         self.assertEqual(response.status_code, 200)
@@ -573,20 +575,23 @@ class ShopPausedTests(TestCase):
         self.assertNotContains(response, 'id="menuBtn"')
         self.assertNotContains(response, 'id="mainNav"')
         self.assertNotContains(response, '>Меню</h2>')
-        self.assertContains(response, '>Правовая информация</h2>')
+        self.assertNotContains(response, '<footer')
 
     @override_settings(SHOP_PAUSED=False)
     def test_flag_off_legal_page_keeps_navigation(self):
         response = self.client.get('/ru/privacy/')
         self.assertContains(response, 'id="menuBtn"')
         self.assertContains(response, '>Меню</h2>')
+        self.assertContains(response, 'Все права защищены')
 
     @override_settings(SHOP_PAUSED=False)
     def test_flag_off_home_is_normal(self):
         response = self.client.get('/ru/')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'pages/home.html')
-        # Навигация на месте: гейт pause_stub не задел обычный режим
+        # Навигация и футер на месте: гейт pause_stub не задел обычный режим
         self.assertContains(response, 'id="menuBtn"')
         self.assertContains(response, 'id="mainNav"')
         self.assertContains(response, '>Меню</h2>')
+        self.assertContains(response, '>Правовая информация</h2>')
+        self.assertContains(response, 'Все права защищены')

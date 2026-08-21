@@ -292,7 +292,8 @@
 </section>
 
 {% block content %}{% endblock %}
-{% include 'base/footer/_footer.html' %}
+{# На заглушке паузы (pause_stub) футера нет целиком — ни меню, ни правового блока, ни копирайта #}
+{% if not pause_stub %}{% include 'base/footer/_footer.html' %}{% endif %}
 
 {% block shop_ui %}{% endblock %}
 

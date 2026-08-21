@@ -1,8 +1,6 @@
 {% load i18n %}
 <footer class="border-t-1 pt-16{% if page_type != 'home' %} mt-20{% endif %}">
   <section class="main-grid gap-12">
-    {# На заглушке паузы (pause_stub) в футере остаются только правовой блок и строка юрлица #}
-    {% if not pause_stub %}
     <div class="col-span-full md:col-span-2 lg:col-span-4 xl:col-span-3 lg:col-start-2 xl:col-start-2 px-4 lg:px-0">
       <div class="flex flex-col gap-6">
         <h2 class="font-benzin uppercase text-xs">{% trans "Меню" %}</h2>
@@ -15,9 +13,7 @@
         </ul>
       </div>
     </div>
-    {% endif %}
-    {# xl:col-start-2 обязателен рядом с lg-: xl:col-span-3 — шорткат grid-column, на xl он сбросил бы lg:col-start-2 #}
-    <div class="col-span-full md:col-span-4 lg:col-span-10 xl:col-span-3{% if pause_stub %} lg:col-start-2 xl:col-start-2{% endif %} px-4 lg:px-0">
+    <div class="col-span-full md:col-span-4 lg:col-span-10 xl:col-span-3 px-4 lg:px-0">
       <div class="flex flex-col gap-6">
         <h2 class="font-benzin uppercase text-xs">{% trans "Правовая информация" %}</h2>
         <ul class="footer-menu">
@@ -29,13 +25,11 @@
         </ul>
       </div>
     </div>
-    {% if not pause_stub %}
     <div class="col-span-full lg:col-span-full xl:col-span-8 xl:col-start-0 lg:col-start-2 px-4 lg:px-0 flex">
       <div class="mt-auto w-full lg:pr-16">
         {% include 'base/components/_contact_links.html' with list_class="justify-start xl:justify-end" %}
       </div>
     </div>
-    {% endif %}
 
     <div class="col-span-full lg:col-start-2 pt-12 pb-8 text-xs uppercase tracking-wide text-center md:text-left">
       {# Копирайт и владелец — одна строка, в каноне: © год, юрлицо с БИН, права #}
