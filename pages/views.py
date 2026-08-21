@@ -217,6 +217,11 @@ class PageDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         page = self.object
+        # Пауза магазина: правовые страницы (категория legal) остаются по
+        # ссылкам с заглушки, но рендерятся без навигации (pause_stub) —
+        # с них не уйти дальше логотипа, петля замыкается на заглушку
+        if settings.SHOP_PAUSED and page.category_id and page.category.slug == 'legal':
+            ctx['pause_stub'] = True
         form_slug = self.INQUIRY_FORMS.get(page.slug)
         if form_slug:
             # Поля и лейблы редактируются в бэкофисе, шаблон только рисует

@@ -25,7 +25,7 @@ from catalog.models import Category, Product, ProductSize
 # Модулем, а не `from orders.tests import ...`: класс в неймспейсе core.tests
 # тест-раннер собрал бы и прогнал второй раз целиком
 from orders import tests as orders_tests
-from pages.models import BlogPost, Page
+from pages.models import BlogPost, Page, PageCategory
 
 PROD = 'https://dr-joys.com'
 # Технический домен: с него приходит запрос, в ответе его быть не должно
@@ -513,6 +513,10 @@ class ShopPausedTests(TestCase):
         cls.category = Category.objects.create(name='Презервативы', slug='prezervativy')
         cls.page = Page.objects.create(title='Оферта', slug='oferta')
         Page.objects.create(title='Оффлайн магазины', slug='partners', body='')
+        legal = PageCategory.objects.create(name='Правовая информация', slug='legal')
+        cls.legal_page = Page.objects.create(
+            title='Политика конфиденциальности', slug='privacy', category=legal,
+        )
 
     def test_home_shows_pause_stub(self):
         response = self.client.get('/ru/')
@@ -559,6 +563,23 @@ class ShopPausedTests(TestCase):
         self.assertNotContains(response, '>Меню</h2>')
         self.assertNotContains(response, 'contact-links')
         self.assertContains(response, '>Правовая информация</h2>')
+
+    def test_legal_pages_stay_alive_but_hide_navigation(self):
+        # Правовые страницы доступны по ссылкам с заглушки, но без навигации:
+        # уйти с них можно только логотипом — обратно на заглушку
+        response = self.client.get('/ru/privacy/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateNotUsed(response, 'pages/pause.html')
+        self.assertNotContains(response, 'id="menuBtn"')
+        self.assertNotContains(response, 'id="mainNav"')
+        self.assertNotContains(response, '>Меню</h2>')
+        self.assertContains(response, '>Правовая информация</h2>')
+
+    @override_settings(SHOP_PAUSED=False)
+    def test_flag_off_legal_page_keeps_navigation(self):
+        response = self.client.get('/ru/privacy/')
+        self.assertContains(response, 'id="menuBtn"')
+        self.assertContains(response, '>Меню</h2>')
 
     @override_settings(SHOP_PAUSED=False)
     def test_flag_off_home_is_normal(self):
