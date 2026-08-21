@@ -1,0 +1,62 @@
+/* Заглушка «сайт на паузе» (pages/pause.html).
+   Иллюстрация — инлайн-SVG в шаблоне; здесь раскладка и CSS-анимации.
+   Вертикальное центрирование делает сам <main> (flex + min-h) в шаблоне. */
+@layer components {
+    /* Колонка заглушки: всё по центру; py — запас, чтобы на коротких
+       экранах контент не прилипал к шапке и футеру */
+    .pause-hero {
+        @apply flex flex-col items-center text-center gap-3 lg:gap-4 py-10 lg:py-16;
+    }
+
+    /* Иллюстрация: ~208px на мобильном, 288–320px на десктопе */
+    .pause-figure {
+        @apply w-52 lg:w-72 xl:w-80 mb-3 lg:mb-6;
+    }
+    .pause-figure svg {
+        @apply block w-full h-auto;
+    }
+
+    /* Единственная строка под заголовком — несёт весь смысл, поэтому
+       крупнее и темнее вспомогательного текста (gray-800, не gray-500) */
+    .pause-text {
+        @apply text-lg lg:text-xl font-medium text-gray-800 max-w-md;
+    }
+
+    /* Единственный CTA: на мобильном во всю колонку, на десктопе — по контенту */
+    .pause-cta {
+        @apply block w-full sm:w-auto text-center mt-3 lg:mt-6;
+    }
+
+    /* Смайлик медленно «дышит»: едва заметный scale от основания */
+    .pause-face {
+        transform-box: view-box;
+        transform-origin: 50% 100%;
+        animation: pause-breathe 4.5s ease-in-out infinite;
+    }
+
+    /* Слезинка: набухает у глаза, катится по щеке и растворяется */
+    .pause-tear {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: pause-tear-fall 3.6s ease-in infinite;
+    }
+
+    @keyframes pause-breathe {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.02); }
+    }
+
+    @keyframes pause-tear-fall {
+        0%   { opacity: 0; transform: translateY(-8px) scale(0.4); }
+        25%  { opacity: 1; transform: translateY(0) scale(1); }
+        65%  { opacity: 1; transform: translateY(14px); }
+        100% { opacity: 0; transform: translateY(30px) scale(0.8); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pause-face,
+        .pause-tear {
+            animation: none;
+        }
+    }
+}

@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.core.cache import cache
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView, TemplateView
@@ -24,6 +26,13 @@ from .models import (
 
 class HomeView(TemplateView):
     template_name = 'pages/home.html'
+
+    def get_template_names(self):
+        # Пауза магазина: вместо витрины — заглушка. Контекст и мета-теги
+        # считаются как обычно, меняется только тело страницы (SHOP_PAUSED).
+        if settings.SHOP_PAUSED:
+            return ['pages/pause.html']
+        return [self.template_name]
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -189,6 +198,14 @@ class PageDetailView(DetailView):
 
     def get_queryset(self):
         return Page.objects.filter(is_published=True).select_related('category')
+
+    def get(self, request, *args, **kwargs):
+        # Пауза магазина: «Оффлайн магазины» временно уводят на заглушку
+        # главной (302 — адрес остаётся в индексе, снимается флагом
+        # SHOP_PAUSED). Остальные CMS-страницы живут как обычно.
+        if settings.SHOP_PAUSED and kwargs.get('slug') == 'partners':
+            return redirect('home')
+        return super().get(request, *args, **kwargs)
 
     def get_template_names(self):
         return [self.CUSTOM_TEMPLATES.get(self.object.slug, self.template_name)]

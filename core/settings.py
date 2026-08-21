@@ -298,6 +298,11 @@ SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8009')
 # дешевле, чем случайно выпавший из индекса боевой сайт.
 SITE_INDEXABLE = os.environ.get('SITE_INDEXABLE', str(not DEBUG)).lower() == 'true'
 
+# Пауза магазина: главная, каталог и «Оффлайн магазины» показывают заглушку
+# (pages/pause.html, код ответа 200 — страницы остаются в индексе), checkout
+# закрыт. Мета-теги страниц не меняются. Снять паузу = убрать флаг из env.
+SHOP_PAUSED = os.environ.get('SHOP_PAUSED', 'false').lower() == 'true'
+
 # Секретный URL админки — обязательно задать в .env
 ADMIN_URL = os.environ['ADMIN_URL']
 

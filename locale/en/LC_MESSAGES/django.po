@@ -939,3 +939,14 @@ msgstr "No specifications available"
 
 msgid "Вам может быть интересно"
 msgstr "You may also like"
+
+msgid "Плаки, плаки ;("
+msgstr "Boo-hoo, boo-hoo ;("
+
+
+
+msgid "Пожелать выздоровления"
+msgstr "Send get-well wishes"
+
+msgid "Сайт заболел — пожелайте скорейшего выздоровления"
+msgstr "The site is sick — wish it a speedy recovery"

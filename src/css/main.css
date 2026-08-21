@@ -29,6 +29,7 @@
 @import "./components/_floating-nav.css";
 @import "./components/_cart.css";
 @import "./components/_contacts.css";
+@import "./components/_pause.css";
 
 /* Leaflet — в слой components, чтобы переопределения из _map.css
    (тот же слой, ниже по порядку) выигрывали без !important */

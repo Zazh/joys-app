@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db.models import Prefetch
+from django.shortcuts import redirect
 from django.http import Http404
 from django.urls import reverse
 from django.utils.translation import gettext as _, gettext_lazy
@@ -21,6 +23,15 @@ class CatalogListView(ListView):
     # Пагинации нет: линейка помещается на одну страницу, отбор — фильтром
     # категорий (решение владельца). Заодно в ItemList JSON-LD попадает весь
     # список, а не первая страница
+
+    def get(self, request, *args, **kwargs):
+        # Пауза магазина: каталог (и категории) временно уводит на заглушку
+        # главной. Именно 302, а не своя заглушка на этом URL: временный
+        # редирект не выкидывает адрес из индекса и снимается одним флагом
+        # (SHOP_PAUSED).
+        if settings.SHOP_PAUSED:
+            return redirect('home')
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         region = getattr(self.request, 'region', None)

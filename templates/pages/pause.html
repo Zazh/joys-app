@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% if meta_title %}{{ meta_title }}{% else %}{% trans "DR.JOYS — ультратонкие презервативы, неощутимые на 95%" %}{% endif %}{% endblock %}
+
+{% block meta %}
+{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% else %}<meta name="description" content="{% trans 'Ультратонкие презервативы DR.JOYS толщиной 0,02 мм — неощутимые на 95%. Классические, ребристые, ароматизированные.' %}">{% endif %}
+{% endblock %}
+
+{% block content %}
+<main class="mt-[7.5rem] flex flex-col justify-center min-h-[calc(100svh-7.5rem)]">
+    <!-- BEGIN pause -->
+    <section class="main-grid">
+        {# Не стандартный старт внутренних страниц (col-start-2): заглушка одна на экране, колонка отцентрована — 9 из 15 → старт с 4-й #}
+        <div class="col-span-full lg:col-span-13 lg:col-start-2 xl:col-span-9 xl:col-start-4">
+            <div class="pause-hero">
+
+                {# Смайлик-«пациент» декоративный: смысл целиком несёт текст ниже, поэтому aria-hidden #}
+                <div class="pause-figure">
+                    <svg viewBox="0 0 220 210" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <g class="pause-face">
+                            <!-- голова -->
+                            <circle cx="110" cy="104" r="84" fill="#FFFFFF" stroke="#1D1D1B" stroke-width="9"/>
+                            <!-- пластырь крест-накрест на лбу -->
+                            <g fill="#E42521">
+                                <rect x="55" y="53" width="46" height="14" rx="7" transform="rotate(45 78 60)"/>
+                                <rect x="55" y="53" width="46" height="14" rx="7" transform="rotate(-45 78 60)"/>
+                            </g>
+                            <!-- закрытые грустные глаза -->
+                            <path d="M68 103 Q80 89 92 103" stroke="#1D1D1B" stroke-width="9" stroke-linecap="round"/>
+                            <path d="M128 103 Q140 89 152 103" stroke="#1D1D1B" stroke-width="9" stroke-linecap="round"/>
+                            <!-- слезинка (анимируется в _pause.css) -->
+                            <path class="pause-tear" d="M144 112 C138 123 135 128 135 133 a9 9 0 0 0 18 0 C153 128 150 123 144 112 Z" fill="#FFFFFF" stroke="#1D1D1B" stroke-width="7" stroke-linejoin="round"/>
+                            <!-- грустный рот -->
+                            <path d="M86 152 Q110 136 134 152" stroke="#1D1D1B" stroke-width="9" stroke-linecap="round"/>
+                            <!-- градусник во рту, красный кончик наружу -->
+                            <g transform="rotate(-16 92 150)">
+                                <rect x="40" y="143.5" width="54" height="13" rx="6.5" fill="#FFFFFF" stroke="#1D1D1B" stroke-width="8"/>
+                                <line x1="48" y1="150" x2="72" y2="150" stroke="#E42521" stroke-width="5" stroke-linecap="round"/>
+                                <circle cx="38" cy="150" r="9" fill="#E42521" stroke="#1D1D1B" stroke-width="8"/>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+
+                <h1 class="display-1">{% trans "Плаки, плаки ;(" %}</h1>
+                <p class="pause-text">{% trans "Сайт заболел — пожелайте скорейшего выздоровления" %}</p>
+
+                <a class="btn-macro danger pause-cta" href="https://t.me/drjoyspromo_bot" target="_blank" rel="noopener noreferrer">{% trans "Пожелать выздоровления" %}</a>
+
+            </div>
+        </div>
+    </section>
+    <!-- END pause -->
+</main>
+{% endblock %}

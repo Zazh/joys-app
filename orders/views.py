@@ -259,6 +259,11 @@ class CheckoutView(View):
     """
 
     def get(self, request):
+        # Пауза магазина: заказы не принимаются, оформление уводит на заглушку
+        # главной (SHOP_PAUSED).
+        if settings.SHOP_PAUSED:
+            return redirect('home')
+
         cart = Cart(request)
         if not cart:
             return redirect(reverse('catalog:catalog'))
@@ -285,6 +290,10 @@ class CheckoutView(View):
         ))
 
     def post(self, request):
+        # Пауза магазина: POST тоже закрыт — заказ не создаётся (SHOP_PAUSED).
+        if settings.SHOP_PAUSED:
+            return redirect('home')
+
         if 'application/json' in (request.content_type or ''):
             return self._handle_json_checkout(request)
         return self._handle_form_checkout(request)

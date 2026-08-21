@@ -499,3 +499,57 @@ class LangSwitchOutsideI18nTest(orders_tests.CheckoutRegionTest):
         response = self.client.get('/orders/checkout/')
         # Маркер шаблона: заголовок формы «Доставка» в en-локали
         self.assertContains(response, 'Delivery')
+
+
+@override_settings(SHOP_PAUSED=True, ALLOWED_HOSTS=['*'])
+class ShopPausedTests(TestCase):
+    """Пауза магазина (SHOP_PAUSED): главная отдаёт заглушку pages/pause.html
+    с кодом 200, каталог и «Оффлайн магазины» временно (302) уводят на неё —
+    адреса не выпадают из индекса, — checkout закрыт, остальные страницы
+    живут как обычно."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.category = Category.objects.create(name='Презервативы', slug='prezervativy')
+        cls.page = Page.objects.create(title='Оферта', slug='oferta')
+        Page.objects.create(title='Оффлайн магазины', slug='partners', body='')
+
+    def test_home_shows_pause_stub(self):
+        response = self.client.get('/ru/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pages/pause.html')
+        self.assertContains(response, 'https://t.me/drjoyspromo_bot')
+
+    def test_catalog_redirects_to_home(self):
+        response = self.client.get('/ru/catalog/')
+        self.assertRedirects(response, '/ru/', status_code=302,
+                             fetch_redirect_response=False)
+
+    def test_category_page_redirects_to_home(self):
+        response = self.client.get('/ru/catalog/prezervativy/')
+        self.assertRedirects(response, '/ru/', status_code=302,
+                             fetch_redirect_response=False)
+
+    def test_partners_redirects_to_home(self):
+        response = self.client.get('/ru/partners/')
+        self.assertRedirects(response, '/ru/', status_code=302,
+                             fetch_redirect_response=False)
+
+    def test_other_cms_pages_stay_alive(self):
+        response = self.client.get('/ru/oferta/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateNotUsed(response, 'pages/pause.html')
+
+    def test_checkout_get_redirects_home(self):
+        response = self.client.get('/orders/checkout/')
+        self.assertRedirects(response, '/ru/', fetch_redirect_response=False)
+
+    def test_checkout_post_redirects_home(self):
+        response = self.client.post('/orders/checkout/', {})
+        self.assertRedirects(response, '/ru/', fetch_redirect_response=False)
+
+    @override_settings(SHOP_PAUSED=False)
+    def test_flag_off_home_is_normal(self):
+        response = self.client.get('/ru/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pages/home.html')
