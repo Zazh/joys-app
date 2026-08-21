@@ -53,7 +53,11 @@ export function initProfileModal() {
         const listEl = document.getElementById('ordersHistoryList');
 
         try {
-            const resp = await fetch('/orders/history/', { credentials: 'same-origin' });
+            // /orders/ вне i18n_patterns — язык ответа задаёт заголовок (см. lib/api.js)
+            const resp = await fetch('/orders/history/', {
+                credentials: 'same-origin',
+                headers: { 'Accept-Language': document.documentElement.lang },
+            });
             const data = await resp.json();
             ordersLoaded = true;
 

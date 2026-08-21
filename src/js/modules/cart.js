@@ -122,7 +122,10 @@ export function initCartModal() {
     async function loadCart() {
         const seq = ++reqSeq;
         try {
-            const resp = await fetch('/orders/cart/');
+            // /orders/ вне i18n_patterns — язык ответа задаёт заголовок (см. lib/api.js)
+            const resp = await fetch('/orders/cart/', {
+                headers: { 'Accept-Language': document.documentElement.lang },
+            });
             const data = await resp.json();
             if (seq !== reqSeq) return; // устаревший ответ — уже ушёл более новый запрос
             cartData = data;

@@ -56,7 +56,10 @@ export function initFavoritesModal() {
 
     async function loadFavorites() {
         try {
-            const resp = await fetch('/orders/favorites/');
+            // /orders/ вне i18n_patterns — язык ответа задаёт заголовок (см. lib/api.js)
+            const resp = await fetch('/orders/favorites/', {
+                headers: { 'Accept-Language': document.documentElement.lang },
+            });
             const data = await resp.json();
             if (data.ok) {
                 renderFavorites(data);
