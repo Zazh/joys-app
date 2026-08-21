@@ -1,6 +1,5 @@
 import { apiPost } from '../lib/api.js';
-import { closeModal, goToStep } from '../lib/modal-core.js';
-import { openDeliveryWithProfile } from './delivery.js';
+import { goToStep } from '../lib/modal-core.js';
 
 // --------------------------------------------
 // 16. AUTH MODAL — Email Login / Register / SSO
@@ -54,14 +53,7 @@ export function initAuthModal() {
 
     function handleAuthSuccess() {
         window.DRJOYS.isAuthenticated = true;
-        if (window._afterAuthAction === 'delivery') {
-            window._afterAuthAction = null;
-            closeModal(authOverlay);
-            const deliveryModal = document.getElementById('modalDelivery');
-            if (deliveryModal) setTimeout(() => openDeliveryWithProfile(deliveryModal), 200);
-        } else {
-            location.reload();
-        }
+        location.reload();
     }
 
     // --- Step navigation ---

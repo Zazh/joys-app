@@ -17,7 +17,6 @@ import { initCartModal } from './modules/cart.js';
 import { initFavoritesModal } from './modules/favorites.js';
 import { initProfileModal } from './modules/profile.js';
 import { initAuthModal } from './modules/auth.js';
-import { initDeliveryModal } from './modules/delivery.js';
 
 // Глобальный доступ для inline-скриптов в шаблонах
 window.openModal = openModal;
@@ -59,8 +58,6 @@ onReady(initFavoritesModal);
 onReady(initProfileModal);
 
 onReady(initAuthModal);
-
-onReady(initDeliveryModal);
 
 onReady(initInteractiveModals);
 onReady(initInteractiveModalForms);
