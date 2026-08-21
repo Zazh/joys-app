@@ -96,16 +96,41 @@ export function initFavoritesModal() {
             const item = cartBtn.closest('.fav-item');
             const sizeId = item.dataset.firstSizeId;
             if (!sizeId) return;
+            // Восстановление подписи — одно место на обе ветки, иначе успех и
+            // отказ разъезжаются при следующей правке. text-gray-500 снимать не
+            // надо (text-red-500 его перебивает), а hover:text-black — надо:
+            // курсор после клика стоит на кнопке, и красное стало бы чёрным
+            const restore = (delay) => setTimeout(() => {
+                cartBtn.textContent = window.DRJOYS.i18n.addToCart;
+                cartBtn.classList.remove('text-red-500');
+                cartBtn.classList.add('hover:text-black');
+            }, delay);
+            // Строка сервера кладётся textContent-ом, а не в innerHTML —
+            // экранировать нечего, SB-04 тут не при чём
+            const showError = (msg) => {
+                cartBtn.textContent = msg;
+                cartBtn.classList.add('text-red-500');
+                cartBtn.classList.remove('hover:text-black');
+                restore(2000);
+            };
+
             cartBtn.disabled = true;
             try {
                 const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty: 1 });
                 if (result.ok) {
                     updateBadges(result.cart_count, null);
                     cartBtn.textContent = '✓';
-                    setTimeout(() => { cartBtn.textContent = window.DRJOYS.i18n.addToCart; }, 800);
+                    restore(800);
+                } else {
+                    // Сервер присылает готовую локализованную причину отказа
+                    // («Скоро в продаже» / «Нет в наличии») — своего текста не
+                    // заводим; errors без error — это отбитый payload
+                    showError(result.error || window.DRJOYS.i18n.networkError);
                 }
             } catch (err) {
+                // Сбой сети или не-JSON ответ: apiPost бросает только здесь (SB-02)
                 console.error('favorites add-to-cart error:', err);
+                showError(window.DRJOYS.i18n.networkError);
             } finally {
                 cartBtn.disabled = false;
             }
