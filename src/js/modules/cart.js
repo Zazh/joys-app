@@ -63,7 +63,10 @@ export function initCartModal() {
                 // Ссылка на страницу товара (SB-08) — только у доступной
                 // позиции: у недоступной страницы может уже не быть (404)
                 const url = !item.unavailable_label && item.product_url ? escapeHtml(item.product_url) : '';
-                const imgHtml = `<img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">`;
+                // Экранируется только строка API (item.image_url, SB-04); плейсхолдер
+                // приходит из window.DRJOYS, где Django-шаблон уже всё экранировал —
+                // повторная обёртка напечатала бы &amp; прямо в src
+                const imgHtml = `<img src="${escapeHtml(item.image_url) || window.DRJOYS?.placeholderUrl || ''}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">`;
 
                 return `<div class="cart-item flex gap-3 py-3" data-size-id="${escapeHtml(item.size_id)}">
                     <div class="w-15 h-15 shrink-0 rounded-lg overflow-hidden bg-stone-50${item.unavailable_label ? ' opacity-50' : ''}">

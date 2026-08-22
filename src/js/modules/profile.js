@@ -170,8 +170,19 @@ export function initProfileModal() {
     // Logout
     const logoutBtn = document.getElementById('profileLogoutBtn');
     if (logoutBtn) {
+        let loggingOut = false;
         logoutBtn.addEventListener('click', async () => {
-            await apiPost(`/${window.DRJOYS.lang}/accounts/logout/`, {});
+            if (loggingOut) return;
+            loggingOut = true;
+            try {
+                await apiPost(`/${window.DRJOYS.lang}/accounts/logout/`, {});
+            } catch (err) {
+                // apiPost бросает на сбое сети и не-JSON ответе (SB-02).
+                // Перезагружаемся всё равно: сессия могла закрыться на
+                // сервере до обрыва ответа, и только перезагрузка покажет
+                // покупателю фактическое состояние — вышел он или нет
+                console.error('Logout error:', err);
+            }
             location.reload();
         });
     }

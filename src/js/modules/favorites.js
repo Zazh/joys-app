@@ -27,7 +27,10 @@ export function initFavoritesModal() {
             listEl.innerHTML = items.map(item => {
                 // Ссылка на страницу товара (SB-08); пустой product_url — без ссылки
                 const url = item.product_url ? escapeHtml(item.product_url) : '';
-                const imgHtml = `<img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">`;
+                // Экранируется только строка API (item.image_url, SB-04); плейсхолдер
+                // приходит из window.DRJOYS, где Django-шаблон уже всё экранировал —
+                // повторная обёртка напечатала бы &amp; прямо в src
+                const imgHtml = `<img src="${escapeHtml(item.image_url) || window.DRJOYS?.placeholderUrl || ''}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">`;
                 return `
                 <div class="fav-item flex gap-3 p-2 rounded-xl bg-stone-50" data-product-id="${escapeHtml(item.product_id)}" data-first-size-id="${escapeHtml(item.first_size_id || '')}">
                     <div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-stone-50">
