@@ -306,18 +306,13 @@
 {% block scripts %}{% endblock %}
 <script>
 window.DRJOYS = {
-    region: '{{ region_code }}',
     currencySymbol: '{{ currency_symbol }}',
-    currencyCode: '{{ currency_code }}',
     paymentCurrencySymbol: '{{ payment_currency_symbol }}',
     needsConversion: {{ needs_conversion|yesno:"true,false" }},
     lang: '{{ CURRENT_LANGUAGE }}',
     csrfToken: '{{ csrf_token }}',
-    isAuthenticated: {{ request.user.is_authenticated|yesno:"true,false" }},
     placeholderUrl: '{{ placeholder_image_url }}',
     i18n: {
-        added: '{% trans "Добавлено!" %}',
-        addMore: '{% trans "Добавить ещё" %}',
         decrease: '{% trans "Уменьшить" %}',
         increase: '{% trans "Увеличить" %}',
         remove: '{% trans "Удалить из корзины" %}',
@@ -332,9 +327,6 @@ window.DRJOYS = {
         loginError: '{% trans "Ошибка входа." %}',
         networkError: '{% trans "Ошибка сети. Попробуйте ещё раз." %}',
         registerError: '{% trans "Ошибка регистрации." %}',
-        orderPlaced: '{% trans "Заказ<br>оформлен!" %}',
-        orderSummary: '{% trans "Заказ" %}',
-        orderSumPrefix: '{% trans "на сумму" %}',
     },
 };
 </script>

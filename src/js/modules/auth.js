@@ -52,7 +52,6 @@ export function initAuthModal() {
     }
 
     function handleAuthSuccess() {
-        window.DRJOYS.isAuthenticated = true;
         location.reload();
     }
 

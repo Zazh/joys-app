@@ -324,12 +324,6 @@ msgstr "Select"
 msgid "Выбрать язык"
 msgstr "Select language"
 
-msgid "Добавлено!"
-msgstr "Added!"
-
-msgid "Добавить ещё"
-msgstr "Add more"
-
 msgid "Уменьшить"
 msgstr "Decrease"
 
@@ -368,12 +362,6 @@ msgstr "Network error. Please try again."
 
 msgid "Ошибка регистрации."
 msgstr "Registration error."
-
-msgid "Заказ<br>оформлен!"
-msgstr "Order<br>placed!"
-
-msgid "на сумму"
-msgstr "for the amount of"
 
 msgid "Назад"
 msgstr "Back"
