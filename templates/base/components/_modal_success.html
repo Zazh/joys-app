@@ -5,7 +5,7 @@
         <!-- Header -->
         <div class="modal-header">
             <div></div>
-            <button class="modal-close" type="button" aria-label="{% trans "Закрыть" %}" onclick="closeModal(document.getElementById('modalSuccess'))">
+            <button class="modal-close" type="button" aria-label="{% trans "Закрыть" %}">
                 {% include 'base/components/icons/_icon_close.html' %}
             </button>
         </div>
@@ -24,7 +24,7 @@
             <p class="text-sm text-gray-500 text-center" id="successText">{% trans "Мы свяжемся с вами для подтверждения" %}</p>
         </div>
 
-        <button class="btn-macro black w-full text-center text-xs" type="button" onclick="closeModal(document.getElementById('modalSuccess'))">{{ success_button|default:_("ВЕРНУТЬСЯ К ПОКУПКАМ") }}</button>
+        <button class="btn-macro black w-full text-center text-xs" type="button" data-modal-close>{{ success_button|default:_("ВЕРНУТЬСЯ К ПОКУПКАМ") }}</button>
     </div>
 </div>
 <!-- END modal success -->
