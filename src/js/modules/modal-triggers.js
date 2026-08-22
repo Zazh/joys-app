@@ -1,9 +1,9 @@
 import { openModal } from '../lib/modal-core.js';
 
 // --------------------------------------------
-// 10. FLOATING NAV — открытие модалок
+// 10. MODAL TRIGGERS — открытие модалок по data-open-modal
 // --------------------------------------------
-export function initFloatingNav() {
+export function initModalTriggers() {
     document.querySelectorAll('[data-open-modal]').forEach(btn => {
         btn.addEventListener('click', () => {
             const modalId = btn.dataset.openModal;

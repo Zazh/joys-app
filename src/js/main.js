@@ -10,7 +10,7 @@ import { initProductGridGap } from './modules/product-grid.js';
 import { initProductImageSlider, initProductSlider, initDragCarousel } from './modules/sliders.js';
 import { initFAQ, initHeroTitleFit } from './modules/home-widgets.js';
 import { initInteractiveModals, initInteractiveModalForms } from './modules/interactive-modals.js';
-import { initFloatingNav } from './modules/floating-nav.js';
+import { initModalTriggers } from './modules/modal-triggers.js';
 import { initProductBuy } from './modules/product-buy.js';
 import { initOrderQuantity } from './modules/order-quantity.js';
 import { initCartModal } from './modules/cart.js';
@@ -43,7 +43,7 @@ onReady(initDragCarousel);
 // SHOP — МОДАЛКИ МАГАЗИНА
 // ============================================
 
-onReady(initFloatingNav);
+onReady(initModalTriggers);
 
 onReady(initProductBuy);
 
