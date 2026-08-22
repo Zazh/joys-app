@@ -324,6 +324,12 @@ msgstr "Select"
 msgid "Выбрать язык"
 msgstr "Select language"
 
+msgid "Купить"
+msgstr "Buy"
+
+msgid "Подробнее"
+msgstr "Learn more"
+
 msgid "Уменьшить"
 msgstr "Decrease"
 
