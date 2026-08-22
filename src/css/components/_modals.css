@@ -6,7 +6,7 @@
     .modal-content {
         @apply w-full max-w-xs bg-white rounded-2xl p-5 relative my-auto;
     }
-    /* Wider variant for shop modals (cart, favorites, profile, delivery, etc.) */
+    /* Wider variant for shop modals (cart, favorites, profile, etc.) */
     .modal-content.modal-wide {
         @apply max-w-sm md:max-w-md p-6;
     }

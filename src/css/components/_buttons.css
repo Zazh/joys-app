@@ -49,10 +49,6 @@
     .product_links-item {
         @apply text-sm tracking-wide font-bold uppercase hover:text-red-500;
     }
-    .add-to-cart.active {
-        @apply border-1;
-    }
-
     .btn-macro {
         @apply font-benzin text-xs lg:text-base p-5 lg:p-7 cursor-pointer rounded-full leading-tight focus-brand;
         /* Пока форма отправляется, кнопка заблокирована — видно, что это не «ничего не произошло».
