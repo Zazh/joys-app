@@ -60,7 +60,7 @@
 
         <div class="col-span-full lg:col-span-14 grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 lg:gap-4 pb-12 px-4 lg:px-0" id="productGrid">
             {% for product in products %}
-            <article class="product-card heart-trigger">
+            <article class="product-card">
                 <a href="{{ product.get_absolute_url }}" class="relative block">
                     <div class="product-card_picture" data-images-count="{{ product.main_images.all|length }}">
                         {% for img in product.main_images.all %}

@@ -8,7 +8,7 @@ import { initPhoneMasks } from './lib/phone-mask.js';
 import { initMobileMenu, initRegionDropdown, initLangDropdown } from './modules/nav.js';
 import { initProductGridGap } from './modules/product-grid.js';
 import { initProductImageSlider, initProductSlider, initDragCarousel } from './modules/sliders.js';
-import { initHeartbeat, initFAQ, initHeroTitleFit } from './modules/home-widgets.js';
+import { initFAQ, initHeroTitleFit } from './modules/home-widgets.js';
 import { initInteractiveModals, initInteractiveModalForms } from './modules/interactive-modals.js';
 import { initFloatingNav } from './modules/floating-nav.js';
 import { initProductBuy } from './modules/product-buy.js';
@@ -32,8 +32,6 @@ onReady(initMobileMenu);
 initProductGridGap();
 
 onReady(initProductImageSlider);
-
-onReady(initHeartbeat);
 
 onReady(initFAQ);
 
