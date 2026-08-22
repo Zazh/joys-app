@@ -145,7 +145,7 @@
                             <div class="flex items-center gap-2 flex-wrap" id="priceBlock">
                                 <span class="text-xs text-stone-400 line-through {% if not pd.has_discount %}hidden{% endif %}" id="priceOld">{{ pd.old_price|format_price }} {{ currency_symbol }}</span>
                                 <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded {% if not pd.has_discount %}hidden{% endif %}" id="priceDiscount">-{{ pd.discount_percent }}%</span>
-                                <span class="text-md font-benzin text-red-500 font-bold" id="priceCurrent">{{ pd.price|format_price }} {{ currency_symbol }}</span>
+                                <span class="text-base font-benzin text-red-500 font-bold" id="priceCurrent">{{ pd.price|format_price }} {{ currency_symbol }}</span>
                                 {% if pd.needs_conversion and pd.payment_price %}
                                 <span class="text-xs text-stone-400" id="pricePayment">({{ pd.payment_price|format_price }} {{ pd.payment_currency_symbol }})</span>
                                 {% endif %}
