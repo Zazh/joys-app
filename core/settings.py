@@ -10,7 +10,6 @@ ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 CSRF_TRUSTED_ORIGINS = [
     'https://dr-joys.com',
     'https://www.dr-joys.com',
-    'https://app.dr-joys.com',
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
