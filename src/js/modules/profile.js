@@ -78,7 +78,6 @@ export function initProfileModal() {
                 const btn = document.createElement('button');
                 btn.className = 'order-card w-full text-left p-3 rounded-xl bg-stone-50 hover:bg-gray-200';
                 btn.type = 'button';
-                btn.dataset.orderId = order.id;
                 btn.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>

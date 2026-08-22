@@ -65,7 +65,7 @@ export function initCartModal() {
                 const url = !item.unavailable_label && item.product_url ? escapeHtml(item.product_url) : '';
                 const imgHtml = `<img src="${escapeHtml(item.image_url || window.DRJOYS?.placeholderUrl || '')}" class="w-full h-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy">`;
 
-                return `<div class="cart-item flex gap-3 py-3" data-size-id="${escapeHtml(item.size_id)}" data-price="${escapeHtml(item.price || '')}" data-old-price="${escapeHtml(item.old_price || '')}">
+                return `<div class="cart-item flex gap-3 py-3" data-size-id="${escapeHtml(item.size_id)}">
                     <div class="w-15 h-15 shrink-0 rounded-lg overflow-hidden bg-stone-50${item.unavailable_label ? ' opacity-50' : ''}">
                         ${url ? `<a href="${url}">${imgHtml}</a>` : imgHtml}
                     </div>

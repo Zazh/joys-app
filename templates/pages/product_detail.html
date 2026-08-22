@@ -112,8 +112,6 @@
                                             data-old-price="{% if spd.has_discount %}{{ spd.old_price|format_price }}{% endif %}"
                                             data-discount="{% if spd.has_discount %}{{ spd.discount_percent }}{% endif %}"
                                             {% if spd.needs_conversion and spd.payment_price %}data-payment-price="{{ spd.payment_price|format_price }}"{% endif %}
-                                            data-available="{{ size.in_stock|yesno:'true,false' }}"
-                                            data-coming-soon="{{ size.coming_soon|yesno:'true,false' }}"
                                             {% if size.coming_soon or not size.in_stock or not spd.price %}disabled{% endif %}>
                                         <span class="size-dropdown__item-name">{{ size.name }}</span>
                                         <span class="size-dropdown__item-info">
