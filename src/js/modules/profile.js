@@ -43,7 +43,7 @@ export function initProfileModal() {
 
     function formatDate(isoStr) {
         const d = new Date(isoStr);
-        return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+        return d.toLocaleDateString(document.documentElement.lang || 'ru', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
     async function loadOrders() {
