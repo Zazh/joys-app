@@ -49,6 +49,9 @@
             <button class="btn-macro default small w-full text-center text-xs" type="button" id="addToCartBtn" data-size-id="">{% trans "ДОБАВИТЬ В КОРЗИНУ" %}</button>
             <button class="btn-macro black w-full text-center text-xs" type="button" id="goToDeliveryBtn">{% trans "ПРОДОЛЖИТЬ" %}</button>
         </div>
+
+        <!-- Причина отказа сервера — одна на обе кнопки (заполняется JS) -->
+        <p class="modal-error hidden text-center" id="orderQuantityError" role="alert"></p>
     </div>
 </div>
 <!-- END modal order quantity -->

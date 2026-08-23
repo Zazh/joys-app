@@ -42,6 +42,24 @@ export function initOrderQuantity() {
         if (goToDeliveryBtn) goToDeliveryBtn.disabled = state;
     }
 
+    // Причину отказа присылает сервер уже локализованной (CartAddView) —
+    // своих строк и ключей i18n здесь не заводим. Строка одна на обе кнопки:
+    // подписи у них цветные и uppercase, длинная причина ломала бы кнопку.
+    // textContent, а не innerHTML — экранировать нечего (SB-04 ни при чём)
+    const orderError = document.getElementById('orderQuantityError');
+
+    function showOrderError(msg) {
+        if (!orderError) return;
+        orderError.textContent = msg || '';
+        orderError.classList.remove('hidden');
+    }
+
+    function clearOrderError() {
+        if (!orderError) return;
+        orderError.textContent = '';
+        orderError.classList.add('hidden');
+    }
+
     // Add to cart button → API
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', async () => {
@@ -49,6 +67,7 @@ export function initOrderQuantity() {
             const sizeId = addToCartBtn.dataset.sizeId;
             const qty = parseInt(qtyValue.textContent) || 1;
             if (!sizeId) return;
+            clearOrderError();
             setInFlight(true);
             try {
                 const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
@@ -58,9 +77,12 @@ export function initOrderQuantity() {
                     // Открыть корзину
                     const cartModal = document.getElementById('modalCart');
                     if (cartModal) openModal(cartModal);
+                } else {
+                    showOrderError(result.error || window.DRJOYS.i18n.networkError);
                 }
             } catch (err) {
                 console.error('cart add error:', err);
+                showOrderError(window.DRJOYS.i18n.networkError);
             } finally {
                 setInFlight(false);
             }
@@ -76,14 +98,21 @@ export function initOrderQuantity() {
             const sizeId = addToCartBtn ? addToCartBtn.dataset.sizeId : '';
             if (sizeId) {
                 const qty = parseInt(qtyValue.textContent) || 1;
+                clearOrderError();
                 setInFlight(true);
                 try {
                     const result = await apiPost('/orders/cart/add/', { size_id: parseInt(sizeId), qty });
-                    if (!result.ok) return;
+                    if (!result.ok) {
+                        // Товар в корзину не лёг — причина вместо молчания,
+                        // на checkout не уходим
+                        showOrderError(result.error || window.DRJOYS.i18n.networkError);
+                        return;
+                    }
                     updateBadges(result.cart_count, null);
                 } catch (err) {
                     // Сбой сети: товар в корзину не лёг — на checkout не уходим
                     console.error('cart add error:', err);
+                    showOrderError(window.DRJOYS.i18n.networkError);
                     return;
                 } finally {
                     setInFlight(false);
@@ -93,6 +122,12 @@ export function initOrderQuantity() {
             window.location.href = '/orders/checkout/';
         });
     }
+
+    // Сброс на любом пути закрытия (Escape, фон, крестик) — modal-core
+    // диспатчит modal:close из closeModal; звать closeModal отсюда нельзя
+    // (рекурсия события)
+    const orderModal = document.getElementById('modalOrderQuantity');
+    if (orderModal) orderModal.addEventListener('modal:close', clearOrderError);
 }
 
 // data-price заполняет modules/product-buy.js (выбор размера), туда же пишется
