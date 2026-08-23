@@ -848,6 +848,26 @@ class SendInquiryNotificationTest(TestCase):
         self.assertIn('Иван Петров', body)
         self.assertIn('+77001234567', body)
 
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_multiline_value_collapsed_to_one_line(self, mock_api):
+        """PP-01 для заявок: перевод строки в значении поля (textarea)
+        печатал в plain-text письме поддельную строку поля выше настоящей —
+        значение идёт через `one_line()`."""
+        from inquiries.models import InquiryFieldValue
+
+        submission = self._create_submission()
+        InquiryFieldValue.objects.filter(
+            submission=submission, field=self.field_name,
+        ).update(value='Иван\n  Телефон: поддельный')
+
+        from emails.service import send_inquiry_notification
+        send_inquiry_notification(submission)
+
+        body = mock_api.call_args[0][2]
+        self.assertIn('Имя: Иван Телефон: поддельный', body)
+        # Строка поля «Телефон» в письме одна — настоящая
+        self.assertEqual(body.count('\n  Телефон:'), 1)
+
     def test_no_email_configured_does_nothing(self):
         """Если email_notify_to пустой — ничего не отправляется."""
         from inquiries.models import InquiryForm, InquirySubmission

@@ -388,8 +388,12 @@ def send_inquiry_notification(submission):
     if not form.email_notify_to:
         return
 
+    # Значение пишет посетитель (textarea пропускает \n) — в plain-text письме
+    # перевод строки печатал бы поддельные строки полей, как в PP-01.
+    # `label` заводит менеджер в бэкофисе — не санитайзится, как и названия
+    # товаров в `_order_items_text`.
     fields_text = '\n'.join(
-        f'  {fv.field.label}: {fv.display_value}'
+        f'  {fv.field.label}: {one_line(fv.display_value)}'
         for fv in submission.values.select_related('field').order_by('field__order')
     )
 

@@ -25,8 +25,9 @@ def one_line(value):
 
     Кто пользуется (санитайзер в проекте один — Р-5 `payments-polish`):
     `orders/gateways/vtb.py` (все записи лога callback-пути, печатающие
-    query-параметры) и `emails/service.py::_owner_customer_lines`
-    (оба письма владельцу).
+    query-параметры), `emails/service.py::_owner_customer_lines`
+    (оба письма владельцу) и `emails/service.py::send_inquiry_notification`
+    (значения полей заявки в письме менеджеру).
     """
     if value is None:
         return ''
