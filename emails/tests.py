@@ -1,7 +1,7 @@
 """Тесты email-инфраструктуры: SendPulse API, retry-логика, шаблоны, публичные функции."""
 
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
@@ -377,6 +377,23 @@ class SendOrderEmailsTest(EmailTestBase):
         self.assertEqual(log.to_email, 'test@example.com')
         self.assertIn(order.number, log.subject)
         self.assertEqual(log.status, EmailLog.Status.SENT)
+
+    @patch('emails.service._send_email')
+    def test_order_date_is_local_time(self, mock_send):
+        """PP-02: created_at в БД — UTC, а письмо обязано печатать время
+        Алматы (+05:00). До правки заказ 16:10 печатался как 11:10 —
+        на 5 часов раньше реального."""
+        order = self._create_order()
+        Order.objects.filter(pk=order.pk).update(
+            created_at=datetime(2026, 3, 20, 11, 10, tzinfo=dt_timezone.utc),
+        )
+        order.refresh_from_db()
+
+        from emails.service import send_order_created_email
+        send_order_created_email(order)
+
+        context = mock_send.call_args.kwargs['context']
+        self.assertEqual(context['order_date'], '20.03.2026 16:10')
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_send_payment_confirmed_email(self, mock_api):

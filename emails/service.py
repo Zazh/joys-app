@@ -311,7 +311,7 @@ def send_order_created_email(order):
         template_slug='order_created',
         context={
             'order_number': order.number,
-            'order_date': order.created_at.strftime('%d.%m.%Y %H:%M'),
+            'order_date': timezone.localtime(order.created_at).strftime('%d.%m.%Y %H:%M'),
             **_order_total_context(order),
             'customer_name': order.customer_name,
             'items_text': items_text,
@@ -330,7 +330,7 @@ def send_payment_confirmed_email(order):
         template_slug='order_paid',
         context={
             'order_number': order.number,
-            'order_date': order.created_at.strftime('%d.%m.%Y %H:%M'),
+            'order_date': timezone.localtime(order.created_at).strftime('%d.%m.%Y %H:%M'),
             **_order_total_context(order),
             'customer_name': order.customer_name,
             'items_text': items_text,
@@ -387,7 +387,7 @@ def send_inquiry_notification(submission):
         f'Новая заявка: {form.title}\n\n'
         f'{fields_text}\n\n'
         f'IP: {submission.ip_address}\n'
-        f'Дата: {submission.created_at.strftime("%d.%m.%Y %H:%M")}\n'
+        f'Дата: {timezone.localtime(submission.created_at).strftime("%d.%m.%Y %H:%M")}\n'
     )
 
     ok, error = _send_via_api(form.email_notify_to, subject, body)
