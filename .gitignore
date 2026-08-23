@@ -37,7 +37,8 @@ Thumbs.db
 .claude/
 
 # Compiled CSS/JS (rebuild from src/)
-# static/dist/ tracked intentionally — no build step on server
+# static/dist/ игнорируется правилом dist/ выше; на прод бандл уезжает
+# rsync-ом из `pnpm run deploy` (см. package.json), в git его нет
 
 # Logs
 *.log
