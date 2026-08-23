@@ -686,6 +686,18 @@ msgstr "Order paid"
 msgid "Ошибка оплаты"
 msgstr "Payment error"
 
+msgid "Платёж проверяется"
+msgstr "Payment is being verified"
+
+msgid "Платёж"
+msgstr "Payment"
+
+msgid "проверяется"
+msgstr "is being verified"
+
+msgid "Мы проверяем ваш платёж и свяжемся с вами в ближайшее время. Если деньги списаны — заказ не потеряется."
+msgstr "We are verifying your payment and will contact you shortly. If the money has been charged, your order will not be lost."
+
 msgid "оплачен!"
 msgstr "paid!"
 

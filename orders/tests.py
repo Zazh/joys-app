@@ -1164,6 +1164,66 @@ class PaymentReturnViewTest(PaymentTestBase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
 
+    @patch.object(VTBGateway, 'check_status')
+    def test_return_expired_shows_verifying(self, mock_status):
+        """PP-06: заказ истёк, деньги могли успеть списаться (банк шлёт на
+        returnUrl сразу после оплаты) — покупатель читает нейтральное
+        «Платёж проверяется» (Р-3), без креста и кнопки повтора. В банк
+        вьюха для мёртвых статусов не ходит — этим занимается детектор
+        `check_expired_paid` (PP-05)."""
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-ret-exp',
+            status=Order.Status.EXPIRED,
+        )
+        # `expire()` не чистит payment_url — старая ветка ошибки рисовала
+        # по нему «ПОПРОБОВАТЬ СНОВА»; без поля негативный ассерт декоративен
+        order.payment_url = 'https://vtb.test/payment/form/exp'
+        order.save(update_fields=['payment_url'])
+
+        response = self.client.get('/orders/payment/return/?orderId=vtb-ret-exp')
+
+        self.assertContains(response, 'Платёж проверяется')
+        self.assertContains(response, 'заказ не потеряется')
+        self.assertNotContains(response, 'не прошла')
+        self.assertNotContains(response, 'ПОПРОБОВАТЬ СНОВА')
+        mock_status.assert_not_called()
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.EXPIRED)
+
+    @patch.object(VTBGateway, 'check_status')
+    def test_return_cancelled_shows_verifying(self, mock_status):
+        """То же для отменённого менеджером заказа — второй вход класса
+        «деньги списаны, заказ мёртв» (Р-6)."""
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-ret-can',
+            status=Order.Status.CANCELLED,
+        )
+        order.payment_url = 'https://vtb.test/payment/form/can'
+        order.save(update_fields=['payment_url'])
+
+        response = self.client.get('/orders/payment/return/?orderId=vtb-ret-can')
+
+        self.assertContains(response, 'Платёж проверяется')
+        self.assertNotContains(response, 'не прошла')
+        self.assertNotContains(response, 'ПОПРОБОВАТЬ СНОВА')
+        mock_status.assert_not_called()
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.CANCELLED)
+
+    def test_return_expired_verifying_english(self):
+        """en-вариант сверяет именно перевод — ловит несобранный `.mo`
+        (прецедент FP-01). Кука `django_language` сильнее заголовка,
+        поэтому язык задаётся ею."""
+        self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-ret-exp-en',
+            status=Order.Status.EXPIRED,
+        )
+        self.client.cookies['django_language'] = 'en'
+
+        response = self.client.get('/orders/payment/return/?orderId=vtb-ret-exp-en')
+
+        self.assertContains(response, 'Payment is being verified')
+
     def test_return_halyk_invoice_id(self):
         """Halyk return по invoiceId (не orderId)."""
         order = self._create_order(region=self.region_kz, gateway='halyk')

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 
-{% block title %}{% if success %}{% trans "Заказ оплачен" %}{% else %}{% trans "Ошибка оплаты" %}{% endif %} — DR.JOYS{% endblock %}
+{% block title %}{% if success %}{% trans "Заказ оплачен" %}{% elif pending_check %}{% trans "Платёж проверяется" %}{% else %}{% trans "Ошибка оплаты" %}{% endif %} — DR.JOYS{% endblock %}
 
 {% block content %}
 <main>
@@ -20,6 +20,21 @@
         </p>
         <p class="text-sm text-gray-500 max-w-xs mb-8">
             {% trans "Мы свяжемся с вами для уточнения доставки." %}
+        </p>
+
+        {% elif pending_check %}
+        <!-- Платёж проверяется: заказ истёк/отменён, деньги могли списаться.
+             Без креста и кнопки повтора — текст назначен владельцем (Р-3) -->
+        {# bg-stone-400, а не amber: жёлтых bg-утилит нет в собранном CSS, а фронт-сборки в этом бэклоге нет (Р-2) #}
+        <div class="w-20 h-20 rounded-full bg-stone-400 flex items-center justify-center mb-6">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <polyline points="12 7 12 12 15.5 13.5"/>
+            </svg>
+        </div>
+        <h1 class="font-benzin text-2xl uppercase leading-tight mb-4">{% trans "Платёж" %}<br>{% trans "проверяется" %}</h1>
+        <p class="text-sm text-gray-500 max-w-xs mb-8">
+            {% trans "Мы проверяем ваш платёж и свяжемся с вами в ближайшее время. Если деньги списаны — заказ не потеряется." %}
         </p>
 
         {% else %}

@@ -588,6 +588,14 @@ class PaymentReturnView(View):
 
         return render(request, 'orders/payment_result.html', {
             'success': order.status == Order.Status.PAID,
+            # «Деньги, возможно, списаны, а заказ мёртв»: банк шлёт на
+            # returnUrl сразу после оплаты, и красный крест с кнопкой
+            # повтора здесь врал бы про чужие деньги (PP-06, текст — Р-3).
+            # В банк для этих статусов не ходим — проверяет детектор
+            # check_expired_paid (PP-05); статус и склад не трогаем (Р-7).
+            'pending_check': order.status in (
+                Order.Status.EXPIRED, Order.Status.CANCELLED,
+            ),
             'order': order,
             'currency_symbol': order.region.currency_symbol,
         })
