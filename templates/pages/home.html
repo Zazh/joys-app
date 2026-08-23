@@ -1305,6 +1305,19 @@
             let quizProducts = [];
             let quizProductIndex = 0;
             const nextVariantBtn = document.getElementById('quizNextVariant');
+            const quizError = document.getElementById('quizError');
+
+            function showQuizError(msg) {
+                if (!quizError) return;
+                quizError.textContent = msg || '';
+                quizError.classList.remove('hidden');
+            }
+
+            function clearQuizError() {
+                if (!quizError) return;
+                quizError.textContent = '';
+                quizError.classList.add('hidden');
+            }
 
             function renderQuizProduct(product) {
                 const img = document.getElementById('quizResultImg');
@@ -1334,6 +1347,7 @@
             }
 
             async function submitQuiz() {
+                clearQuizError();
                 try {
                     // window.apiPost из main.js: те же заголовки, что у остальных POST'ов сайта
                     const data = await window.apiPost('{% url "quiz:quiz_result" %}', quizAnswers);
@@ -1348,9 +1362,14 @@
                         if (nextVariantBtn) {
                             nextVariantBtn.classList.toggle('hidden', quizProducts.length <= 1);
                         }
+                    } else {
+                        // Отказ сервера: готовая локализованная строка (FP-01),
+                        // фолбэк — networkError; только textContent (SB-04)
+                        showQuizError(data.error || window.DRJOYS?.i18n?.networkError);
                     }
                 } catch (e) {
                     console.error('Quiz error:', e);
+                    showQuizError(window.DRJOYS?.i18n?.networkError);
                 }
             }
 
@@ -1390,6 +1409,7 @@
                 quizProducts = [];
                 quizProductIndex = 0;
                 resetQuizTheme();
+                clearQuizError();
             });
         }
 

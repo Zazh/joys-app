@@ -1,4 +1,4 @@
-from django.utils.translation import get_language
+from django.utils.translation import get_language, gettext as _
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -36,7 +36,7 @@ class QuizResultView(APIView):
         )
 
         if not products:
-            return Response({'ok': False, 'error': 'No matching product'})
+            return Response({'ok': False, 'error': _('Не нашли подходящий товар. Попробуйте изменить ответы.')})
 
         bg_map = {
             bg.key: bg

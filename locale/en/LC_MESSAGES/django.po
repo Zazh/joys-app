@@ -962,3 +962,6 @@ msgstr "Cancelled"
 
 msgid "Истёк"
 msgstr "Expired"
+
+msgid "Не нашли подходящий товар. Попробуйте изменить ответы."
+msgstr "We couldn't find a matching product. Try changing your answers."

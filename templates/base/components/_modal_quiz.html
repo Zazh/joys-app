@@ -30,6 +30,9 @@
                     >{{ option.label }}</button>
                     {% endfor %}
                 </div>
+                {% if forloop.last %}
+                <p class="modal-error hidden text-center pl-0" id="quizError" role="alert"></p>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
