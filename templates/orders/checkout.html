@@ -143,7 +143,7 @@
                                 {% if item.unavailable_label %}
                                 <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mt-1">{{ item.unavailable_label }}</p>
                                 {% else %}
-                                <p class="text-xs text-red-500 font-benzin mt-1">{{ item.subtotal|floatformat:0 }} {{ currency_symbol }}</p>
+                                <p class="text-xs text-red-500 font-benzin mt-1">{{ item.subtotal|floatformat:"0g" }} {{ currency_symbol }}</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -155,17 +155,17 @@
                         {% if cart_old_total and cart_old_total > cart_total %}
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-xs text-stone-400">{% trans "Без скидки" %}</span>
-                            <span class="text-xs text-stone-400 line-through">{{ cart_old_total|floatformat:0 }} {{ currency_symbol }}</span>
+                            <span class="text-xs text-stone-400 line-through">{{ cart_old_total|floatformat:"0g" }} {{ currency_symbol }}</span>
                         </div>
                         {% endif %}
                         <div class="flex justify-between items-center">
                             <span class="font-benzin uppercase text-sm">{% trans "Итого" %}</span>
-                            <span class="font-benzin text-lg text-red-500">{{ cart_total|floatformat:0 }} {{ currency_symbol }}</span>
+                            <span class="font-benzin text-lg text-red-500">{{ cart_total|floatformat:"0g" }} {{ currency_symbol }}</span>
                         </div>
                         {% if payment_total %}
                         <div class="flex justify-between items-center mt-1">
                             <span class="text-xs text-stone-500">{% trans "Спишется с карты" %}</span>
-                            <span class="text-xs font-bold">{{ payment_total|floatformat:0 }} {{ payment_currency_symbol }}</span>
+                            <span class="text-xs font-bold">{{ payment_total|floatformat:"0g" }} {{ payment_currency_symbol }}</span>
                         </div>
                         {% endif %}
                     </div>

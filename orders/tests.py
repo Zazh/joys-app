@@ -2197,7 +2197,8 @@ class CheckoutRegionTest(PaymentTestBase):
 
         self.assertContains(response, 'Регион изменился')
         self.assertContains(response, 'Спишется с карты')
-        self.assertContains(response, '5500 ₸')
+        # Разделитель разрядов — неразрывный пробел ru-локали (PP-08)
+        self.assertContains(response, '5\xa0500 ₸')
 
     @override_settings(HALYK_ENABLED=False)
     def test_matching_country_kz_creates_order_without_conversion(self):
@@ -2300,6 +2301,40 @@ class CheckoutMirHintTest(CheckoutRegionTest):
         self.assertNotContains(response, 'Р-6')
 
 
+class CheckoutThousandsSeparatorTest(CheckoutRegionTest):
+    """PP-08: суммы checkout печатаются с разделителем разрядов
+    (`floatformat:"0g"`) — в одном формате с модалкой корзины
+    (`toLocaleString('ru-RU')`, SB-06). Разделитель ru-локали Django —
+    неразрывный пробел, в assert именно `\\xa0`, не обычный пробел.
+
+    Фикстуры и хелперы — у CheckoutRegionTest (корзина, цены ru, курс).
+    """
+
+    def test_totals_grouped_with_nbsp(self):
+        from orders.models import CartItem
+
+        # 2500 ₸ × 8 = 20 000 — сумма с разрядом тысяч
+        CartItem.objects.filter(user=self.user).update(qty=8)
+        self._set_region_cookie('kz')
+
+        response = self.client.get('/orders/checkout/')
+
+        self.assertContains(response, '20\xa0000 ₸')
+
+    def test_payment_total_grouped_for_conversion_region(self):
+        """У ru-региона строка «Спишется с карты» тоже с разделителем:
+        500 ₽ × 4 = 2 000 ₽, конверсия ×5.5 → 11 000 ₸."""
+        from orders.models import CartItem
+
+        CartItem.objects.filter(user=self.user).update(qty=4)
+        self._set_region_cookie('ru')
+
+        response = self.client.get('/orders/checkout/')
+
+        self.assertContains(response, '2\xa0000 ₽')
+        self.assertContains(response, '11\xa0000 ₸')
+
+
 @override_settings(HALYK_ENABLED=False)
 class CheckoutWithdrawnItemTest(CheckoutRegionTest):
     """Guard «снят с продажи» в `_create_order`: coming_soon отсекается только
@@ -2376,7 +2411,7 @@ class CheckoutWithdrawnItemTest(CheckoutRegionTest):
 
         self.assertContains(response, 'Скоро в продаже')
         self.assertContains(response, 'uppercase text-sm">Итого')
-        self.assertContains(response, '1000 ₸')
+        self.assertContains(response, '1\xa0000 ₸')  # floatformat:"0g" (PP-08)
         self.assertNotContains(response, '5000')
 
 
