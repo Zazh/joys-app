@@ -1731,6 +1731,55 @@ class OrderLifecycleTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PAID)
 
 
+# ─── Сигнал «заказ отправлен»: письмо за границей транзакции (PP-03) ───
+
+class OrderShippedSignalTransactionTest(PaymentTestBase):
+    """PP-03: раньше pre_save слал письмо ДО записи — упавший save() оставлял
+    покупателя с ложным «отправлен». Теперь post_save + on_commit.
+
+    ⚠️ on_commit-колбэки в TestCase сами не выполняются — проверки писем
+    только под captureOnCommitCallbacks(execute=True), иначе тест молча
+    пустой (грабля PH-06).
+    """
+
+    @patch('emails.service.send_order_shipped_email')
+    def test_shipped_email_sent_once_after_commit(self, mock_email):
+        order = self._create_order(status=Order.Status.PAID)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            order.status = Order.Status.SHIPPED
+            order.save(update_fields=['status'])
+
+        mock_email.assert_called_once_with(order)
+
+    @patch('emails.service.send_order_shipped_email')
+    def test_rollback_cancels_email(self, mock_email):
+        """save() прошёл, но транзакция откатилась — письма нет: колбэк
+        умирает вместе с транзакцией."""
+        order = self._create_order(status=Order.Status.PAID)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            try:
+                with transaction.atomic():
+                    order.status = Order.Status.SHIPPED
+                    order.save(update_fields=['status'])
+                    raise RuntimeError('искусственный откат после save')
+            except RuntimeError:
+                pass
+
+        mock_email.assert_not_called()
+
+    @patch('emails.service.send_order_shipped_email')
+    def test_other_status_change_sends_nothing(self, mock_email):
+        order = self._create_order(status=Order.Status.PAID)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            order.status = Order.Status.DELIVERED
+            order.save(update_fields=['status'])
+
+        mock_email.assert_not_called()
+
+
 # ─── Тест gateway registry ───
 
 class GatewayRegistryTest(TestCase):

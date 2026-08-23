@@ -829,15 +829,17 @@ class SendInquiryNotificationTest(TestCase):
 # ─── Сигнал order_status_changed ───
 
 class OrderShippedSignalTest(EmailTestBase):
-    """Тест сигнала pre_save: отправка email при смене статуса на SHIPPED."""
+    """Сигнал смены статуса на SHIPPED: письмо уходит после commit (PP-03),
+    поэтому сохранение — под captureOnCommitCallbacks(execute=True)."""
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_signal_sends_email_on_shipped(self, mock_api):
         self._create_template('order_shipped', subject='Отправлен #{order_number}', body='{customer_name}')
         order = self._create_order(status=Order.Status.PAID)
 
-        order.status = Order.Status.SHIPPED
-        order.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            order.status = Order.Status.SHIPPED
+            order.save()
 
         log = EmailLog.objects.filter(template_slug='order_shipped')
         self.assertTrue(log.exists())
@@ -847,8 +849,9 @@ class OrderShippedSignalTest(EmailTestBase):
         """Смена статуса не на SHIPPED — email не отправляется."""
         order = self._create_order(status=Order.Status.PENDING)
 
-        order.status = Order.Status.PAID
-        order.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            order.status = Order.Status.PAID
+            order.save()
 
         self.assertFalse(EmailLog.objects.filter(template_slug='order_shipped').exists())
         mock_api.assert_not_called()
