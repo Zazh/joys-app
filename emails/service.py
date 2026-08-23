@@ -259,11 +259,22 @@ def _pay_symbol(region):
     )
 
 
+def _fmt_amount(value):
+    """Сумма с разделителем разрядов, без дробной части: 2950 → «2\xa0950».
+
+    Разделитель — NBSP, как у ru-локали Django на checkout (PP-08) и у
+    `toLocaleString('ru-RU')` модалки корзины (SB-06). Захардкожен, а не взят
+    из активной локали: письмо уходит из callback-а банка или крона, где
+    активный язык случайный, а тела писем в БД — русские.
+    """
+    return f'{value:,.0f}'.replace(',', '\xa0')
+
+
 def _order_items_text(order):
     """Позиции заказа строкой — в валюте ВИТРИНЫ (`item.price` хранится в ней)."""
     return '\n'.join(
         f'  {item.product_name} ({item.size_name}) x {item.quantity} — '
-        f'{item.subtotal:.0f} {order.region.currency_symbol}'
+        f'{_fmt_amount(item.subtotal)} {order.region.currency_symbol}'
         for item in order.items.all()
     )
 
@@ -282,7 +293,7 @@ def _order_total_context(order):
     подставит), а править боевой контент задача не должна.
     """
     region = order.region
-    total = f'{order.total_amount:.0f}'
+    total = _fmt_amount(order.total_amount)
 
     if not region.needs_conversion:
         return {'order_total': total, 'currency': region.currency_symbol}
@@ -298,7 +309,7 @@ def _order_total_context(order):
         'order_total': total,
         'currency': (
             f'{pay_symbol} '
-            f'({order.display_amount:.0f} {region.currency_symbol})'
+            f'({_fmt_amount(order.display_amount)} {region.currency_symbol})'
         ),
     }
 
@@ -412,12 +423,12 @@ def _owner_total_lines(order):
     # `payment_currency_symbol` в бэкофисе забыли почистить, покупателю уходит
     # «4423 ₽», а владельцу за тот же заказ — «4423 ₸». Это зеркало PAY-07.
     symbol = _pay_symbol(region) if region.needs_conversion else region.currency_symbol
-    total = f'{order.total_amount:.0f} {symbol}'
+    total = f'{_fmt_amount(order.total_amount)} {symbol}'
 
     if order.display_amount and region.needs_conversion:
         return total, (
             f'{total} (покупатель видел '
-            f'{order.display_amount:.0f} {region.currency_symbol})'
+            f'{_fmt_amount(order.display_amount)} {region.currency_symbol})'
         )
     return total, total
 

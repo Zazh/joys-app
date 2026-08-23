@@ -455,7 +455,7 @@ class OrderEmailTotalTest(EmailTestBase):
         send_payment_confirmed_email(self._ru_order())
 
         body = EmailLog.objects.get(template_slug='order_paid').body
-        self.assertEqual(body, 'Итого: 2950 ₸ (525 ₽)')
+        self.assertEqual(body, 'Итого: 2\xa0950 ₸ (525 ₽)')
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_order_created_email_too(self, mock_api):
@@ -466,7 +466,7 @@ class OrderEmailTotalTest(EmailTestBase):
         send_order_created_email(self._ru_order())
 
         body = EmailLog.objects.get(template_slug='order_created').body
-        self.assertEqual(body, 'Итого: 2950 ₸ (525 ₽)')
+        self.assertEqual(body, 'Итого: 2\xa0950 ₸ (525 ₽)')
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_plain_region_unchanged(self, mock_api):
@@ -478,7 +478,7 @@ class OrderEmailTotalTest(EmailTestBase):
         send_payment_confirmed_email(order)
 
         body = EmailLog.objects.get(template_slug='order_paid').body
-        self.assertEqual(body, 'Итого: 8990 ₸')
+        self.assertEqual(body, 'Итого: 8\xa0990 ₸')
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_legacy_order_without_display_amount(self, mock_api):
@@ -490,7 +490,7 @@ class OrderEmailTotalTest(EmailTestBase):
         send_payment_confirmed_email(self._ru_order(display_amount=None))
 
         body = EmailLog.objects.get(template_slug='order_paid').body
-        self.assertEqual(body, 'Итого: 2950 ₸')
+        self.assertEqual(body, 'Итого: 2\xa0950 ₸')
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_symbol_never_falls_back_to_display_currency(self, mock_api):
@@ -507,8 +507,8 @@ class OrderEmailTotalTest(EmailTestBase):
         send_payment_confirmed_email(order)
 
         body = EmailLog.objects.get(template_slug='order_paid').body
-        self.assertEqual(body, 'Итого: 2950 KZT (525 ₽)')
-        self.assertNotIn('2950 ₽', body)
+        self.assertEqual(body, 'Итого: 2\xa0950 KZT (525 ₽)')
+        self.assertNotIn('2\xa0950 ₽', body)
 
 
 # ─── Письма владельцу ───
@@ -570,8 +570,8 @@ class OwnerEmailsTest(EmailTestBase):
         """
         subject, body = self._alert_body(self._create_order(), mock_api)
 
-        self.assertIn('Сумма: 5000 ₸\n', body)
-        self.assertIn('5000 ₸', subject)
+        self.assertIn('Сумма: 5\xa0000 ₸\n', body)
+        self.assertIn('5\xa0000 ₸', subject)
         self.assertNotIn('покупатель видел', body)
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
@@ -579,8 +579,8 @@ class OwnerEmailsTest(EmailTestBase):
         """Списано в ₸, в корзине человек видел ₽ — в письме обе суммы."""
         subject, body = self._alert_body(self._ru_order(), mock_api)
 
-        self.assertIn('Сумма: 2950 ₸ (покупатель видел 525 ₽)\n', body)
-        self.assertIn('2950 ₸', subject)
+        self.assertIn('Сумма: 2\xa0950 ₸ (покупатель видел 525 ₽)\n', body)
+        self.assertIn('2\xa0950 ₸', subject)
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     def test_legacy_order_without_display_amount(self, mock_api):
@@ -593,7 +593,7 @@ class OwnerEmailsTest(EmailTestBase):
 
         _, body = self._alert_body(order, mock_api)
 
-        self.assertIn('Сумма: 2950 ₸\n', body)
+        self.assertIn('Сумма: 2\xa0950 ₸\n', body)
         self.assertNotIn('покупатель видел', body)
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
@@ -614,8 +614,8 @@ class OwnerEmailsTest(EmailTestBase):
         subject, body = self._alert_body(order, mock_api)
 
         self.assertEqual(_order_total_context(order)['currency'], '₽')
-        self.assertIn('Сумма: 2950 ₽\n', body)
-        self.assertIn('2950 ₽', subject)
+        self.assertIn('Сумма: 2\xa0950 ₽\n', body)
+        self.assertIn('2\xa0950 ₽', subject)
         self.assertNotIn('₸', subject)
 
     # ── Формулировки по фактическому статусу (PP-05, Р-6) ──
@@ -754,8 +754,8 @@ class OwnerEmailsTest(EmailTestBase):
 
         to, subject, body = mock_api.call_args[0]
         self.assertEqual(to, self.OWNER)
-        self.assertIn('Сумма: 2950 ₸ (покупатель видел 525 ₽)\n', body)
-        self.assertIn('2950 ₸', subject)
+        self.assertIn('Сумма: 2\xa0950 ₸ (покупатель видел 525 ₽)\n', body)
+        self.assertIn('2\xa0950 ₸', subject)
 
 
 # ─── Публичные функции отправки (accounts) ───

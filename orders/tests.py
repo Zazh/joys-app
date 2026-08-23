@@ -1237,6 +1237,34 @@ class PaymentReturnViewTest(PaymentTestBase):
         self.assertEqual(response.status_code, 200)
 
 
+class ResultPagesThousandsSeparatorTest(PaymentTestBase):
+    """Хвост PP-08: суммы страниц результата — с разделителем разрядов
+    (`floatformat:"0g"`), в одном формате с checkout
+    (`CheckoutThousandsSeparatorTest`). Разделитель ru-локали — NBSP,
+    в assert именно `\\xa0`, не обычный пробел."""
+
+    def test_payment_result_sum_grouped_with_nbsp(self):
+        order = self._create_order(
+            region=self.region_kz, gateway='halyk', payment_id='ret-sum',
+            status=Order.Status.PAID,
+        )
+
+        response = self.client.get('/orders/payment/return/?orderId=ret-sum')
+
+        self.assertContains(response, f'#{order.number}')
+        self.assertContains(response, '5\xa0000&nbsp;₸')
+
+    def test_checkout_success_sum_grouped_with_nbsp(self):
+        order = self._create_order(region=self.region_kz)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse(
+            'orders:checkout_success', kwargs={'order_number': order.number},
+        ))
+
+        self.assertContains(response, '5\xa0000&nbsp;₸')
+
+
 # ─── Тесты крона check_payments ───
 
 class CheckPaymentsCommandTest(PaymentTestBase):
@@ -1657,8 +1685,8 @@ class ExpiredPaidDetectorTest(PaymentTestBase):
             self._run()
 
         _, subject, body = mock_api.call_args[0]
-        self.assertIn('5000 ₸', subject)
-        self.assertIn('5000 ₸', body)
+        self.assertIn('5\xa0000 ₸', subject)
+        self.assertIn('5\xa0000 ₸', body)
         self.assertIn('525 ₽', body)
 
 
@@ -1820,7 +1848,7 @@ class PaymentNotificationTest(PaymentTestBase):
             order.confirm_payment()
 
         _, subject, body = mock_api.call_args[0]
-        self.assertIn('5000 ₸', subject)
+        self.assertIn('5\xa0000 ₸', subject)
         self.assertIn('525 ₽', body)
 
 
