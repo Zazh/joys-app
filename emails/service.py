@@ -481,7 +481,13 @@ def send_payment_received_notification(order):
 
 
 def send_expired_paid_alert(order):
-    """Алерт владельцу: заказ истёк, а деньги в банке всё-таки списаны.
+    """Алерт владельцу: заказ истёк или отменён, а деньги в банке
+    всё-таки списаны.
+
+    Формулировки — по фактическому статусу заказа (Р-6 payments-polish):
+    для CANCELLED письмо говорит «отменён», а строка «Истёк: <дата>»
+    опускается — даты отмены в модели нет, а `expires_at` отменённого
+    заказа моментом инцидента не является.
 
     Шлёт крон `check_expired_paid`. Адрес — отдельная переменная
     PAYMENT_ALERT_EMAIL, а не ORDER_NOTIFY_EMAIL: тот означает «письмо о
@@ -502,31 +508,47 @@ def send_expired_paid_alert(order):
     region = order.region
     total, total_line = _owner_total_lines(order)
     order_url = _order_backoffice_url(order)
-    # Локальное время: сверять письмо придётся с логами и выпиской банка,
-    # а логи контейнера идут в зоне проекта (Asia/Almaty), не в UTC.
-    expired_at = (
-        timezone.localtime(order.expires_at).strftime('%d.%m.%Y %H:%M')
-        if order.expires_at else '—'
-    )
 
-    subject = f'ВНИМАНИЕ: истёкший заказ {order.number} оплачен — {total}'
+    cancelled = order.status == order.Status.CANCELLED
+    if cancelled:
+        status_adj = 'отменённый'    # тема: «отменённый заказ … оплачен»
+        status_short = 'отменён'     # «заказ уже отменён»
+        status_gen = 'отменённого'   # «для отменённого заказа»
+        status_noun = 'отмене'       # «остаток на складе при отмене»
+        status_state = 'отменённым'  # «заказ останется отменённым»
+        date_line = ''               # даты отмены в модели нет
+    else:
+        status_adj = 'истёкший'
+        status_short = 'истёк'
+        status_gen = 'истёкшего'
+        status_noun = 'истечении'
+        status_state = 'истёкшим'
+        # Локальное время: сверять письмо придётся с логами и выпиской банка,
+        # а логи контейнера идут в зоне проекта (Asia/Almaty), не в UTC.
+        expired_at = (
+            timezone.localtime(order.expires_at).strftime('%d.%m.%Y %H:%M')
+            if order.expires_at else '—'
+        )
+        date_line = f'Истёк: {expired_at} (Алматы)\n'
+
+    subject = f'ВНИМАНИЕ: {status_adj} заказ {order.number} оплачен — {total}'
     body = (
         f'По заказу {order.number} банк подтверждает успешное списание, '
-        f'но заказ уже истёк и резерв товара снят.\n\n'
+        f'но заказ уже {status_short} и резерв товара снят.\n\n'
         f'Сумма: {total_line}\n'
         f'Регион: {region.name} · шлюз: {order.payment_gateway or "—"}\n'
-        f'Истёк: {expired_at} (Алматы)\n'
+        f'{date_line}'
         f'ID платежа: {order.payment_id or "—"}\n\n'
         f'Состав заказа:\n{_order_items_text(order)}\n\n'
         f'{_owner_customer_lines(order)}'
-        f'Что делать: кнопка «Подтвердить оплату» в бэкофисе для истёкшего '
+        f'Что делать: кнопка «Подтвердить оплату» в бэкофисе для {status_gen} '
         f'заказа НЕ сработает — она принимает только заказы в статусе '
         f'«Ожидает оплаты». Разбор ручной: связаться с покупателем и '
         f'оформить отправку вручную либо вернуть платёж через кабинет банка.\n'
         f'Если отправляете товар: статус заказа переводится руками в '
-        f'Django-админке (иначе заказ останется истёкшим — не попадёт ни в '
+        f'Django-админке (иначе заказ останется {status_state} — не попадёт ни в '
         f'историю покупателя, ни в выручку), а остаток на складе при '
-        f'истечении НЕ списывался (снимался только резерв) — поправить '
+        f'{status_noun} НЕ списывался (снимался только резерв) — поправить '
         f'вручную: {settings.SITE_URL + reverse("backoffice:stock_list")}\n\n'
         f'Заказ в бэкофисе: {order_url}\n'
     )

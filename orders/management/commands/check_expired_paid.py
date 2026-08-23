@@ -17,13 +17,18 @@ LOOKBACK = timedelta(hours=24)
 
 class Command(BaseCommand):
     help = (
-        'Найти истёкшие заказы, по которым в банке всё же прошла оплата, '
-        'и уведомить владельца. Статус заказа и склад не трогает.'
+        'Найти истёкшие и отменённые заказы, по которым в банке всё же '
+        'прошла оплата, и уведомить владельца. Статус заказа и склад не трогает.'
     )
 
     def handle(self, *args, **options):
+        # CANCELLED — второй вход той же дыры (Р-6): менеджер отменяет
+        # PENDING-заказ кнопкой бэкофиса, а покупатель в те же минуты
+        # дожимает оплату на ещё живой форме банка. `cancel()`, как и
+        # `expire()`, снимает резерв и не трогает payment_id/expires_at —
+        # фильтры ниже работают для обоих статусов без правок.
         orders = Order.objects.filter(
-            status=Order.Status.EXPIRED,
+            status__in=[Order.Status.EXPIRED, Order.Status.CANCELLED],
             payment_id__gt='',
             payment_gateway__gt='',
             expired_paid_alerted_at__isnull=True,
@@ -31,7 +36,7 @@ class Command(BaseCommand):
         )
 
         if not orders.exists():
-            self.stdout.write('Свежих истёкших заказов с оплатой нет.')
+            self.stdout.write('Свежих истёкших или отменённых заказов с оплатой нет.')
             return
 
         for order in orders:
@@ -55,13 +60,19 @@ class Command(BaseCommand):
                 )
                 continue
 
-            # Ни статуса, ни склада: `Order.expire()` уже снял резерв, и
-            # автоматический confirm_payment увёл бы остатки в минус (Р-1
-            # бэклога payments-hardening). Разбор — ручной, письмом.
+            # Ни статуса, ни склада: `Order.expire()`/`Order.cancel()` уже
+            # снял резерв, и автоматический confirm_payment увёл бы остатки
+            # в минус (Р-1 бэклога payments-hardening). Разбор — ручной,
+            # письмом. Подстрока `has successful payment` — стабильный якорь
+            # для grep-разбора лога, не менять.
+            status_ru = (
+                'отменён' if order.status == Order.Status.CANCELLED else 'истёк'
+            )
             logger.error(
-                'EXPIRED order %s has successful payment: gateway=%s payment_id=%s — '
-                'деньги списаны, заказ истёк, нужен ручной разбор',
-                order.number, order.payment_gateway, order.payment_id,
+                '%s order %s has successful payment: gateway=%s payment_id=%s — '
+                'деньги списаны, заказ %s, нужен ручной разбор',
+                order.status.upper(), order.number,
+                order.payment_gateway, order.payment_id, status_ru,
             )
             # Отметку ставим ТОЛЬКО за доставленный сигнал: иначе сбой
             # SendPulse навсегда прячет единственное письмо про пропавшие

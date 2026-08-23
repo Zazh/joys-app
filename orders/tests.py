@@ -1354,6 +1354,56 @@ class ExpiredPaidDetectorTest(PaymentTestBase):
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_cancelled_paid_order_is_alerted(self, mock_status, mock_api):
+        """Второй вход той же дыры (Р-6): менеджер отменил PENDING кнопкой
+        бэкофиса, а покупатель в те же минуты дожал оплату на ещё живой
+        форме банка. `cancel()` не трогает payment_id/expires_at — заказ
+        обязан попасть в выборку, лог — назвать фактический статус."""
+        order = self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='vtb-can-1',
+            status=Order.Status.CANCELLED,
+        )
+        stock = Stock.objects.get(size=self.size_m, region=self.region_ru)
+        qty_before, reserved_before = stock.quantity, stock.reserved
+
+        with self.assertLogs(self.LOGGER, level='ERROR') as logs:
+            self._run()
+
+        joined = '\n'.join(logs.output)
+        self.assertIn(order.number, joined)
+        self.assertIn('CANCELLED order', joined)         # фактический статус
+        self.assertIn('has successful payment', joined)  # стабильный якорь grep-а
+        mock_api.assert_called_once()
+        _, subject, _ = mock_api.call_args[0]
+        self.assertIn(order.number, subject)
+
+        # Ни статуса, ни склада (Р-7) — как и для EXPIRED
+        order.refresh_from_db()
+        stock.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.CANCELLED)
+        self.assertEqual(stock.quantity, qty_before)
+        self.assertEqual(stock.reserved, reserved_before)
+        self.assertIsNotNone(order.expired_paid_alerted_at)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
+    def test_cancelled_without_payment_is_not_polled(self, mock_status, mock_api):
+        """Отменённая заявка, не ходившая в банк, банк не опрашивает:
+        фильтр `payment_id__gt=''` держит цену расширения выборки —
+        «отменённые без оплаты начнут опрашивать банк» не случается."""
+        self._create_order(
+            region=self.region_ru, gateway='vtb', payment_id='',
+            status=Order.Status.CANCELLED,
+        )
+
+        output = self._run()
+
+        mock_status.assert_not_called()
+        mock_api.assert_not_called()
+        self.assertIn('Свежих истёкших или отменённых заказов с оплатой нет', output)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))
     def test_alert_is_not_repeated(self, mock_status, mock_api):
         """Крон ходит каждые полчаса — второй раз владельца не будим."""
         self._expired_order()
@@ -1391,7 +1441,7 @@ class ExpiredPaidDetectorTest(PaymentTestBase):
 
         mock_status.assert_not_called()
         mock_api.assert_not_called()
-        self.assertIn('Свежих истёкших заказов с оплатой нет', output)
+        self.assertIn('Свежих истёкших или отменённых заказов с оплатой нет', output)
 
     @patch('emails.service._send_via_api', return_value=(True, ''))
     @patch.object(VTBGateway, 'check_status', return_value=PaymentStatus(paid=True, raw_status='2'))

@@ -618,6 +618,43 @@ class OwnerEmailsTest(EmailTestBase):
         self.assertIn('2950 ₽', subject)
         self.assertNotIn('₸', subject)
 
+    # ── Формулировки по фактическому статусу (PP-05, Р-6) ──
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_cancelled_alert_speaks_cancellation(self, mock_api):
+        """Для CANCELLED-заказа письмо говорит «отменён», а не «истёк», и
+        строку «Истёк: <дата>» не печатает: даты отмены в модели нет, а
+        `expires_at` отменённого заказа моментом инцидента не является."""
+        order = self._create_order(
+            status=Order.Status.CANCELLED, payment_id='vtb-can-alert',
+        )
+
+        subject, body = self._alert_body(order, mock_api)
+
+        self.assertIn('отменённый заказ', subject)
+        self.assertIn('заказ уже отменён', body)
+        # «истёк» не встречается нигде (ловит и «истёкшим», и «Истёк:»)
+        self.assertNotIn('истёк', subject.lower())
+        self.assertNotIn('истёк', body.lower())
+        self.assertNotIn('Истёк:', body)
+        # Рантбук остаётся честным: кнопка бэкофиса принимает только PENDING
+        self.assertIn('НЕ сработает', body)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_expired_alert_keeps_expiry_wording(self, mock_api):
+        """EXPIRED-ветка не изменилась: «истёкший» в теме, дата «Истёк:»
+        с зоной — по ней владелец сверяется с выпиской банка."""
+        order = self._create_order(
+            status=Order.Status.EXPIRED, payment_id='vtb-exp-alert',
+        )
+
+        subject, body = self._alert_body(order, mock_api)
+
+        self.assertIn('истёкший заказ', subject)
+        self.assertIn('Истёк:', body)
+        self.assertIn('(Алматы)', body)
+        self.assertNotIn('отмен', body.lower())
+
     # ── Поля покупателя не подделывают строк письма (PP-01) ──
 
     FORGED_ADDRESS = 'ул. Ленина 1\n\nСумма: 999'
