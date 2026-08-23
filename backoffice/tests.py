@@ -18,6 +18,8 @@ from pages.context_processors import CONTACTS_CACHE_KEY, get_contacts
 from catalog.models import Category, Product, ProductSize
 from inquiries.models import InquiryForm, InquirySubmission
 from pages.models import City, ContactSettings, OfflineStore, Page
+from orders.models import Order, OrderStatusLog
+from regions.models import Region
 
 User = get_user_model()
 
@@ -995,6 +997,57 @@ class StockProductLinkTests(TestCase):
 
     def test_senior_sees_link(self):
         self.assertIn(self.product_url, self.stock_html(User.Role.SUPER_MANAGER))
+
+
+class OrderStatusLanguageTests(TestCase):
+    """Бэкофис остаётся русским при любой куке языка (Р-6 бэклога shop-polish).
+
+    `/backoffice/` вне i18n-префикса, и `LocaleMiddleware` берёт язык из куки
+    `django_language`, которую ставит переключатель языка самой витрины: после
+    ленивых лейблов `Order.Status` менеджер, заглянувший на витрину
+    по-казахски, увидел бы казахские статусы в рабочем интерфейсе. Русский
+    источник у бэкофиса свой и единственный — `STATUS_COLORS`.
+    """
+
+    def setUp(self):
+        region = Region.objects.create(
+            code='kz', name='Казахстан',
+            currency_code='KZT', currency_symbol='₸', is_default=True,
+        )
+        self.order = Order.objects.create(
+            number='260823-9001', region=region, status=Order.Status.PAID,
+            customer_name='Тест Тестов', customer_phone='+77001234567',
+            total_amount=Decimal('5000'),
+        )
+        OrderStatusLog.objects.create(
+            order=self.order,
+            old_status=Order.Status.PENDING, new_status=Order.Status.PAID,
+        )
+        User.objects.create_user(
+            email='manager@example.com', password='x', role=User.Role.MANAGER)
+        self.client.login(email='manager@example.com', password='x')
+        self.client.cookies['django_language'] = 'kk'
+
+    def _html(self, url):
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        # Доказательство, что активный язык действительно казахский: иначе тест
+        # был бы зелёным ни о чём — русские лейблы нашлись бы и под русским
+        self.assertEqual(response.headers['Content-Language'], 'kk')
+        return response.content.decode()
+
+    def test_order_list_stays_russian(self):
+        html = self._html(reverse('backoffice:order_list'))
+        self.assertIn('Оплачен', html)      # бейдж заказа
+        self.assertIn('Ожидает', html)      # пункт фильтра «Статус»
+        self.assertNotIn('Төленді', html)
+        self.assertNotIn('Төлем күтілуде', html)
+
+    def test_status_log_stays_russian(self):
+        html = self._html(
+            reverse('backoffice:order_detail', args=[self.order.number]))
+        self.assertIn('Ожидает → Оплачен', html)
+        self.assertNotIn('Төленді', html)
 
 
 class PartnerInquiriesScopeTests(TestCase):

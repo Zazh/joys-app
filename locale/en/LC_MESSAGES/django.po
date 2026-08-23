@@ -944,3 +944,21 @@ msgstr "Send get-well wishes"
 
 msgid "Сайт заболел — пожелайте скорейшего выздоровления"
 msgstr "The site is sick — wish it a speedy recovery"
+
+msgid "Ожидает оплаты"
+msgstr "Awaiting payment"
+
+msgid "Оплачен"
+msgstr "Paid"
+
+msgid "Отправлен"
+msgstr "Shipped"
+
+msgid "Доставлен"
+msgstr "Delivered"
+
+msgid "Отменён"
+msgstr "Cancelled"
+
+msgid "Истёк"
+msgstr "Expired"

@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.test import TestCase, RequestFactory, override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from accounts.models import User
 from catalog.models import Category, Product, ProductSize, RegionPrice, Stock
@@ -2295,6 +2295,48 @@ class OrdersAcceptLanguageTest(PaymentTestBase):
         self.client.cookies['django_language'] = 'ru'
         url = self._first('/orders/cart/', 'en')['product_url']
         self.assertTrue(url.startswith('/ru/'), url)
+
+
+# ─── Статус заказа на языке покупателя ───
+
+class OrderStatusI18nTest(PaymentTestBase):
+    """Лейблы `Order.Status` ленивые — история заказов говорит на языке
+    страницы (вторая половина JC-01: заголовок `Accept-Language` фронт слал
+    и раньше, но переводить было нечего). Куку `django_language` тесты не
+    ставят намеренно: она сильнее заголовка и обнулила бы смысл проверки.
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.client.login(email='test@example.com', password='test12345')
+        self._create_order(status=Order.Status.PAID)
+
+    def _status(self, lang=None):
+        headers = {'HTTP_ACCEPT_LANGUAGE': lang} if lang else {}
+        response = self.client.get('/orders/history/', **headers)
+        self.assertEqual(response.status_code, 200)
+        return response.json()['orders'][0]['status_display']
+
+    def test_labels_are_translated(self):
+        for lang, label in (('en', 'Paid'), ('kk', 'Төленді')):
+            with self.subTest(lang=lang):
+                with translation.override(lang):
+                    self.assertEqual(str(Order.Status.PAID.label), label)
+
+    def test_history_follows_header(self):
+        self.assertEqual(self._status('en'), 'Paid')
+        self.assertEqual(self._status('kk'), 'Төленді')
+
+    def test_history_without_header_is_russian(self):
+        self.assertEqual(self._status(), 'Оплачен')
+
+    def test_lazy_label_does_not_break_json(self):
+        """Регресс на сериализацию: DRF разворачивает ленивую строку сам,
+        ответ обязан остаться валидным JSON (иначе `response.json()` бросит)."""
+        payload = self.client.get(
+            '/orders/history/', HTTP_ACCEPT_LANGUAGE='en').json()
+        self.assertTrue(payload['ok'])
+        self.assertIsInstance(payload['orders'][0]['status_display'], str)
 
 
 # ─── Суммы корзины одной функцией ───

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from catalog.models import ProductSize, Stock
 from regions.models import Region
@@ -10,12 +11,16 @@ class Order(models.Model):
     """Заказ в интернет-магазине."""
 
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Ожидает оплаты'
-        PAID = 'paid', 'Оплачен'
-        SHIPPED = 'shipped', 'Отправлен'
-        DELIVERED = 'delivered', 'Доставлен'
-        CANCELLED = 'cancelled', 'Отменён'
-        EXPIRED = 'expired', 'Истёк'
+        # Лейблы ленивые: их печатает витрина (история заказов в профиле), и
+        # покупателю на /en/ и /kk/ статус обязан прийти на языке страницы.
+        # Бэкофис остаётся русским через свой источник — STATUS_COLORS
+        # и фильтр status_label (backoffice/templatetags/backoffice_tags.py).
+        PENDING = 'pending', _('Ожидает оплаты')
+        PAID = 'paid', _('Оплачен')
+        SHIPPED = 'shipped', _('Отправлен')
+        DELIVERED = 'delivered', _('Доставлен')
+        CANCELLED = 'cancelled', _('Отменён')
+        EXPIRED = 'expired', _('Истёк')
 
     number = models.CharField('Номер', max_length=20, unique=True, editable=False)
     status = models.CharField(

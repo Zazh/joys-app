@@ -129,7 +129,7 @@
                     <div class="w-1.5 h-1.5 rounded-full bg-stone-400 mt-1.5 shrink-0"></div>
                     <div>
                         <p class="text-stone-800">
-                            {{ log.get_old_status_display }} → {{ log.get_new_status_display }}
+                            {{ log.old_status|status_label }} → {{ log.new_status|status_label }}
                         </p>
                         <p class="text-stone-400 mt-0.5">
                             {{ log.changed_by.email|default:"Система" }} &middot; {{ log.changed_at|date:"d.m.Y H:i" }}
