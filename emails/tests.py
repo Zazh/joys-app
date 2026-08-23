@@ -601,6 +601,33 @@ class OwnerEmailsTest(EmailTestBase):
         self.assertIn('2950 ₽', subject)
         self.assertNotIn('₸', subject)
 
+    # ── Поля покупателя не подделывают строк письма (PP-01) ──
+
+    FORGED_ADDRESS = 'ул. Ленина 1\n\nСумма: 999'
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_alert_customer_fields_cannot_forge_lines(self, mock_api):
+        """Адрес с \n\n печатал в алерте поддельную «Сумма:» выше настоящей —
+        после one_line() адрес остаётся одной строкой внутри «Доставка:»."""
+        order = self._create_order(address=self.FORGED_ADDRESS)
+
+        _, body = self._alert_body(order, mock_api)
+
+        self.assertEqual(body.count('\nСумма:'), 1)
+        self.assertIn('Доставка: Алматы, ул. Ленина 1 Сумма: 999\n', body)
+
+    @patch('emails.service._send_via_api', return_value=(True, ''))
+    def test_notification_customer_fields_cannot_forge_lines(self, mock_api):
+        """То же для уведомления об оплате: санитайзер один на оба письма."""
+        from emails.service import send_payment_received_notification
+
+        send_payment_received_notification(
+            self._create_order(address=self.FORGED_ADDRESS))
+
+        _, _, body = mock_api.call_args[0]
+        self.assertEqual(body.count('\nСумма:'), 1)
+        self.assertIn('Доставка: Алматы, ул. Ленина 1 Сумма: 999\n', body)
+
     # ── Ссылка в бэкофис ──
 
     @patch('emails.service._send_via_api', return_value=(True, ''))

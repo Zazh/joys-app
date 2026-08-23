@@ -8,6 +8,7 @@ import certifi
 import requests
 from django.conf import settings
 
+from core.text import one_line
 from orders.models import Order
 from .base import BaseGateway, CallbackRejected, PaymentResult, PaymentStatus
 
@@ -219,10 +220,12 @@ class VTBGateway(BaseGateway):
 
         # Лог до всех проверок — по нему разбирается первый боевой callback,
         # если формат или подпись не совпадут. Токен и checksum не пишем.
+        # Значения — сырые query-параметры публичного URL: без one_line()
+        # `%0A` дописывал в лог поддельную запись (PP-01).
         logger.info(
             'VTB callback: mdOrder=%s orderNumber=%s operation=%s status=%s',
-            gateway_order_id, params.get('orderNumber', ''),
-            params.get('operation', ''), params.get('status', ''),
+            one_line(gateway_order_id), one_line(params.get('orderNumber', '')),
+            one_line(params.get('operation', '')), one_line(params.get('status', '')),
         )
 
         self._verify_callback_checksum(params)

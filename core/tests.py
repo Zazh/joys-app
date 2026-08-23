@@ -22,6 +22,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from catalog.models import Category, Product, ProductSize
+from core.text import one_line
 # Модулем, а не `from orders.tests import ...`: класс в неймспейсе core.tests
 # тест-раннер собрал бы и прогнал второй раз целиком
 from orders import tests as orders_tests
@@ -595,3 +596,28 @@ class ShopPausedTests(TestCase):
         self.assertContains(response, '>Меню</h2>')
         self.assertContains(response, '>Правовая информация</h2>')
         self.assertContains(response, 'Все права защищены')
+
+
+# ─── core/text.py::one_line — санитайзер значений покупателя (PP-01) ───
+
+class OneLineTests(SimpleTestCase):
+    """Один санитайзер на лог callback-а и письма владельцу (Р-5).
+
+    Перевод строки в значении от покупателя — это поддельная запись в логе
+    или поддельная строка в plain-text письме; здесь он обязан умереть.
+    """
+
+    def test_newlines_become_single_spaces(self):
+        self.assertEqual(
+            one_line('ул. Ленина 1\r\nСумма: 999'),
+            'ул. Ленина 1 Сумма: 999',
+        )
+
+    def test_controls_collapse_and_edges_trimmed(self):
+        self.assertEqual(one_line('  a \t\t b \n\n '), 'a b')
+
+    def test_none_is_empty_string(self):
+        self.assertEqual(one_line(None), '')
+
+    def test_plain_string_passes_unchanged(self):
+        self.assertEqual(one_line('ул. Абая 1, кв. 2'), 'ул. Абая 1, кв. 2')

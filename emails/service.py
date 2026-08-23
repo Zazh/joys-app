@@ -7,6 +7,8 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
+from core.text import one_line
+
 logger = logging.getLogger(__name__)
 
 _token_cache = {'token': None, 'expires_at': 0}
@@ -452,10 +454,10 @@ def send_payment_received_notification(order):
         f'Сумма: {total_line}\n'
         f'Регион: {region.name} · шлюз: {order.payment_gateway or "—"}\n\n'
         f'Состав заказа:\n{_order_items_text(order)}\n\n'
-        f'Покупатель: {order.customer_name}\n'
-        f'Телефон: {order.customer_phone}\n'
-        f'Email: {order.customer_email}\n'
-        f'Доставка: {order.city}, {order.address}\n\n'
+        f'Покупатель: {one_line(order.customer_name)}\n'
+        f'Телефон: {one_line(order.customer_phone)}\n'
+        f'Email: {one_line(order.customer_email)}\n'
+        f'Доставка: {one_line(order.city)}, {one_line(order.address)}\n\n'
         f'Заказ в бэкофисе: {order_url}\n'
     )
 
@@ -502,10 +504,10 @@ def send_expired_paid_alert(order):
         f'Истёк: {expired_at} (Алматы)\n'
         f'ID платежа: {order.payment_id or "—"}\n\n'
         f'Состав заказа:\n{_order_items_text(order)}\n\n'
-        f'Покупатель: {order.customer_name}\n'
-        f'Телефон: {order.customer_phone}\n'
-        f'Email: {order.customer_email}\n'
-        f'Доставка: {order.city}, {order.address}\n\n'
+        f'Покупатель: {one_line(order.customer_name)}\n'
+        f'Телефон: {one_line(order.customer_phone)}\n'
+        f'Email: {one_line(order.customer_email)}\n'
+        f'Доставка: {one_line(order.city)}, {one_line(order.address)}\n\n'
         f'Что делать: кнопка «Подтвердить оплату» в бэкофисе для истёкшего '
         f'заказа НЕ сработает — она принимает только заказы в статусе '
         f'«Ожидает оплаты». Разбор ручной: связаться с покупателем и '

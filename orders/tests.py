@@ -708,6 +708,22 @@ class PaymentCallbackViewTest(PaymentTestBase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
 
+    def test_vtb_callback_log_is_single_line(self):
+        """PP-01: перевод строки (%0A) в параметре callback-а дописывал в лог
+        поддельную запись — теперь значения проходят one_line() и запись одна.
+        """
+        forged = 'x\nINFO orders.views: Callback confirmed: подделка'
+
+        with self.assertLogs('orders.gateways.vtb', level='INFO') as logs:
+            self.client.get(
+                '/orders/payment/callback/vtb/', {'mdOrder': forged},
+            )
+
+        info = [r for r in logs.output if r.startswith('INFO:')]
+        self.assertEqual(len(info), 1)
+        self.assertNotIn('\n', info[0])
+        self.assertIn('mdOrder=x INFO orders.views:', info[0])
+
     @patch.object(HalykGateway, '_verify_signature', return_value=True)
     @patch('emails.service.send_payment_confirmed_email')
     def test_halyk_callback_json_confirms_payment(self, mock_email, mock_verify):
