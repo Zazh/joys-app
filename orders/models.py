@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
@@ -5,6 +7,13 @@ from django.utils.translation import gettext_lazy as _
 
 from catalog.models import ProductSize, Stock
 from regions.models import Region
+
+# Окно оплаты заказа: столько живёт PENDING до `release_expired_orders`.
+# Инвариант (PH-03): сессия банка (`orders/gateways/vtb.py::SESSION_TIMEOUT_SECS`)
+# ОБЯЗАНА быть короче этого окна — иначе банк принимает оплату по заказу,
+# который крон уже отменил и снял резерв. Держит тест
+# `orders/tests.py::test_session_timeout_is_shorter_than_order_window`.
+PAYMENT_WINDOW = timedelta(minutes=30)
 
 
 class Order(models.Model):

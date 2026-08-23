@@ -18,7 +18,7 @@ from orders.gateways.halyk import HalykGateway
 from orders.gateways.vtb import (
     SESSION_TIMEOUT_SECS, VTBGateway, _callback_checksum, _checksum_source,
 )
-from orders.models import Order, OrderItem
+from orders.models import PAYMENT_WINDOW, Order, OrderItem
 from regions.models import ExchangeRate, Region
 
 
@@ -80,7 +80,7 @@ class PaymentTestBase(TestCase):
             payment_gateway=gateway,
             payment_id=payment_id,
             status=status,
-            expires_at=timezone.now() + timedelta(minutes=30),
+            expires_at=timezone.now() + PAYMENT_WINDOW,
         )
         OrderItem.objects.create(
             order=order,
@@ -163,14 +163,16 @@ class VTBGatewayTest(PaymentTestBase):
         self.assertEqual(params['sessionTimeoutSecs'], 1500)
 
     def test_session_timeout_is_shorter_than_order_window(self):
-        """Инвариант: сессия банка короче нашего окна оплаты (30 минут,
-        `orders/views.py::_create_order`).
+        """Инвариант: сессия банка короче нашего окна оплаты
+        (`orders/models.py::PAYMENT_WINDOW` — его и использует
+        `_create_order`).
 
-        Поднять таймаут выше 30 минут — значит вернуть окно «деньги списаны,
-        заказ EXPIRED»: банк ещё принимает оплату по заказу, который крон
-        `release_expired_orders` уже отменил и снял резерв.
+        Поднять таймаут выше окна ИЛИ сузить окно ниже таймаута — значит
+        вернуть дыру «деньги списаны, заказ EXPIRED»: банк ещё принимает
+        оплату по заказу, который крон `release_expired_orders` уже отменил
+        и снял резерв.
         """
-        self.assertLess(SESSION_TIMEOUT_SECS, 30 * 60)
+        self.assertLess(SESSION_TIMEOUT_SECS, PAYMENT_WINDOW.total_seconds())
 
     @patch.object(VTBGateway, '_post')
     def test_check_status_paid(self, mock_post):

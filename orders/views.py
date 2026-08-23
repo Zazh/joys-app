@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 
 from django.conf import settings
 from django.db import transaction
@@ -23,7 +22,7 @@ from emails.service import send_order_created_email
 from .forms import CheckoutForm
 from .gateways import get_gateway, get_gateway_by_code
 from .gateways.base import CallbackRejected
-from .models import Order, OrderItem
+from .models import PAYMENT_WINDOW, Order, OrderItem
 from .serializers import (
     CartAddSerializer, CartRemoveSerializer, CartUpdateSerializer,
     FavoriteToggleSerializer, OrderSerializer,
@@ -425,7 +424,7 @@ class CheckoutView(View):
             'customer_email': email or request.user.email,
             'city': city,
             'address': address,
-            'expires_at': timezone.now() + timedelta(minutes=30),
+            'expires_at': timezone.now() + PAYMENT_WINDOW,
         }
 
         if region.needs_conversion:
