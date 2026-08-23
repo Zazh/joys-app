@@ -193,7 +193,7 @@ class VTBGateway(BaseGateway):
             # без раскопок в алгоритме HMAC.
             logger.error(
                 'VTB callback ОТКЛОНЁН (нет checksum): mdOrder=%s',
-                params.get('mdOrder', ''),
+                one_line(params.get('mdOrder', '')),
             )
             raise CallbackRejected('no checksum')
 
@@ -208,7 +208,7 @@ class VTBGateway(BaseGateway):
         if not hmac.compare_digest(expected, checksum.upper().encode('utf-8')):
             logger.error(
                 'VTB callback ОТКЛОНЁН (подпись не сошлась): mdOrder=%s',
-                params.get('mdOrder', ''),
+                one_line(params.get('mdOrder', '')),
             )
             raise CallbackRejected('invalid checksum')
 
@@ -236,7 +236,7 @@ class VTBGateway(BaseGateway):
         try:
             order = Order.objects.get(payment_id=gateway_order_id)
         except Order.DoesNotExist:
-            logger.warning('VTB callback: order not found for %s', gateway_order_id)
+            logger.warning('VTB callback: order not found for %s', one_line(gateway_order_id))
             return None, False
 
         status = self.check_status(gateway_order_id)

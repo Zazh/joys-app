@@ -721,8 +721,11 @@ class PaymentCallbackViewTest(PaymentTestBase):
 
         info = [r for r in logs.output if r.startswith('INFO:')]
         self.assertEqual(len(info), 1)
-        self.assertNotIn('\n', info[0])
         self.assertIn('mdOrder=x INFO orders.views:', info[0])
+        # Ни одна запись callback-пути (включая «order not found») не
+        # раскрывает %0A в перевод строки
+        for record in logs.output:
+            self.assertNotIn('\n', record)
 
     @patch.object(HalykGateway, '_verify_signature', return_value=True)
     @patch('emails.service.send_payment_confirmed_email')
