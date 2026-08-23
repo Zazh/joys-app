@@ -19,6 +19,37 @@ from .management.commands.import_offline_stores import parse_partner_body
 from .models import City, ContactSettings, OfflineStore, Page
 
 
+class JsonLdMixin:
+    """Разбор JSON-LD страницы — один на все тесты разметки.
+
+    Регулярка и `json.loads` лежали копией в каждом классе. Разметка отдаётся
+    с экранированием под тег `<script>` (`serialize_jsonld`), `json.loads`
+    его разворачивает.
+    """
+
+    def _jsonld_blocks(self, response):
+        """Все блоки со страницы; битый блок падает исключением тут же."""
+        return [
+            json.loads(raw.decode('utf-8'))
+            for raw in re.findall(
+                rb'<script type="application/ld\+json">(.*?)</script>',
+                response.content, re.S,
+            )
+        ]
+
+    def _jsonld(self, response, type_):
+        """Блок нужного @type; его отсутствие — провал теста."""
+        for data in self._jsonld_blocks(response):
+            if data.get('@type') == type_:
+                return data
+        self.fail(f'блок JSON-LD @type={type_} на странице не найден')
+
+    def _of_type(self, response, type_):
+        """Все блоки нужного @type — там, где важно их количество."""
+        return [b for b in self._jsonld_blocks(response)
+                if b.get('@type') == type_]
+
+
 class ContactSettingsFormatTests(TestCase):
     """phone_display, ссылки мессенджеров, address_line, social_links."""
 
@@ -266,7 +297,7 @@ class ContactSettingsCacheTests(TestCase):
         self.assertIsNone(cache.get(CONTACTS_CACHE_KEY))
 
 
-class ContactsPageRenderTests(TestCase):
+class ContactsPageRenderTests(JsonLdMixin, TestCase):
     """Страница контактов и футер: контакты доезжают из модели в разметку.
 
     Сессия 2 (docs/contact_settings.md §5) — переезд шаблонов и JSON-LD на модель.
@@ -287,18 +318,6 @@ class ContactsPageRenderTests(TestCase):
         with translation.override(lang):
             url = self.page.get_absolute_url()
         return self.client.get(url)
-
-    def _jsonld(self, response, type_):
-        """Блок JSON-LD нужного @type со страницы."""
-        for raw in re.findall(
-            rb'<script type="application/ld\+json">(.*?)</script>',
-            response.content, re.S,
-        ):
-            # Разметка отдаётся с <-экранированием, json.loads его разворачивает
-            data = json.loads(raw.decode('utf-8'))
-            if data.get('@type') == type_:
-                return data
-        self.fail(f'блок JSON-LD @type={type_} на странице не найден')
 
     def test_coordinates_not_localized(self):
         """На /ru/ float печатается как «51,15824», и parseFloat в contacts.js даёт 51 —
@@ -515,7 +534,7 @@ class ImportOfflineStoresTests(TestCase):
         self.assertEqual(OfflineStore.objects.count(), 3)
 
 
-class PartnersPageTests(TestCase):
+class PartnersPageTests(JsonLdMixin, TestCase):
     """Страница /partners/: свой шаблон, группировка по городам, JSON-LD."""
 
     @classmethod
@@ -543,16 +562,6 @@ class PartnersPageTests(TestCase):
         with translation.override(lang):
             url = self.page.get_absolute_url()
         return self.client.get(url)
-
-    def _jsonld(self, response, type_):
-        for raw in re.findall(
-            rb'<script type="application/ld\+json">(.*?)</script>',
-            response.content, re.S,
-        ):
-            data = json.loads(raw.decode('utf-8'))
-            if data.get('@type') == type_:
-                return data
-        self.fail(f'блок JSON-LD @type={type_} на странице не найден')
 
     def test_uses_partners_template(self):
         response = self._get()
@@ -630,7 +639,7 @@ class PartnersPageTests(TestCase):
         self.assertEqual(items['Flirtshop']['address']['addressCountry'], 'KZ')
 
 
-class PageJsonLdTests(TestCase):
+class PageJsonLdTests(JsonLdMixin, TestCase):
     """WebPage обычной CMS-страницы собирается в Python (SP-04).
 
     Инлайновый блок `pages/page.html` подставлял заголовок прямо в тело
@@ -652,19 +661,6 @@ class PageJsonLdTests(TestCase):
             url = page.get_absolute_url()
         return self.client.get(url)
 
-    def _blocks(self, response):
-        """Все блоки JSON-LD со страницы, разобранные json.loads."""
-        return [
-            json.loads(raw.decode('utf-8'))
-            for raw in re.findall(
-                rb'<script type="application/ld\+json">(.*?)</script>',
-                response.content, re.S,
-            )
-        ]
-
-    def _of_type(self, response, type_):
-        return [b for b in self._blocks(response) if b.get('@type') == type_]
-
     def test_generic_page_has_single_webpage_block(self):
         response = self._get()
         blocks = self._of_type(response, 'WebPage')
@@ -677,18 +673,25 @@ class PageJsonLdTests(TestCase):
         self.assertEqual(block['inLanguage'], 'ru')
         self.assertEqual(block['publisher']['@type'], 'Organization')
 
-    def test_quote_in_title_keeps_markup_parsable(self):
-        """Регресс на причину задачи: до переноса в Python такой заголовок
-        рвал блок, и json.loads падал на первом же кавычном разрыве."""
-        page = Page.objects.create(
-            slug='privacy', title='Политика "конфиденциальности"', body='',
-        )
+    def test_special_chars_in_title_keep_markup_parsable(self):
+        """Регресс на причину задачи — оба символа, которыми контент-менеджер
+        ломал разметку заголовком.
+
+        Шаблон подставлял заголовок прямо в тело скрипта. Кавычку
+        автоэкранирование Django превращало в `&quot;`: блок оставался
+        разбираемым, но в разметку уезжало испорченное название. Обратный слэш
+        `escape()` не трогает вовсе — на нём `json.loads` падал
+        «Invalid \\escape», то есть блок рвался целиком. `json.dumps`
+        экранирует оба символа сам.
+        """
+        title = 'Политика "конфиденциальности" \\ 2026'
+        page = Page.objects.create(slug='privacy', title=title, body='')
         response = self._get(page)
         self.assertEqual(response.status_code, 200)
-        blocks = self._blocks(response)  # падает исключением, если хоть один битый
+        blocks = self._jsonld_blocks(response)  # битый блок падает тут же
         webpage = [b for b in blocks if b.get('@type') == 'WebPage']
         self.assertEqual(len(webpage), 1)
-        self.assertEqual(webpage[0]['name'], 'Политика "конфиденциальности"')
+        self.assertEqual(webpage[0]['name'], title)
 
     def test_body_has_no_inline_markup(self):
         """Разметка живёт только в <head>: в теле страницы блоков не осталось."""

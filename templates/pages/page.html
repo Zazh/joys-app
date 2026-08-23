@@ -5,7 +5,9 @@
 
 {% block meta %}
 {% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}
-{# Хлебные крошки собирает PageDetailView для любой CMS-страницы — pages/views.py #}
+{# Разметку целиком собирает PageDetailView (pages/views.py): BreadcrumbList #}
+{# и WebPage. Интерполяции в теле скрипта тут больше нет — кавычка или слэш #}
+{# в заголовке страницы портили такой блок (SP-04) #}
 {% for jsonld_str in jsonld_blocks %}
 <script type="application/ld+json">{{ jsonld_str|safe }}</script>
 {% endfor %}
