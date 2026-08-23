@@ -43,19 +43,5 @@
         </div>
     </section>
 
-    <!-- JSON-LD structured data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": "{{ page.meta_title|default:page.title }}",
-        {% if page.meta_description %}"description": "{{ page.meta_description }}",{% endif %}
-        "url": "{{ canonical_url }}",
-        "publisher": {
-            "@type": "Organization",
-            "name": "DR.JOYS"
-        }
-    }
-    </script>
 </main>
 {% endblock %}

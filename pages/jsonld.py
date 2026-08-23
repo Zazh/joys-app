@@ -99,6 +99,40 @@ def build_contact_page_jsonld(request, page, description=''):
     return result
 
 
+def build_page_jsonld(request, page, description=''):
+    """WebPage обычной CMS-страницы.
+
+    Собирается тут, а не в шаблоне, ровно по инварианту «разметка — только
+    JSON-LD, собранная в Python»: инлайновый блок `pages/page.html` подставлял
+    заголовок и описание прямо в тело скрипта, и одна кавычка в заголовке,
+    набранная контент-менеджером в бэкофисе, ломала блок целиком. json.dumps
+    экранирует такой заголовок сам.
+
+    Блок положен только страницам generic-шаблона: у `/contacts/` и
+    `/partners/` уже есть свой верхний блок с тем же `@id` (ContactPage и
+    WebPage + ItemList), второй такой же был бы конфликтом — условие живёт
+    во вьюхе (`slug not in CUSTOM_TEMPLATES`).
+    """
+    page_url = absolute_url(page.get_absolute_url())
+
+    result = {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        '@id': page_url,
+        'url': page_url,
+        'name': page.meta_title or page.title,
+        'inLanguage': get_language(),
+        'publisher': {
+            '@type': 'Organization',
+            '@id': organization_id(request),
+            'name': 'DR.JOYS',
+        },
+    }
+    if description:
+        result['description'] = description
+    return result
+
+
 def build_offline_stores_jsonld(request, page, stores, description=''):
     """Оффлайн-точки — ItemList из Store с адресом и координатами.
 

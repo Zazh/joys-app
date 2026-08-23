@@ -628,3 +628,87 @@ class PartnersPageTests(TestCase):
         self.assertEqual(items['KG Shop']['address']['addressCountry'], 'KG')
         self.assertEqual(items['KG Shop']['address']['addressLocality'], 'Bishkek')
         self.assertEqual(items['Flirtshop']['address']['addressCountry'], 'KZ')
+
+
+class PageJsonLdTests(TestCase):
+    """WebPage обычной CMS-страницы собирается в Python (SP-04).
+
+    Инлайновый блок `pages/page.html` подставлял заголовок прямо в тело
+    скрипта: кавычка в заголовке, набранная в бэкофисе, ломала разметку
+    целиком. Здесь же проверяется, что второго WebPage у страниц со своими
+    шаблонами не появилось — у них свой верхний блок с тем же `@id`.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.page = Page.objects.create(
+            slug='delivery', title='Доставка и оплата', body='<p>Текст страницы</p>',
+            meta_title='Доставка — DR.JOYS', meta_description='Как мы доставляем заказы.',
+        )
+
+    def _get(self, page=None, lang='ru'):
+        page = page or self.page
+        with translation.override(lang):
+            url = page.get_absolute_url()
+        return self.client.get(url)
+
+    def _blocks(self, response):
+        """Все блоки JSON-LD со страницы, разобранные json.loads."""
+        return [
+            json.loads(raw.decode('utf-8'))
+            for raw in re.findall(
+                rb'<script type="application/ld\+json">(.*?)</script>',
+                response.content, re.S,
+            )
+        ]
+
+    def _of_type(self, response, type_):
+        return [b for b in self._blocks(response) if b.get('@type') == type_]
+
+    def test_generic_page_has_single_webpage_block(self):
+        response = self._get()
+        blocks = self._of_type(response, 'WebPage')
+        self.assertEqual(len(blocks), 1)
+        block = blocks[0]
+        self.assertEqual(block['name'], 'Доставка — DR.JOYS')
+        self.assertEqual(block['url'], block['@id'])
+        self.assertTrue(block['url'].endswith('/ru/delivery/'), block['url'])
+        self.assertEqual(block['description'], 'Как мы доставляем заказы.')
+        self.assertEqual(block['inLanguage'], 'ru')
+        self.assertEqual(block['publisher']['@type'], 'Organization')
+
+    def test_quote_in_title_keeps_markup_parsable(self):
+        """Регресс на причину задачи: до переноса в Python такой заголовок
+        рвал блок, и json.loads падал на первом же кавычном разрыве."""
+        page = Page.objects.create(
+            slug='privacy', title='Политика "конфиденциальности"', body='',
+        )
+        response = self._get(page)
+        self.assertEqual(response.status_code, 200)
+        blocks = self._blocks(response)  # падает исключением, если хоть один битый
+        webpage = [b for b in blocks if b.get('@type') == 'WebPage']
+        self.assertEqual(len(webpage), 1)
+        self.assertEqual(webpage[0]['name'], 'Политика "конфиденциальности"')
+
+    def test_body_has_no_inline_markup(self):
+        """Разметка живёт только в <head>: в теле страницы блоков не осталось."""
+        response = self._get()
+        body = response.content.split(b'<main', 1)[1]
+        self.assertNotIn(b'application/ld+json', body)
+
+    def test_contacts_page_keeps_its_own_block(self):
+        """У страницы контактов свой верхний блок с тем же @id — WebPage
+        рядом с ним был бы вторым описанием одного объекта."""
+        contacts_page = Page.objects.create(slug='contacts', title='Контакты', body='')
+        cache.delete(CONTACTS_CACHE_KEY)
+        response = self._get(contacts_page)
+        self.assertEqual(len(self._of_type(response, 'ContactPage')), 1)
+        self.assertEqual(self._of_type(response, 'WebPage'), [])
+
+    def test_partners_page_has_exactly_one_webpage_block(self):
+        partners = Page.objects.create(slug='partners', title='Оффлайн магазины', body='')
+        city = City.objects.create(name='Алматы')
+        OfflineStore.objects.create(city=city, name='Flirtshop', address='Абая, 1')
+        blocks = self._of_type(self._get(partners), 'WebPage')
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]['mainEntity']['@type'], 'ItemList')

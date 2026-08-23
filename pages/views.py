@@ -16,7 +16,7 @@ from quiz.models import QuizQuestion, QuizResultText
 from reviews.models import Review
 from .jsonld import (
     build_blog_list_jsonld, build_blogposting_jsonld, build_contact_page_jsonld,
-    build_offline_stores_jsonld,
+    build_offline_stores_jsonld, build_page_jsonld,
 )
 from .models import (
     PageCategory, Page, BlogPost, HeroSection, HeroCard, FeatureSlide, PromoBlock,
@@ -266,6 +266,10 @@ class PageDetailView(DetailView):
             if page.slug == 'contacts' else None,
             build_offline_stores_jsonld(self.request, page, stores, description)
             if stores is not None else None,
+            # У страниц своих шаблонов уже есть верхний блок с тем же @id
+            # (ContactPage и WebPage + ItemList) — второй такой же был бы конфликтом
+            build_page_jsonld(self.request, page, description)
+            if page.slug not in self.CUSTOM_TEMPLATES else None,
         )
         return ctx
 
