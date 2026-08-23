@@ -70,7 +70,7 @@ class RegionMiddleware:
             show_modal = True
 
         request.region = region
-        request.region_code = region.code if region else 'kz'
+        request.region_code = region.code if region else ''
         request.show_region_modal = show_modal
 
         return self.get_response(request)

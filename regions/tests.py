@@ -383,3 +383,49 @@ class SetRegionNoDefaultTest(RegionTestBase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.cookies['drjoys_region'].value, 'ru')
+
+
+class RegionModalNoDefaultTest(RegionTestBase):
+    """PP-07: в окне «ноль дефолтов» регион не выбирается за посетителя.
+
+    До правки middleware подставлял в `request.region_code` хардкод `'kz'`
+    (жил с первого коммита), и кнопка «ДА, ВСЁ ВЕРНО» модалки «подтверждала»
+    регион, которого посетителю даже не показали (название гасил
+    `{% if current_region %}`). Решение Р-4: оба лечения сразу — пустой
+    `region_code` при `region is None` И скрытая форма подтверждения.
+    """
+
+    CONFIRM_TEXT = 'ДА, ВСЁ ВЕРНО'
+    CHOOSE_TEXT = 'ВЫБРАТЬ ДРУГОЙ'
+
+    def _drop_default(self):
+        # Первая половина легитимной смены дефолта; `update()` минует сигналы,
+        # поэтому кеш чистим руками (образец — SetRegionNoDefaultTest)
+        Region.objects.filter(pk=self.region_kz.pk).update(is_default=False)
+        cache.clear()
+
+    def test_no_default_window_hides_confirm_button(self):
+        self._drop_default()
+
+        response = self.client.get(reverse('catalog:catalog'))
+
+        self.assertNotContains(response, self.CONFIRM_TEXT)
+        self.assertContains(response, self.CHOOSE_TEXT)
+        self.assertEqual(response.context['region_code'], '')
+
+    def test_default_alive_renders_confirm_form_with_default_code(self):
+        response = self.client.get(reverse('catalog:catalog'))
+
+        self.assertContains(response, self.CONFIRM_TEXT)
+        self.assertContains(response, 'name="region" value="kz"')
+        self.assertEqual(response.context['region_code'], 'kz')
+
+    def test_middleware_region_code_is_empty_without_region(self):
+        """Мутация «вернуть `'kz'`» обязана ронять этот тест."""
+        self._drop_default()
+        request = RequestFactory().get('/')
+
+        RegionMiddleware(lambda req: HttpResponse())(request)
+
+        self.assertIsNone(request.region)
+        self.assertEqual(request.region_code, '')

@@ -20,6 +20,7 @@
                     {% if current_region %}{{ current_region.flag_emoji }} {{ current_region.name }}{% endif %}
                 </p>
                 <div class="flex flex-col gap-3 w-full">
+                    {% if current_region %}
                     <form method="post" action="{% url 'regions:set_region' %}">
                         {% csrf_token %}
                         <input type="hidden" name="region" value="{{ region_code }}">
@@ -28,6 +29,7 @@
                             {% trans "ДА, ВСЁ ВЕРНО" %}
                         </button>
                     </form>
+                    {% endif %}
                     <button type="button" class="btn-macro default w-full text-center text-xs"
                             id="regionShowList">
                         {% trans "ВЫБРАТЬ ДРУГОЙ" %}

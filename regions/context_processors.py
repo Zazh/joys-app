@@ -14,7 +14,7 @@ def region_context(request):
     region = getattr(request, 'region', None)
     return {
         'current_region': region,
-        'region_code': getattr(request, 'region_code', 'kz'),
+        'region_code': getattr(request, 'region_code', ''),
         'currency_symbol': region.currency_symbol if region else '\u20b8',
         'currency_code': region.currency_code if region else 'KZT',
         'payment_currency_symbol': region.payment_currency_symbol if region and region.needs_conversion else '',
