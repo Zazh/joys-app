@@ -1,3 +1,5 @@
+from django.utils import formats, timezone
+
 from rest_framework import serializers
 
 
@@ -66,11 +68,17 @@ class OrderSerializer(serializers.Serializer):
     city = serializers.CharField()
     address = serializers.CharField()
     customer_name = serializers.CharField()
-    created_at = serializers.DateTimeField()
+    created_at_display = serializers.SerializerMethodField()
     items = OrderItemSerializer(many=True, source='items.all')
 
     def get_status_display(self, obj):
         return obj.get_status_display()
+
+    def get_created_at_display(self, obj):
+        # Дата — готовой строкой на активном языке: названия казахских
+        # месяцев в ICU обычного Chrome нет, клиент их не соберёт (PP-09).
+        # Формат 'j E Y' — дефолтный DATE_FORMAT для kk даёт «Там. 22, 2026».
+        return formats.date_format(timezone.localtime(obj.created_at), 'j E Y')
 
     def get_currency_symbol(self, obj):
         return obj.region.currency_symbol if obj.region else '₸'

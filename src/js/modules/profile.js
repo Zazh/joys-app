@@ -41,11 +41,6 @@ export function initProfileModal() {
         }
     }
 
-    function formatDate(isoStr) {
-        const d = new Date(isoStr);
-        return d.toLocaleDateString(document.documentElement.lang || 'ru', { day: 'numeric', month: 'long', year: 'numeric' });
-    }
-
     async function loadOrders() {
         if (ordersLoaded) return;
         const loadingEl = document.getElementById('ordersLoading');
@@ -82,7 +77,7 @@ export function initProfileModal() {
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-bold">#${escapeHtml(order.number)}</p>
-                            <p class="text-[10px] text-gray-500">${formatDate(order.created_at)}</p>
+                            <p class="text-[10px] text-gray-500">${escapeHtml(order.created_at_display)}</p>
                         </div>
                         <span class="order-status ${statusCls} text-[10px] font-bold px-2 py-0.5 rounded-full">${escapeHtml(order.status_display)}</span>
                     </div>
@@ -125,7 +120,7 @@ export function initProfileModal() {
 
         contentEl.innerHTML = `
             <div class="flex justify-between items-center">
-                <p class="text-xs text-gray-500">${formatDate(order.created_at)}</p>
+                <p class="text-xs text-gray-500">${escapeHtml(order.created_at_display)}</p>
                 <span class="order-status ${statusCls} text-[10px] font-bold px-2 py-0.5 rounded-full">${escapeHtml(order.status_display)}</span>
             </div>
             <div class="flex flex-col divide-y divide-stone-50">

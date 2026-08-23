@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
@@ -2574,6 +2574,57 @@ class OrderStatusI18nTest(PaymentTestBase):
             '/orders/history/', HTTP_ACCEPT_LANGUAGE='en').json()
         self.assertTrue(payload['ok'])
         self.assertIsInstance(payload['orders'][0]['status_display'], str)
+
+
+# ─── Дата заказа: готовой строкой с сервера ───
+
+class OrderDateI18nTest(PaymentTestBase):
+    """PP-09: дата истории заказов приходит готовой строкой
+    (`created_at_display`) — в ICU обычного Chrome нет названий казахских
+    месяцев, и `toLocaleDateString('kk')` печатал «2026 M08 22». Формат —
+    `date_format(localtime(created_at), 'j E Y')` на активном языке.
+
+    Фикстурная дата — 21.08 23:00 UTC: локальное время (+05:00) — уже
+    22.08, поэтому каждый точный assert заодно держит границу суток.
+    Куку `django_language` не ставим — она сильнее заголовка.
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.client.login(email='test@example.com', password='test12345')
+        order = self._create_order(status=Order.Status.PAID)
+        # auto_now_add перебивается только через update()
+        Order.objects.filter(pk=order.pk).update(
+            created_at=datetime(2026, 8, 21, 23, 0, tzinfo=dt_timezone.utc),
+        )
+
+    def _display(self, lang=None):
+        headers = {'HTTP_ACCEPT_LANGUAGE': lang} if lang else {}
+        response = self.client.get('/orders/history/', **headers)
+        self.assertEqual(response.status_code, 200)
+        return response.json()['orders'][0]['created_at_display']
+
+    def test_kk_month_in_words(self):
+        self.assertEqual(self._display('kk'), '22 Тамыз 2026')
+
+    def test_en_month_in_words(self):
+        self.assertEqual(self._display('en'), '22 August 2026')
+
+    def test_without_header_is_russian(self):
+        self.assertEqual(self._display(), '22 августа 2026')
+
+    def test_date_is_local_time_not_utc(self):
+        """Граница суток: 21.08 23:00 UTC → 22.08 местного (+05:00).
+        Снятый `timezone.localtime` печатал бы 21-е — тест обязан упасть."""
+        display = self._display('en')
+        self.assertTrue(display.startswith('22 '), display)
+
+    def test_raw_created_at_removed_from_payload(self):
+        """Голый `created_at` из ответа ушёл: читателей не осталось,
+        мёртвых полей не держим (ТЗ PP-09)."""
+        order = self.client.get('/orders/history/').json()['orders'][0]
+        self.assertNotIn('created_at', order)
+        self.assertIn('created_at_display', order)
 
 
 # ─── Суммы корзины одной функцией ───
