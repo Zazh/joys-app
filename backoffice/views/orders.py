@@ -47,7 +47,10 @@ class OrderListView(BackofficeAccessMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['statuses'] = Order.Status.choices
+        # Только коды: лейблы Order.Status ленивые и перевелись бы языком
+        # куки, а бэкофис русский — подпись пункту даёт фильтр status_label
+        # над STATUS_COLORS, единственным русским источником (Р-6 shop-polish)
+        ctx['statuses'] = Order.Status.values
         ctx['regions'] = Region.objects.filter(is_active=True).order_by('order')
         ctx['current_status'] = self.request.GET.get('status', '')
         ctx['current_q'] = self.request.GET.get('q', '')

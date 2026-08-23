@@ -15,9 +15,8 @@
             <label class="block text-xs text-stone-500 mb-1">Статус</label>
             <select name="status" class="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs">
                 <option value="">Все</option>
-                {# Лейбл из Order.Status ленивый и переводится языком куки — бэкофис #}
-                {# остаётся русским через свой источник, фильтр status_label (Р-6 SP) #}
-                {% for value, lazy_label in statuses %}
+                {# В statuses только коды: подпись даёт status_label, бэкофис русский #}
+                {% for value in statuses %}
                 <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ value|status_label }}</option>
                 {% endfor %}
             </select>
