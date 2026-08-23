@@ -1275,8 +1275,9 @@
 <script>
     // --------------------------------------------
     // HOME MODALS (quiz, tattoo, partner)
-    // Uses global openModal/closeModal/goToStep from main.js
-    // Escape key and phone mask are handled globally in main.js
+    // Uses global openModal/apiPost from main.js
+    // Закрытие модалок (крестик, фон, Escape) и маска телефона — на общих
+    // делегатах main.js; локальных обработчиков закрытия здесь нет
     // --------------------------------------------
     document.addEventListener('DOMContentLoaded', () => {
         // --- Quiz modal ---
@@ -1293,12 +1294,6 @@
                 quizContent.style.backgroundSize = '';
                 quizContent.style.backgroundPosition = '';
                 quizContent.classList.remove('modal-result-dark');
-            }
-
-            function closeQuiz() {
-                closeModal(quizOverlay);
-                quizAnswers = {};
-                resetQuizTheme();
             }
 
             function goToQuizStep(stepNum) {
@@ -1367,10 +1362,6 @@
                 });
             }
 
-            quizOverlay.querySelectorAll('.modal-close-quiz').forEach(btn => {
-                btn.addEventListener('click', () => closeQuiz());
-            });
-
             quizOverlay.querySelectorAll('.quiz-option').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const step = btn.closest('.modal-step');
@@ -1391,8 +1382,14 @@
                 });
             });
 
-            quizOverlay.addEventListener('click', (e) => {
-                if (e.target === quizOverlay) closeQuiz();
+            // Сброс на любом пути закрытия (Escape, фон, крестик) — modal-core
+            // диспатчит modal:close из closeModal; звать closeModal отсюда
+            // нельзя (рекурсия события)
+            quizOverlay.addEventListener('modal:close', () => {
+                quizAnswers = {};
+                quizProducts = [];
+                quizProductIndex = 0;
+                resetQuizTheme();
             });
         }
 
@@ -1405,12 +1402,11 @@
         const openPartnerBtns = document.querySelectorAll('.open-partner-modal');
 
         if (partnerOverlay) {
+            // Открытие — своё: класс .open-partner-modal делегаты не знают.
+            // Закрытие не вешаем вообще (крестик, «Закрыть», фон и Escape —
+            // на делегатах modal-core.js), как и в modules/interactive-modals.js
             openPartnerBtns.forEach(btn => {
                 btn.addEventListener('click', () => openModal(partnerOverlay));
-            });
-
-            partnerOverlay.addEventListener('click', (e) => {
-                if (e.target === partnerOverlay) closeModal(partnerOverlay);
             });
         }
     });
