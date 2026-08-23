@@ -12,7 +12,7 @@ from django.utils import timezone
 from accounts.models import User
 from catalog.models import Category, Product, ProductSize, Stock
 from emails.models import EmailTemplate, EmailLog
-from orders.models import Order, OrderItem
+from orders.models import PAYMENT_WINDOW, Order, OrderItem
 from regions.models import Region
 
 
@@ -52,7 +52,7 @@ class EmailTestBase(TestCase):
             address='ул. Абая 1',
             total_amount=Decimal('5000'),
             status=Order.Status.PAID,
-            expires_at=timezone.now() + timedelta(minutes=30),
+            expires_at=timezone.now() + PAYMENT_WINDOW,
         )
         defaults.update(kwargs)
         order = Order.objects.create(**defaults)
