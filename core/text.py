@@ -24,8 +24,9 @@ def one_line(value):
     владельцу поддельные строки «Сумма:» выше настоящих.
 
     Кто пользуется (санитайзер в проекте один — Р-5 `payments-polish`):
-    `orders/gateways/vtb.py::process_callback` (INFO-строка callback-а) и
-    `emails/service.py` (оба письма владельцу).
+    `orders/gateways/vtb.py` (все записи лога callback-пути, печатающие
+    query-параметры) и `emails/service.py::_owner_customer_lines`
+    (оба письма владельцу).
     """
     if value is None:
         return ''

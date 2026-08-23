@@ -947,6 +947,28 @@ class PaymentCallbackViewTest(PaymentTestBase):
         self.assertEqual(order.status, Order.Status.PENDING)
         mock_post.assert_not_called()
 
+    @override_settings(VTB_CALLBACK_TOKEN=CALLBACK_TOKEN)
+    @patch.object(VTBGateway, '_post')
+    def test_vtb_callback_rejection_log_is_single_line(self, mock_post):
+        """PP-01 (довесок): ERROR-записи отказа («нет checksum», «подпись не
+        сошлась») печатают mdOrder через one_line() — %0A в параметре не
+        дописывает поддельную запись и на пути отказа. Тест INFO-строки
+        живёт с пустым токеном и до этих веток не доходит."""
+        forged = 'x\nERROR подделка'
+
+        for params in (
+            {'mdOrder': forged},                       # нет checksum
+            {'mdOrder': forged, 'checksum': 'AABB'},   # подпись не сошлась
+        ):
+            with self.assertLogs('orders.gateways.vtb', level='ERROR') as logs:
+                response = self.client.get(
+                    '/orders/payment/callback/vtb/', params,
+                )
+            self.assertEqual(response.status_code, 403)
+            self.assertEqual(len(logs.output), 1)
+            self.assertNotIn('\n', logs.output[0])
+            self.assertIn('mdOrder=x ERROR подделка', logs.output[0])
+
     @override_settings(VTB_CALLBACK_TOKEN='')
     @patch.object(VTBGateway, '_post')
     @patch('emails.service.send_payment_confirmed_email')

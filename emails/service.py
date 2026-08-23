@@ -422,6 +422,23 @@ def _owner_total_lines(order):
     return total, total
 
 
+def _owner_customer_lines(order):
+    """Блок «кто и куда» в письмах владельцу.
+
+    Поля пишет покупатель, поэтому каждое идёт через `one_line()`: перевод
+    строки в адресе печатал в plain-text письме поддельные строки выше
+    настоящих (PP-01). Блок общий для уведомления об оплате и алерта
+    «истёк, но оплачен» — копия в двух письмах разъехалась бы вместе с
+    санитайзером (Р-5), как разъехались суммы в PAY-07.
+    """
+    return (
+        f'Покупатель: {one_line(order.customer_name)}\n'
+        f'Телефон: {one_line(order.customer_phone)}\n'
+        f'Email: {one_line(order.customer_email)}\n'
+        f'Доставка: {one_line(order.city)}, {one_line(order.address)}\n\n'
+    )
+
+
 def _order_backoffice_url(order):
     """Адрес карточки заказа в бэкофисе.
 
@@ -454,10 +471,7 @@ def send_payment_received_notification(order):
         f'Сумма: {total_line}\n'
         f'Регион: {region.name} · шлюз: {order.payment_gateway or "—"}\n\n'
         f'Состав заказа:\n{_order_items_text(order)}\n\n'
-        f'Покупатель: {one_line(order.customer_name)}\n'
-        f'Телефон: {one_line(order.customer_phone)}\n'
-        f'Email: {one_line(order.customer_email)}\n'
-        f'Доставка: {one_line(order.city)}, {one_line(order.address)}\n\n'
+        f'{_owner_customer_lines(order)}'
         f'Заказ в бэкофисе: {order_url}\n'
     )
 
@@ -504,10 +518,7 @@ def send_expired_paid_alert(order):
         f'Истёк: {expired_at} (Алматы)\n'
         f'ID платежа: {order.payment_id or "—"}\n\n'
         f'Состав заказа:\n{_order_items_text(order)}\n\n'
-        f'Покупатель: {one_line(order.customer_name)}\n'
-        f'Телефон: {one_line(order.customer_phone)}\n'
-        f'Email: {one_line(order.customer_email)}\n'
-        f'Доставка: {one_line(order.city)}, {one_line(order.address)}\n\n'
+        f'{_owner_customer_lines(order)}'
         f'Что делать: кнопка «Подтвердить оплату» в бэкофисе для истёкшего '
         f'заказа НЕ сработает — она принимает только заказы в статусе '
         f'«Ожидает оплаты». Разбор ручной: связаться с покупателем и '
