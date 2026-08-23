@@ -673,6 +673,19 @@ class PageJsonLdTests(JsonLdMixin, TestCase):
         self.assertEqual(block['inLanguage'], 'ru')
         self.assertEqual(block['publisher']['@type'], 'Organization')
 
+    def test_publisher_id_matches_global_organization(self):
+        """`@id` издателя — тот же, что у глобального блока Organization.
+
+        Ровно ради этого publisher ссылкой по `@id`, а не строкой «DR.JOYS»:
+        по идентификатору парсер склеивает компанию с той, что описана на
+        остальных страницах, а не заводит вторую. Зеркало
+        `test_jsonld_organization_id_shared_with_global_block` у контактов.
+        """
+        response = self._get()
+        publisher = self._of_type(response, 'WebPage')[0]['publisher']
+        self.assertEqual(
+            publisher['@id'], self._jsonld(response, 'Organization')['@id'])
+
     def test_special_chars_in_title_keep_markup_parsable(self):
         """Регресс на причину задачи — оба символа, которыми контент-менеджер
         ломал разметку заголовком.
