@@ -49,6 +49,15 @@
         @apply text-gray-600 hover:text-red-500;
     }
 
+    /* Тайлы OSM обесцвечиваются в фирменный монохром: цветной стандарт OSM
+       пришёл на смену серому CARTO Positron (28.08.2026, CARTO закрыл
+       бесплатные basemaps), и без фильтра красный пин теряется среди
+       цветных значков POI. Фильтр — только тайл-слою: на .leaflet-container
+       он обесцветил бы и пин, и попап, и кнопки зума. */
+    .leaflet-tile-pane {
+        filter: grayscale(1) contrast(0.92) brightness(1.08);
+    }
+
     /* Брендовый пин */
     .map-pin {
         @apply block origin-bottom;

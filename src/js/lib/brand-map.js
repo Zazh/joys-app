@@ -1,14 +1,18 @@
 // ============================================
 // BRAND-MAP.JS — общее для карт сайта (contacts.js, stores.js):
-// тайлы CARTO и брендовый пин. Один источник, чтобы карты не разъезжались.
+// тайлы OSM и брендовый пин. Один источник, чтобы карты не разъезжались.
 // ============================================
 import L from 'leaflet';
 
-// CARTO Positron — монохромные серые тайлы, {r} — ретина-версия из коробки.
-// Атрибуция OSM + CARTO обязательна (условие бесплатного использования) —
-// каждая страница выводит её статичной строкой под картой (.map-attribution),
-// а не контролом Leaflet: rounded-2xl + overflow-hidden на контейнере иначе режут её.
-export const TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+// OpenStreetMap standard. Пришли на смену CARTO Positron 28.08.2026: CARTO
+// закрыл бесплатные basemaps и начал печатать «API KEY REQUIRED» прямо
+// поверх тайлов — на боевых /partners/ и /contacts/. Отличия, которые важны:
+// ретина-версии ({r}, @2x) у OSM нет, поддоменов {s} тоже — один хост под
+// HTTP/2 быстрее, чем четыре (и это рекомендация самого OSM), потолок зума 19.
+// Атрибуция «© OpenStreetMap contributors» обязательна — каждая страница
+// выводит её статичной строкой под картой (.map-attribution), а не контролом
+// Leaflet: rounded-2xl + overflow-hidden на контейнере иначе режут её.
+export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 // Брендовый пин — знак из логотипа: щит #E42521 + белое сердце внутри.
 // Пути взяты как есть из src/images/svgs/logo_small.svg (без ® рядом),
@@ -24,7 +28,6 @@ export const PIN_HTML = `
 export function addBrandTiles(map) {
     L.tileLayer(TILE_URL, {
         maxZoom: 19,
-        subdomains: 'abcd',
     }).addTo(map);
 }
 

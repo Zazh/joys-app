@@ -119,10 +119,9 @@
                 </div>
             </div>
 
-            {# Атрибуция OSM + CARTO обязательна для бесплатных тайлов (§3.4, §4.3) — строка под картой, не контрол Leaflet: rounded-2xl + overflow-hidden на .map-container иначе обрезают его снизу #}
+            {# Атрибуция OpenStreetMap обязательна для бесплатных тайлов — строка под картой, не контрол Leaflet: rounded-2xl + overflow-hidden на .map-container иначе обрезают его снизу #}
             <p class="map-attribution">
                 &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
-                &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>
             </p>
 
             {# Содержимое попапа метки: JS клонирует его при инициализации карты #}
