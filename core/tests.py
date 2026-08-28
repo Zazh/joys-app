@@ -505,9 +505,9 @@ class LangSwitchOutsideI18nTest(orders_tests.CheckoutRegionTest):
 @override_settings(SHOP_PAUSED=True, ALLOWED_HOSTS=['*'])
 class ShopPausedTests(TestCase):
     """Пауза магазина (SHOP_PAUSED): главная отдаёт заглушку pages/pause.html
-    с кодом 200, каталог и «Оффлайн магазины» временно (302) уводят на неё —
-    адреса не выпадают из индекса, — checkout закрыт, остальные страницы
-    живут как обычно."""
+    с кодом 200 и кнопкой на оффлайн-точки, каталог временно (302) уводит на
+    неё — адреса не выпадают из индекса, — checkout закрыт, «Оффлайн магазины»
+    и правовые страницы живы без навигации, остальные страницы — как обычно."""
 
     @classmethod
     def setUpTestData(cls):
@@ -535,10 +535,23 @@ class ShopPausedTests(TestCase):
         self.assertRedirects(response, '/ru/', status_code=302,
                              fetch_redirect_response=False)
 
-    def test_partners_redirects_to_home(self):
+    def test_partners_stays_alive_but_hides_navigation(self):
+        # «Оффлайн магазины» на паузе живут (точки продаж работают), но без
+        # навигации и футера — уйти можно только логотипом, обратно на заглушку
         response = self.client.get('/ru/partners/')
-        self.assertRedirects(response, '/ru/', status_code=302,
-                             fetch_redirect_response=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateNotUsed(response, 'pages/pause.html')
+        self.assertNotContains(response, 'id="menuBtn"')
+        self.assertNotContains(response, 'id="mainNav"')
+        self.assertNotContains(response, '>Меню</h2>')
+        self.assertNotContains(response, '<footer')
+
+    def test_pause_stub_links_to_offline_stores(self):
+        # С заглушки есть ход на оффлайн-точки — иначе страница доступна
+        # только по прямому адресу
+        response = self.client.get('/ru/')
+        self.assertContains(response, 'href="/ru/partners/"')
+        self.assertContains(response, 'Где купить офлайн')
 
     def test_other_cms_pages_stay_alive(self):
         response = self.client.get('/ru/oferta/')

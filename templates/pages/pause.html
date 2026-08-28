@@ -46,7 +46,11 @@
                 <h1 class="display-1">{% trans "Плаки, плаки ;(" %}</h1>
                 <p class="pause-text">{% trans "Сайт заболел — пожелайте скорейшего выздоровления" %}</p>
 
-                <a class="btn-macro danger pause-cta" href="https://t.me/drjoyspromo_bot" target="_blank" rel="noopener noreferrer">{% trans "Пожелать выздоровления" %}</a>
+                {# Вторая кнопка — на оффлайн-точки: онлайн-магазин на паузе, а точки продаж работают #}
+                <div class="pause-actions">
+                    <a class="btn-macro danger pause-cta" href="https://t.me/drjoyspromo_bot" target="_blank" rel="noopener noreferrer">{% trans "Пожелать выздоровления" %}</a>
+                    <a class="btn-macro light pause-cta" href="{% url 'pages:page_detail' slug='partners' %}">{% trans "Где купить офлайн" %}</a>
+                </div>
 
             </div>
         </div>
