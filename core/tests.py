@@ -505,9 +505,9 @@ class LangSwitchOutsideI18nTest(orders_tests.CheckoutRegionTest):
 @override_settings(SHOP_PAUSED=True, ALLOWED_HOSTS=['*'])
 class ShopPausedTests(TestCase):
     """Пауза магазина (SHOP_PAUSED): главная отдаёт заглушку pages/pause.html
-    с кодом 200 и кнопкой на оффлайн-точки, каталог временно (302) уводит на
-    неё — адреса не выпадают из индекса, — checkout закрыт, «Оффлайн магазины»
-    и правовые страницы живы без навигации, остальные страницы — как обычно."""
+    с кодом 200, каталог временно (302) уводит на неё — адреса не выпадают из
+    индекса, — checkout закрыт, «Оффлайн магазины» и правовые страницы живы
+    без навигации (по прямой ссылке), остальные страницы — как обычно."""
 
     @classmethod
     def setUpTestData(cls):
@@ -545,13 +545,6 @@ class ShopPausedTests(TestCase):
         self.assertNotContains(response, 'id="mainNav"')
         self.assertNotContains(response, '>Меню</h2>')
         self.assertNotContains(response, '<footer')
-
-    def test_pause_stub_links_to_offline_stores(self):
-        # С заглушки есть ход на оффлайн-точки — иначе страница доступна
-        # только по прямому адресу
-        response = self.client.get('/ru/')
-        self.assertContains(response, 'href="/ru/partners/"')
-        self.assertContains(response, 'Где купить офлайн')
 
     def test_other_cms_pages_stay_alive(self):
         response = self.client.get('/ru/oferta/')

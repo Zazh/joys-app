@@ -951,9 +951,6 @@ msgstr "Boo-hoo, boo-hoo ;("
 
 
 
-msgid "Где купить офлайн"
-msgstr "Where to buy offline"
-
 msgid "Пожелать выздоровления"
 msgstr "Send get-well wishes"
 

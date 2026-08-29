@@ -22,14 +22,9 @@
         @apply text-lg lg:text-xl font-medium text-gray-800 max-w-md;
     }
 
-    /* Две кнопки: на мобильном столбиком во всю колонку, на десктопе — в ряд */
-    .pause-actions {
-        @apply flex flex-col sm:flex-row sm:justify-center gap-3 w-full sm:w-auto mt-3 lg:mt-6;
-    }
-
-    /* CTA: на мобильном во всю колонку, на десктопе — по контенту */
+    /* Единственный CTA: на мобильном во всю колонку, на десктопе — по контенту */
     .pause-cta {
-        @apply block w-full sm:w-auto text-center;
+        @apply block w-full sm:w-auto text-center mt-3 lg:mt-6;
     }
 
     /* Смайлик медленно «дышит»: едва заметный scale от основания */
