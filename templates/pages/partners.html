@@ -53,16 +53,32 @@
             {# Чипы городов собраны из точек в БД: новый город в бэкофисе — новый чип. #}
             {# aria-pressed вместо табов: это фильтры одного списка, а не смена панелей #}
             <div class="stores-controls">
-                <div class="stores-chips">
-                    <button type="button" class="stores-chip is-active" data-city="all" aria-pressed="true">
-                        {% trans "Все" %}
+                {# На мобильном чипы — лента со скрытым скроллбаром: стрелки показывают, что городов #}
+                {# больше, чем влезло, и листают без свайпа (JS прячет стрелку, когда в её сторону #}
+                {# листать нечего). Клавиатуре и скринридеру стрелки не нужны — чипы сами #}
+                {# фокусируемые кнопки, поэтому aria-hidden + tabindex="-1" #}
+                <div class="stores-chips-wrap" data-chips-scroller>
+                    <button type="button" class="stores-chips__arrow stores-chips__arrow--prev" data-chips-prev tabindex="-1" aria-hidden="true" hidden>
+                        <svg class="stores-chips__arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M15 6l-6 6 6 6"/>
+                        </svg>
                     </button>
-                    {% for city in city_groups %}
-                    {# data-city — id города, а не название: на kk/en названия переводятся #}
-                    <button type="button" class="stores-chip" data-city="{{ city.id }}" aria-pressed="false">
-                        {{ city.name }} <span class="stores-chip__count">{{ city.count }}</span>
+                    <div class="stores-chips" data-chips-track>
+                        <button type="button" class="stores-chip is-active" data-city="all" aria-pressed="true">
+                            {% trans "Все" %}
+                        </button>
+                        {% for city in city_groups %}
+                        {# data-city — id города, а не название: на kk/en названия переводятся #}
+                        <button type="button" class="stores-chip" data-city="{{ city.id }}" aria-pressed="false">
+                            {{ city.name }} <span class="stores-chip__count">{{ city.count }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="stores-chips__arrow stores-chips__arrow--next" data-chips-next tabindex="-1" aria-hidden="true" hidden>
+                        <svg class="stores-chips__arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 6l6 6-6 6"/>
+                        </svg>
                     </button>
-                    {% endfor %}
                 </div>
                 <button type="button" id="storesNearMe" class="stores-near-btn">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -18,6 +18,8 @@ const CITY_FOCUS_MAX_ZOOM = 14;
 const NEAR_CITY_KM = 30;
 
 const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches;
+const scrollBehavior = () =>
+    (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 
 // Расстояние по сфере в километрах — для «рядом со мной» точности хватает
 function haversineKm(aLat, aLng, bLat, bLng) {
@@ -258,6 +260,7 @@ function initStores() {
             const active = chip.dataset.city === city;
             chip.classList.toggle('is-active', active);
             chip.setAttribute('aria-pressed', String(active));
+            if (active) centerChip(chip);
         }
         for (const section of list.querySelectorAll('[data-city-group]')) {
             section.hidden = city !== 'all' && section.dataset.cityGroup !== city;
@@ -408,4 +411,50 @@ function initStores() {
     });
 }
 
+// --------------------------------------------
+// Лента чипов на мобильном: выбранный город — в центр ленты. Иначе чип,
+// включённый «Рядом со мной», мог остаться за краем экрана. Скроллится
+// только лента (не scrollIntoView — тот дёрнул бы и страницу); на десктопе
+// чипы переносятся строками, листать нечего — scrollBy ничего не сделает
+// --------------------------------------------
+function centerChip(chip) {
+    const track = chip.parentElement;
+    const t = track.getBoundingClientRect();
+    const c = chip.getBoundingClientRect();
+    track.scrollBy({ left: c.left - t.left - (t.width - c.width) / 2, behavior: scrollBehavior() });
+}
+
+// --------------------------------------------
+// Стрелки ленты чипов: видна только та, в чью сторону есть скрытые города,
+// шаг — 70% ширины ленты, чтобы крайний чип оставался ориентиром
+// --------------------------------------------
+function initChipsScroller() {
+    const wrap = document.querySelector('[data-chips-scroller]');
+    if (!wrap) return;
+    const track = wrap.querySelector('[data-chips-track]');
+    const prev = wrap.querySelector('[data-chips-prev]');
+    const next = wrap.querySelector('[data-chips-next]');
+
+    function update() {
+        // 1px запаса: на дробном DPR scrollLeft не доходит до края ровно
+        const hasPrev = track.scrollLeft > 1;
+        const hasNext = track.scrollLeft < track.scrollWidth - track.clientWidth - 1;
+        prev.hidden = !hasPrev;
+        next.hidden = !hasNext;
+        wrap.classList.toggle('has-prev', hasPrev);
+        wrap.classList.toggle('has-next', hasNext);
+    }
+
+    const step = dir => track.scrollBy({ left: dir * track.clientWidth * 0.7, behavior: scrollBehavior() });
+    prev.addEventListener('click', () => step(-1));
+    next.addEventListener('click', () => step(1));
+    track.addEventListener('scroll', update, { passive: true });
+    // Ширина ленты меняется не только с окном: в режиме карты плашка чипов
+    // становится fixed с другими полями; шрифт догружается и меняет ширину чипов
+    new ResizeObserver(update).observe(track);
+    document.fonts?.ready.then(update);
+    update();
+}
+
 onReady(initStores);
+onReady(initChipsScroller);

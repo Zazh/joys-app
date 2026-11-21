@@ -15,11 +15,42 @@
     .stores-controls {
         @apply flex flex-col gap-3 pb-6 lg:flex-row lg:items-center lg:justify-between;
     }
+    .stores-chips-wrap {
+        @apply relative;
+        --chips-fade-l: 0px;
+        --chips-fade-r: 0px;
+    }
     .stores-chips {
         @apply flex gap-2 overflow-x-auto -mx-3 px-3 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible;
         scrollbar-width: none;
     }
     .stores-chips::-webkit-scrollbar { display: none; }
+
+    /* Край ленты гаснет с той стороны, где есть скрытые города (has-prev /
+       has-next ставит stores.js). Маска, а не белый градиент: в режиме карты
+       лента лежит на полупрозрачной плашке, и белая полоса была бы видна.
+       Только на этих классах — на десктопе их не бывает, и маска не режет
+       кольцо фокуса у крайних чипов */
+    .stores-chips-wrap.has-prev { --chips-fade-l: 3.5rem; }
+    .stores-chips-wrap.has-next { --chips-fade-r: 3.5rem; }
+    .stores-chips-wrap.has-prev .stores-chips,
+    .stores-chips-wrap.has-next .stores-chips {
+        mask-image: linear-gradient(to right, transparent, #000 var(--chips-fade-l),
+                                    #000 calc(100% - var(--chips-fade-r)), transparent);
+    }
+
+    /* Стрелки ленты — только мобайл: на десктопе чипы переносятся строками.
+       Кружок бренда (красный — решение владельца 21.11.2026), 36px по высоте
+       чипа, зона нажатия расширена до 44px, как у .route-link */
+    .stores-chips__arrow {
+        @apply absolute top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center
+               rounded-full bg-red-500 text-white shadow-md
+               transition-colors hover:bg-red-400
+               after:absolute after:-inset-1 after:content-[''] lg:hidden;
+    }
+    .stores-chips__arrow--prev { @apply -left-1; }
+    .stores-chips__arrow--next { @apply -right-1; }
+    .stores-chips__arrow-icon { @apply size-4; }
 
     .stores-chip {
         @apply shrink-0 rounded-full border border-gray-200 px-4 py-2 text-sm font-bold
