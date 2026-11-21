@@ -28,6 +28,12 @@ export const PIN_HTML = `
 export function addBrandTiles(map) {
     L.tileLayer(TILE_URL, {
         maxZoom: 19,
+        // Политика OSM требует Referer: браузерный запрос тайла без него
+        // получает картинку «Access blocked» (403). У сайта Referrer-Policy:
+        // same-origin — на чужой домен Referer не уходит вовсе, и к 21.11.2026
+        // обе карты на бою показывали заглушки. Тайлам отдаём только origin
+        // (https://dr-joys.com/, без пути) — политику всего сайта не трогаем
+        referrerPolicy: 'strict-origin-when-cross-origin',
     }).addTo(map);
 }
 
