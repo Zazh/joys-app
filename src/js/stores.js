@@ -40,7 +40,10 @@ function initStores() {
     const located = stores.filter(s => s.lat != null && s.lng != null);
     if (!located.length) return;
 
-    const layout = document.getElementById('storesLayout');
+    // Класс режима карты — на общем блоке страницы, а не на #storesLayout:
+    // плашка чипов (.stores-controls) стоит вне раскладки, и правило «чипы
+    // поверх карты» с 31.07 не срабатывало — в режиме карты город было не выбрать
+    const view = document.getElementById('storesView');
     const list = document.getElementById('storesList');
     const chips = [...document.querySelectorAll('.stores-chip')];
     const cards = new Map(
@@ -300,7 +303,7 @@ function initStores() {
     const toggle = document.getElementById('storesViewToggle');
 
     function switchView(toMap) {
-        layout.classList.toggle('stores-view--map', toMap);
+        view.classList.toggle('stores-view--map', toMap);
         // Карта раскрывается фиксированным слоем на весь экран — страница под
         // ней не должна скроллиться (тот же приём, что у модалок)
         document.body.classList.toggle('overflow-hidden', toMap);
@@ -314,7 +317,7 @@ function initStores() {
     }
 
     toggle.addEventListener('click', () => {
-        switchView(!layout.classList.contains('stores-view--map'));
+        switchView(!view.classList.contains('stores-view--map'));
     });
 
     // Растянули окно до десктопа, не выйдя из карты, — возвращаем сплит,

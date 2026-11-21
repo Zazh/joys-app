@@ -34,7 +34,9 @@
 <main>
     <section class="main-grid">
         {# Колонка шире контентной (списку и карте нужны обе половины), левый край совпадает с каноном внутренних страниц #}
-        <div class="col-span-full lg:col-span-14 xl:col-span-13 xl:col-start-2">
+        {# Класс режима карты (stores-view--map) ставится сюда, на общий блок: CSS режима #}
+        {# правит и раскладку (#storesLayout), и плашку чипов (.stores-controls) — а она вне раскладки #}
+        <div id="storesView" class="col-span-full lg:col-span-14 xl:col-span-13 xl:col-start-2">
 
             <!-- BEGIN stores-hero -->
             <div class="pt-30 pb-8">
@@ -97,7 +99,7 @@
 
             <!-- BEGIN stores-layout -->
             {# Десктоп — сплит: список слева, липкая карта справа. Мобайл — список, #}
-            {# карта включается плавающей кнопкой (класс stores-view--map на этом блоке) #}
+            {# карта включается плавающей кнопкой (класс stores-view--map — на #storesView) #}
             <div id="storesLayout" class="stores-layout">
                 <div id="storesList" class="stores-list">
                     {% for group in city_groups %}
